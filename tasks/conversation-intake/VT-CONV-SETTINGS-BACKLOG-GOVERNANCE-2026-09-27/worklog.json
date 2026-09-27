@@ -1,0 +1,1647 @@
+{
+  "schemaVersion": "viewtube.conversation-work-log.v1",
+  "conversationId": "VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27",
+  "created": "2026-09-27",
+  "lastEdited": "2026-09-27",
+  "sourceHost": "ChatGPT",
+  "reviewStatus": "RECONCILED",
+  "items": [
+    {
+      "itemId": "VT-CWI-001",
+      "title": "Settings primitive frontend redesign",
+      "summary": "Rebuild Settings with compact Toolbox/SubToolbox structure and canonical primitives while preserving backend behavior.",
+      "details": "Implemented across Overview, Account, AI, Widgets, Experience, Billing, Data/Privacy and Help/Legal; legacy Settings-local card/input/button authority removed. Final visual certification remains a separate verification concern.",
+      "kind": "DESIGN",
+      "conversationState": "COMPLETED_IN_CONVERSATION",
+      "domains": [
+        "settings",
+        "toolbox-ui"
+      ],
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-VERIFICATION"
+      ],
+      "surfaces": [
+        "Settings"
+      ],
+      "sourceRefs": [
+        "conversation:Settings redesign thread",
+        "tasks/SETTINGS-FRONTEND-BLUEPRINT.md",
+        "tasks/SPEC-settings-frontend-redesign.md"
+      ],
+      "changedPaths": [
+        "src/views/Settings.tsx",
+        "src/views/settings/"
+      ],
+      "branchPrRefs": [
+        "PR #376",
+        "PR #379"
+      ],
+      "evidenceRefs": [
+        "Settings governance tests",
+        "production build",
+        "local smoke"
+      ],
+      "dependencies": [],
+      "blockers": [
+        "Full human screenshot matrix not recorded"
+      ],
+      "similarityKeys": [
+        "settings redesign",
+        "primitive migration",
+        "subtoolbox settings"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "MEDIUM",
+        "urgency": "LOW",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Creates one consistent settings UI and removes parallel frontend authority."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "Toolbox UI authority + Verification",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ATTACH_RECEIPT_EVIDENCE",
+      "targetRefs": [
+        "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md",
+        "docs/governance/VERIFICATION.md",
+        "VT-047"
+      ],
+      "harvestedMaterial": [
+        "Compact page shell",
+        "dense L1 repeated settings rows",
+        "progressive disclosure for secondary controls",
+        "preserve existing backend/service owners"
+      ],
+      "reviewNotes": "Do not recreate Settings as greenfield work. Keep visual/runtime certification only."
+    },
+    {
+      "itemId": "VT-CWI-002",
+      "title": "Workspace usability and Quick Switcher foundation",
+      "summary": "Compact mobile navigation, position persistence, toolbox state memory, Quick Switcher, recent/pinned destinations and desktop navigation personalization.",
+      "details": "Historical conversation waves implemented the core preference store, navigation layouts, quick switcher, recent/pin stores and orientation/page preservation. The remembered backlog items 332–378 contain additional app-wide workflow ideas; only missing behavior/certification should survive.",
+      "kind": "FEATURE",
+      "conversationState": "COMPLETED_IN_CONVERSATION",
+      "domains": [
+        "navigation",
+        "workspace-ui"
+      ],
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-VERIFICATION"
+      ],
+      "surfaces": [
+        "App Shell",
+        "Settings",
+        "Quick Switcher"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:332-378"
+      ],
+      "changedPaths": [
+        "src/components/navigation/",
+        "src/services/workspaceUxPreferences.ts",
+        "src/services/workspaceUiPersistence.ts",
+        "src/hooks/usePreserveOrientationPosition.ts"
+      ],
+      "branchPrRefs": [
+        "PR #316",
+        "PR #319",
+        "PR #334",
+        "PR #336",
+        "PR #346",
+        "PR #347"
+      ],
+      "evidenceRefs": [
+        "focused navigation/workspace tests"
+      ],
+      "dependencies": [],
+      "blockers": [
+        "Full app-wide responsive/state certification remains"
+      ],
+      "similarityKeys": [
+        "workspace state",
+        "quick switcher",
+        "navigation personalization",
+        "orientation persistence"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Foundation affects every creator workspace."
+      },
+      "relationship": "OVERLAPS",
+      "suggestedDestination": "PLAN-FAMILY-MOBILE-RESPONSIVE",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-MOBILE-RESPONSIVE",
+        "VT-047"
+      ],
+      "harvestedMaterial": [
+        "Persist route/tool state",
+        "keyboard restoration",
+        "thumb-zone/edge-swipe concepts",
+        "future URL-addressable/multi-tool state ideas"
+      ],
+      "reviewNotes": "Foundation is already present. Remaining ideas should become specific responsive/workspace follow-ons only after current-main checks."
+    },
+    {
+      "itemId": "VT-CWI-003",
+      "title": "Documentation backlog integration plan",
+      "summary": "Plan and execute a lossless integration of conversation backlog, old audits, current programs, authorities, receipts and task projections.",
+      "details": "Planning PR #501 merged. Existing mission VT-MISSION-current-main-backlog-reconciliation now owns execution.",
+      "kind": "PLAN",
+      "conversationState": "VERIFIED_IN_CONVERSATION",
+      "domains": [
+        "documentation",
+        "task-index"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "surfaces": [
+        "docs",
+        "tasks",
+        ".viewtube/exchange"
+      ],
+      "sourceRefs": [
+        "tasks/documentation-backlog-integration/plan.md"
+      ],
+      "changedPaths": [
+        "tasks/documentation-backlog-integration/"
+      ],
+      "branchPrRefs": [
+        "PR #501"
+      ],
+      "evidenceRefs": [
+        "merged plan PR",
+        "current reconciliation mission"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "backlog reconciliation",
+        "documentation governance",
+        "task integration"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Prevents duplicate plans/tasks and stale work from propagating."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "VT-MISSION-current-main-backlog-reconciliation",
+      "reviewStatus": "RECONCILED",
+      "disposition": "UPDATE_EXISTING_PLAN",
+      "targetRefs": [
+        "docs/programs/INTEGRATED_APPLICATION.md",
+        ".viewtube/exchange/missions/VT-MISSION-current-main-backlog-reconciliation.json"
+      ],
+      "harvestedMaterial": [
+        "Current-main-first elimination",
+        "proposal-only Task Authority mode",
+        "lossless donor consolidation",
+        "active projection cleanup"
+      ],
+      "reviewNotes": "Continue the existing mission; do not create another reconciliation program."
+    },
+    {
+      "itemId": "VT-CWI-004",
+      "title": "Documentation / Conversation OS / Task Authority foundation",
+      "summary": "Repository-wide documentation governance, Conversation OS, Crown mission coordination, verification and Task Authority.",
+      "details": "Conversation backlog items 1–18 and 313–331 included creating these systems. Foundations now exist and are active; remaining work is adoption, Task Index VNext, archive migration and automation.",
+      "kind": "DOCUMENTATION",
+      "conversationState": "DISCOVERED",
+      "domains": [
+        "documentation",
+        "agent-os",
+        "task-index"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "surfaces": [
+        "docs",
+        "agent",
+        "tasks"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:1-18",
+        "conversation-reconstructed-backlog:313-331"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [
+        "PR #462",
+        "PR #464",
+        "PR #481"
+      ],
+      "evidenceRefs": [
+        "docs/governance/DOCUMENTATION.md",
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/TASK_AUTHORITY.md"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "documentation governance",
+        "conversation os",
+        "task authority",
+        "crown"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Shared operating system for all future work."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "PLAN-FAMILY-DOCS-AGENTS",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ALREADY_TRACKED",
+      "targetRefs": [
+        "PLAN-FAMILY-DOCS-AGENTS",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "No second ledger",
+        "one authority per bounded concern",
+        "receipts/evidence not truth",
+        "Removed Archive/no-loss rules"
+      ],
+      "reviewNotes": "Do not rebuild foundation. Continue only unfinished migration/automation work."
+    },
+    {
+      "itemId": "VT-CWI-005",
+      "title": "Task Index VNext and canonical writer",
+      "summary": "Finish repo-native canonical task storage/import/writer/control-room and migrate historical task donors safely.",
+      "details": "Current Conversation Handoff reports a tested local prototype with 1,542 donor tasks, 35 shards and 228 aliases, but it is not committed on current main. This remains the key blocker for canonical task lifecycle mutation.",
+      "kind": "MIGRATION",
+      "conversationState": "PARTIAL",
+      "domains": [
+        "task-index",
+        "documentation"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "surfaces": [
+        "Task Index",
+        "Crown Control Room"
+      ],
+      "sourceRefs": [
+        "tasks/conversation-intake/VT-CONV-DOCS-OS-TASK-INDEX/handoff.md",
+        "conversation-reconstructed-backlog:1-18"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "Conversation handoff records local prototype only"
+      ],
+      "dependencies": [
+        "Documentation Governance",
+        "Task Authority"
+      ],
+      "blockers": [
+        "Canonical writer/storage not on current main"
+      ],
+      "similarityKeys": [
+        "task index vnext",
+        "task writer",
+        "legacy task import"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Canonical task mutation cannot safely proceed without it."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "PLAN-FAMILY-DOCS-AGENTS",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "docs/governance/TASK_AUTHORITY.md",
+        "tasks/conversation-intake/VT-CONV-DOCS-OS-TASK-INDEX/handoff.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "Lossless donor import",
+        "historical status as CLAIMED",
+        "sharded storage",
+        "generated read-only control room"
+      ],
+      "reviewNotes": "Highest-priority documentation-system follow-on. No canonical mutation until this lands."
+    },
+    {
+      "itemId": "VT-CWI-006",
+      "title": "Release stability, quality gates and certification",
+      "summary": "Repository-wide type/test debt, creator-loop E2E, responsive certification, diagnostics and observability.",
+      "details": "Covers reconstructed backlog items 19–32. Some individual failures have changed over time; the durable need is a changed-file no-new-debt gate, baseline burn-down, golden/failure E2E and runtime/visual certification.",
+      "kind": "VERIFICATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "quality",
+        "release",
+        "verification"
+      ],
+      "capabilityIds": [
+        "CAP-VERIFICATION"
+      ],
+      "surfaces": [
+        "CI",
+        "Production",
+        "All UI"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:19-32"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "tasks/viewtube-one-goal-status.md"
+      ],
+      "dependencies": [
+        "Domain-specific implementations"
+      ],
+      "blockers": [
+        "Inherited baseline failures",
+        "Vercel rate limits sometimes obscure preview status"
+      ],
+      "similarityKeys": [
+        "release gates",
+        "test debt",
+        "responsive certification",
+        "creator loop e2e"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Reliable completion claims depend on trustworthy gates and runtime evidence."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "Verification + One-Goal",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "VT-037",
+        "VT-038",
+        "VT-045",
+        "VT-046",
+        "VT-047",
+        "VT-050",
+        "docs/governance/VERIFICATION.md"
+      ],
+      "harvestedMaterial": [
+        "Golden creator loop",
+        "failure matrix",
+        "desktop/mobile screenshot certification",
+        "runtime diagnostics/bug report"
+      ],
+      "reviewNotes": "Do not preserve obsolete named failures as tasks after they stop reproducing; retain the durable quality program."
+    },
+    {
+      "itemId": "VT-CWI-007",
+      "title": "Auth, account, OAuth, billing and identity reliability",
+      "summary": "Stabilize canonical account/session/channel identity, mobile sign-in, proxy paths, verification and billing/credits edge cases.",
+      "details": "Covers backlog items 33–43. Current Simple Auth authority exists; these are reliability/integration/certification follow-ons rather than a new auth architecture.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "auth",
+        "billing",
+        "account"
+      ],
+      "capabilityIds": [],
+      "surfaces": [
+        "Settings",
+        "App shell",
+        "YouTube integrations"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:33-43"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "docs/architecture/SIMPLE_AUTH_V1.md"
+      ],
+      "dependencies": [],
+      "blockers": [
+        "Authenticated production verification required"
+      ],
+      "similarityKeys": [
+        "auth stability",
+        "mobile sign in",
+        "youtube account",
+        "billing entitlements"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "HIGH",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Account reliability gates most creator workflows."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "Auth Domain Authority + Verification",
+      "reviewStatus": "RECONCILED",
+      "disposition": "UPDATE_EXISTING_PLAN",
+      "targetRefs": [
+        "docs/architecture/SIMPLE_AUTH_V1.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "Session recovery",
+        "identity reconciliation",
+        "mobile sign-in persistence",
+        "Google proxy diagnostics",
+        "billing edge cases"
+      ],
+      "reviewNotes": "Preserve current Simple Auth owner; no parallel auth system."
+    },
+    {
+      "itemId": "VT-CWI-008",
+      "title": "VT-SYNC and data ingestion completion",
+      "summary": "Dataset registry, windows, traffic/geography dimensions, manual import, hybrid/public modes and Sync Controller accuracy.",
+      "details": "Covers backlog items 44–64. Route to Analytics/VT-SYNC authority; current main must decide exact remaining datasets and failures.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "analytics",
+        "vt-sync",
+        "data"
+      ],
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "surfaces": [
+        "Analytics",
+        "VT-SYNC"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:44-64"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md"
+      ],
+      "dependencies": [
+        "YouTube API/auth"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "dataset registry",
+        "traffic sources",
+        "geography",
+        "sync controller",
+        "manual import"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Truthful analytics and Brain evidence depend on complete normalized data."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "PLAN-FAMILY-ANALYTICS",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-ANALYTICS",
+        "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md"
+      ],
+      "harvestedMaterial": [
+        "Lifetime-only day-dimension rule",
+        "traffic-source coverage",
+        "country/state/city/DMA",
+        "batch sync switches/status",
+        "public/hybrid ingest"
+      ],
+      "reviewNotes": "Exact dataset leaf tasks must be reconciled against current analytics authority before Task IDs."
+    },
+    {
+      "itemId": "VT-CWI-009",
+      "title": "Analytics platform completion",
+      "summary": "Creator-facing command center, deep-video/traffic/audience/monetization analytics, checkpoints, comparability and action handoffs.",
+      "details": "Covers backlog items 65–84. MetricComparabilityPolicy and evaluation integration are now DONE (VT-001, VT-023); visual/experiment integration VT-024 and broader analytics work remain.",
+      "kind": "FEATURE",
+      "conversationState": "PLANNED",
+      "domains": [
+        "analytics"
+      ],
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "surfaces": [
+        "Analytics",
+        "Dashboard"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:65-84"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [
+        "PR #511"
+      ],
+      "evidenceRefs": [
+        "VT-001 DONE",
+        "VT-023 DONE"
+      ],
+      "dependencies": [
+        "VT-SYNC"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "analytics command center",
+        "deep video analytics",
+        "comparability",
+        "checkpoints"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Turns raw channel data into reliable creator decisions."
+      },
+      "relationship": "OVERLAPS",
+      "suggestedDestination": "PLAN-FAMILY-ANALYTICS",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "VT-024",
+        "VT-018",
+        "PLAN-FAMILY-ANALYTICS"
+      ],
+      "harvestedMaterial": [
+        "Analytics checkpoints",
+        "source fidelity",
+        "shorts bubble chart",
+        "geography visuals",
+        "monetization/deep-video/action handoffs"
+      ],
+      "reviewNotes": "Remove VT-001/VT-023 from unfinished interpretation; retain consumer and broader platform work."
+    },
+    {
+      "itemId": "VT-CWI-010",
+      "title": "Brain, intelligence, evidence and context convergence",
+      "summary": "Unify BrainRuntime context/evidence/outcomes, Opportunity/Algorithm intelligence, prompt/runtime reachability, RAG and AI observability.",
+      "details": "Covers backlog items 85–117. Brain Project context and Opportunity evidence foundations exist; main also advanced EvidenceRecord/derived-signal convergence. Remaining work is convergence/integration/certification, not another Brain.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "brain",
+        "ai",
+        "evidence"
+      ],
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "surfaces": [
+        "Brain Hub",
+        "Daily Oracle",
+        "AI tools"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:85-117",
+        "tasks/system-convergence/EVIDENCE-INTELLIGENCE-AUDIT.md"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "BrainProjectContext tests",
+        "OpportunityEvidenceAdapter tests",
+        "Evidence convergence commits"
+      ],
+      "dependencies": [
+        "Analytics canon",
+        "Project/ContentBuild"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "brain convergence",
+        "evidence intelligence",
+        "creator context",
+        "opportunity intelligence",
+        "prompt runtime"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Shared reasoning/evidence layer influences every AI-assisted creator workflow."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "PLAN-FAMILY-BRAIN-AI",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-BRAIN-AI",
+        "docs/domains/BRAIN.md",
+        "docs/specifications/PROMPTS.md",
+        "VT-003",
+        "VT-004",
+        "VT-019",
+        "VT-020",
+        "VT-021",
+        "VT-022"
+      ],
+      "harvestedMaterial": [
+        "Context Resolver recipes",
+        "evidence trace/explorer",
+        "outcome/evaluation ledger",
+        "learning candidates",
+        "RAG",
+        "provider registry",
+        "AI observability",
+        "typed patches"
+      ],
+      "reviewNotes": "Current main already converged several evidence foundations; refresh leaf tasks before promotion."
+    },
+    {
+      "itemId": "VT-CWI-011",
+      "title": "Projects, ContentBuild and Asset workflow completion",
+      "summary": "Finish Project facade, Asset Slot Registry, Asset Engine Studio, Launch Package, versions/variants and cross-tool handoffs.",
+      "details": "Covers backlog items 118–137. Project↔ContentBuild and Video Package foundations exist; do not rebuild identity. Remaining work is creator-facing facade and downstream continuity.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "projects",
+        "contentbuild",
+        "asset-engine"
+      ],
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "surfaces": [
+        "Projects",
+        "Studio",
+        "Asset Engine"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:118-137"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "Project/ContentBuild bridge tests",
+        "Video Package bridge tests"
+      ],
+      "dependencies": [
+        "Canonical identity"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "project facade",
+        "asset slot registry",
+        "asset engine studio",
+        "launch package"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Core production continuity from idea to publish depends on this."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "PLAN-FAMILY-PROJECTS + PLAN-FAMILY-ASSET-VAULT",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-PROJECTS",
+        "PLAN-FAMILY-ASSET-VAULT",
+        "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md",
+        "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md"
+      ],
+      "harvestedMaterial": [
+        "Project Overview→Plan→Create→Package→Publish→Performance",
+        "Asset Slot Registry",
+        "Launch Package",
+        "full Asset Engine Studio",
+        "Versions/VariantGroups UI",
+        "shared handoffs"
+      ],
+      "reviewNotes": "Identity foundation already exists; focus on lifecycle composition and continuity."
+    },
+    {
+      "itemId": "VT-CWI-012",
+      "title": "Publishing, Video Manager, packaging and post-publish learning",
+      "summary": "Finish durable approved intent, retry/recovery, remote reconciliation, experiment-aware packaging and measured post-publish learning.",
+      "details": "Covers backlog items 138–156. Approved snapshot, PublishingPackage and transaction foundations exist. Current Video Manager primitive migration is complete. Remaining work is durability/recovery/outcome linkage and AI-assisted update experiments.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "publishing",
+        "video-manager",
+        "experiments"
+      ],
+      "capabilityIds": [
+        "CAP-PUBLISH",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "surfaces": [
+        "Publisher",
+        "Video Manager",
+        "Projects"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:138-156"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "ApprovedPublishSnapshot tests",
+        "PublishTransaction tests",
+        "VideoManager.contract.test.ts"
+      ],
+      "dependencies": [
+        "VT-005",
+        "Project/ContentBuild identity"
+      ],
+      "blockers": [
+        "Server-authoritative persistence/recovery not fully certified"
+      ],
+      "similarityKeys": [
+        "approved publish",
+        "retry recovery",
+        "video manager",
+        "abc testing",
+        "post publish learning"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Publishing must be exact, recoverable and attributable."
+      },
+      "relationship": "OVERLAPS",
+      "suggestedDestination": "PLAN-FAMILY-PUBLISHING",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "VT-014",
+        "VT-015",
+        "VT-016",
+        "VT-017",
+        "VT-018",
+        "PLAN-FAMILY-PUBLISHING"
+      ],
+      "harvestedMaterial": [
+        "remote YouTube reconciliation",
+        "post-publish checkpoints",
+        "optional title/thumbnail tests",
+        "AI analysis of current metadata/thumbnail",
+        "measured update outcomes"
+      ],
+      "reviewNotes": "Do not reopen snapshot/transaction or Video Manager primitive foundations."
+    },
+    {
+      "itemId": "VT-CWI-013",
+      "title": "Vault and asset management expansion",
+      "summary": "Complete Asset Matrix/Inspector, import/batch/collections/versions/lineage/search/metadata/derivatives and cross-tool asset handoffs.",
+      "details": "Covers backlog items 157–202. Vault should remain the management experience over canonical Asset Engine semantics.",
+      "kind": "FEATURE",
+      "conversationState": "PLANNED",
+      "domains": [
+        "vault",
+        "asset-engine"
+      ],
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "surfaces": [
+        "Vault",
+        "Projects",
+        "Editor",
+        "Studio"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:157-202"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "Vault handoffs/domain docs"
+      ],
+      "dependencies": [
+        "Asset identity boundary"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "vault asset matrix",
+        "asset inspector",
+        "asset lineage",
+        "collections",
+        "semantic search"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Durable media/asset management is a major creator workflow dependency."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "PLAN-FAMILY-ASSET-VAULT",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-ASSET-VAULT",
+        "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md"
+      ],
+      "harvestedMaterial": [
+        "small/medium asset cards",
+        "batch/import station",
+        "versions/provenance",
+        "smart collections",
+        "semantic search",
+        "metadata extraction",
+        "AI tagging",
+        "derivatives",
+        "usage analytics"
+      ],
+      "reviewNotes": "Reconcile exact Vault UI tasks against current main before promoting leaf work."
+    },
+    {
+      "itemId": "VT-CWI-014",
+      "title": "Toolbox, primitive and Studio component certification",
+      "summary": "Finish remaining primitive certification, split-left/dropdown behavior, CSS ownership, accessibility and prototype fidelity.",
+      "details": "Covers backlog items 203–230. Recent main fixed major responsive CSS/header/field-state/geometry issues and Video Manager migration. Keep reproduced/certification gaps only.",
+      "kind": "DESIGN",
+      "conversationState": "PLANNED",
+      "domains": [
+        "toolbox-ui",
+        "studio-ui"
+      ],
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-VERIFICATION"
+      ],
+      "surfaces": [
+        "Studio",
+        "Dashboard",
+        "Projects",
+        "Settings"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:203-230",
+        "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "recent Toolbox CSS ownership commits",
+        "mobile header certification"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "toolbox primitives",
+        "split left",
+        "focus states",
+        "css ownership",
+        "component certification"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Canonical UI prevents repeated local fixes."
+      },
+      "relationship": "OVERLAPS",
+      "suggestedDestination": "PLAN-FAMILY-TOOLBOX",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-TOOLBOX",
+        "VT-032",
+        "VT-033",
+        "VT-047"
+      ],
+      "harvestedMaterial": [
+        "primitive screenshot matrix",
+        "split-left/select certification",
+        "standalone HTML primitive fidelity",
+        "Studio capability-parity harness"
+      ],
+      "reviewNotes": "Do not reopen fixed header/CSS/field-state bugs without reproduction."
+    },
+    {
+      "itemId": "VT-CWI-015",
+      "title": "Dashboard widget convergence and production cohort",
+      "summary": "Certify canonical widget states/layouts and finish the priority cohort while merging overlapping legacy widgets.",
+      "details": "Covers backlog items 231–255. Current widget authority and registry exist; recent dashboard geometry fixes landed.",
+      "kind": "FEATURE",
+      "conversationState": "PLANNED",
+      "domains": [
+        "widgets",
+        "dashboard"
+      ],
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "surfaces": [
+        "Dashboard"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:231-255"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md"
+      ],
+      "dependencies": [
+        "Canonical Toolbox/Widget shell"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "widget preview state",
+        "widget cohort",
+        "daily oracle",
+        "opportunity radar",
+        "anomaly monitor"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Dashboard should surface the strongest creator actions without duplicate tools."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "PLAN-FAMILY-WIDGETS",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-WIDGETS",
+        "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md"
+      ],
+      "harvestedMaterial": [
+        "six-state WidgetPreviewState",
+        "10-widget cohort",
+        "Daily Oracle convergence",
+        "Opportunity/Anomaly/Intelligence widgets",
+        "width×height certification"
+      ],
+      "reviewNotes": "Promote individual widgets only through registry/backend ownership/certification."
+    },
+    {
+      "itemId": "VT-CWI-016",
+      "title": "Editor, timeline, Remotion and render continuity",
+      "summary": "Finish editor layouts, timeline/mini-map, transitions, preview/render parity, render recovery and Asset Engine publishing continuity.",
+      "details": "Covers backlog items 256–286. Remotion 100-asset library and portions of parity/final-asset work already exist; remaining tasks must be current-main-specific.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "editor",
+        "remotion",
+        "asset-engine"
+      ],
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "surfaces": [
+        "Editor"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:256-286"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "VT-029 VERIFYING",
+        "VT-030 IN_PROGRESS"
+      ],
+      "dependencies": [
+        "Asset identity",
+        "render contract"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "editor mobile",
+        "remotion parity",
+        "timeline",
+        "render asset",
+        "transitions"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "HIGH",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Reliable final media is required before publishing can close the loop."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "PLAN-FAMILY-EDITOR-REMOTION",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "PLAN-FAMILY-EDITOR-REMOTION",
+        "VT-029",
+        "VT-030",
+        "VT-031"
+      ],
+      "harvestedMaterial": [
+        "four-layout certification",
+        "timeline minimap",
+        "transition system",
+        "render progress/recovery",
+        "Vault insertion/output",
+        "caption/audio/TTS/FX/keyframes"
+      ],
+      "reviewNotes": "100-asset library is not greenfield anymore; retain integration/quality gaps."
+    },
+    {
+      "itemId": "VT-CWI-017",
+      "title": "Video Director provider/runtime and mobile certification",
+      "summary": "Complete generation presets/controls/provider routing and certify mobile layout/runtime behavior.",
+      "details": "Covers backlog items 287–303. Current main contains a production Video Director surface and provider/job contracts, so greenfield build is obsolete.",
+      "kind": "VERIFICATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "studio",
+        "video-generation",
+        "brain"
+      ],
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "surfaces": [
+        "Video Director"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:287-303"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "Integrated Application current-main reconciliation"
+      ],
+      "dependencies": [
+        "provider adapters",
+        "Asset Engine"
+      ],
+      "blockers": [
+        "Provider/runtime certification"
+      ],
+      "similarityKeys": [
+        "video director",
+        "camera controls",
+        "provider routing",
+        "mobile overflow"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Video generation should be a reliable Project-aware production tool."
+      },
+      "relationship": "VERIFICATION_ONLY",
+      "suggestedDestination": "Studio/Asset Engine + Verification",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "docs/programs/INTEGRATED_APPLICATION.md",
+        "VT-047"
+      ],
+      "harvestedMaterial": [
+        "preset batches",
+        "camera/lens controls",
+        "sound/music",
+        "shared dropdown population",
+        "portrait/landscape certification"
+      ],
+      "reviewNotes": "Do not create another Video Director; reconcile specific missing capabilities only."
+    },
+    {
+      "itemId": "VT-CWI-018",
+      "title": "Comments, community, audience feedback and learning",
+      "summary": "Connect comments/audience requests to canonical evidence, outcomes, opportunities and governed learning.",
+      "details": "Covers backlog items 304–312.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "community",
+        "brain",
+        "outcomes"
+      ],
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "surfaces": [
+        "Comment Responder",
+        "Audience tools",
+        "Brain"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:304-312"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "VT-009 NOT_STARTED"
+      ],
+      "dependencies": [
+        "Outcome identity",
+        "Evidence"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "comments learning",
+        "audience requests",
+        "superfan",
+        "community intelligence"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Audience feedback should influence future content without unsafe single-comment learning."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "Brain/Outcome program",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "VT-009",
+        "B14",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "comments→Brain context",
+        "comments→Project ideas",
+        "audience request opportunities",
+        "outcome history",
+        "governed response learning"
+      ],
+      "reviewNotes": "Keep aggregation/governance requirement."
+    },
+    {
+      "itemId": "VT-CWI-019",
+      "title": "Resource Library, User Guide and creator education expansion",
+      "summary": "Expand creator-first resources, contextual guidance and discoverability beyond the existing production reader and first three guides.",
+      "details": "Covers backlog items 313–331. Resource Library base reader plus Recommendation, Analytics and Shorts-vs-Long-form guides are complete.",
+      "kind": "DOCUMENTATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "resource-library",
+        "user-guide"
+      ],
+      "capabilityIds": [],
+      "surfaces": [
+        "Resources",
+        "User Guide"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:313-331"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [
+        "PR #491",
+        "PR #492"
+      ],
+      "evidenceRefs": [
+        "ResourceLibrary.contract.test.tsx"
+      ],
+      "dependencies": [
+        "Creator-visible capabilities"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "resource library",
+        "creator guide",
+        "algorithm education",
+        "analytics education"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "MEDIUM",
+        "urgency": "LOW",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "Improves feature understanding and creator outcomes."
+      },
+      "relationship": "OVERLAPS",
+      "suggestedDestination": "User Guide / Resource Library authority",
+      "reviewStatus": "RECONCILED",
+      "disposition": "UPDATE_DOMAIN_AUTHORITY",
+      "targetRefs": [
+        "docs/user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "workflow recipes",
+        "contextual help",
+        "feature discovery",
+        "additional creator resources"
+      ],
+      "reviewNotes": "Remove generic 'build Resource Library' work; keep catalog/content expansion."
+    },
+    {
+      "itemId": "VT-CWI-020",
+      "title": "Deployment, public agent readiness and protocol discovery",
+      "summary": "Improve deployment verification plus public llms/agents/sitemap/OpenAPI/.well-known readiness.",
+      "details": "Covers backlog items 379–391.",
+      "kind": "INTEGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "deployment",
+        "agent-readiness"
+      ],
+      "capabilityIds": [
+        "CAP-VERIFICATION"
+      ],
+      "surfaces": [
+        "Public site",
+        "Deployment"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:379-391"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "D30 plan-only",
+        "Vercel rate-limit receipts"
+      ],
+      "dependencies": [
+        "Public site"
+      ],
+      "blockers": [
+        "Vercel free-plan deployment quota can obscure preview checks"
+      ],
+      "similarityKeys": [
+        "agent readiness",
+        "llms.txt",
+        "deployment verification",
+        "openapi"
+      ],
+      "value": {
+        "creatorImpact": "MEDIUM",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "Improves release evidence and public machine readability."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "Deployment authority + D30",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "D30",
+        "docs/deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md"
+      ],
+      "harvestedMaterial": [
+        "llms.txt",
+        "AGENTS discovery",
+        "sitemap/meta/JSON-LD",
+        "OpenAPI/well-known cleanup",
+        "production SHA confirmation"
+      ],
+      "reviewNotes": "Keep deployment quota as infrastructure constraint, not product failure."
+    },
+    {
+      "itemId": "VT-CWI-021",
+      "title": "Cross-system cleanup, duplicate authority and donor retirement",
+      "summary": "Harvest and retire duplicate Brain/evidence/assets/publisher/widgets/CSS/auth/analytics/docs implementations after parity.",
+      "details": "Covers backlog items 392–406.",
+      "kind": "CLEANUP",
+      "conversationState": "PLANNED",
+      "domains": [
+        "architecture",
+        "documentation",
+        "cleanup"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "surfaces": [
+        "Repository-wide"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:392-406"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "System convergence plan",
+        "Removed Archive governance"
+      ],
+      "dependencies": [
+        "Parity/reachability evidence"
+      ],
+      "blockers": [
+        "Cannot safely delete until no-loss and runtime checks"
+      ],
+      "similarityKeys": [
+        "duplicate owners",
+        "dead paths",
+        "legacy cleanup",
+        "archive"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Simplification prevents parallel state/logic from reappearing."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "System convergence + D28",
+      "reviewStatus": "RECONCILED",
+      "disposition": "MERGE_INTO_EXISTING_TASK",
+      "targetRefs": [
+        "D28",
+        "VT-043",
+        "VT-044",
+        "VT-048",
+        "tasks/system-convergence/"
+      ],
+      "harvestedMaterial": [
+        "Brain/evidence consolidation",
+        "publisher duplication",
+        "widget duplication",
+        "CSS overrides",
+        "legacy auth/analytics adapters",
+        "stale branches/docs"
+      ],
+      "reviewNotes": "Deletion remains gated by donor harvest, parity and rollback lineage."
+    },
+    {
+      "itemId": "VT-CWI-022",
+      "title": "Promo, demo and product presentation artifacts",
+      "summary": "Create real-UI promo modules and product demos using actual ViewTube systems.",
+      "details": "Covers backlog items 407–410. These are useful presentation opportunities but not core completion blockers.",
+      "kind": "IDEA",
+      "conversationState": "PLANNED",
+      "domains": [
+        "demos",
+        "marketing"
+      ],
+      "capabilityIds": [],
+      "surfaces": [
+        "Promo",
+        "Demo"
+      ],
+      "sourceRefs": [
+        "conversation-reconstructed-backlog:407-410"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [],
+      "dependencies": [
+        "Stable product surfaces"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "product promo",
+        "heygen",
+        "remotion demo",
+        "analytics promo"
+      ],
+      "value": {
+        "creatorImpact": "MEDIUM",
+        "systemLeverage": "LOW",
+        "urgency": "NONE",
+        "reusePotential": "MEDIUM",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "Useful for product presentation after core workflows stabilize."
+      },
+      "relationship": "NEW",
+      "suggestedDestination": "Idea/Opportunity registry",
+      "reviewStatus": "RECONCILED",
+      "disposition": "CREATE_OPPORTUNITY",
+      "targetRefs": [
+        "docs/demos/",
+        "ideas/registry.json"
+      ],
+      "harvestedMaterial": [
+        "12 analytics promo modules",
+        "20-second product promo",
+        "demo matrix",
+        "history-video reusable production workflow"
+      ],
+      "reviewNotes": "Keep as opportunity/reference; do not crowd the critical product backlog."
+    },
+    {
+      "itemId": "VT-CWI-023",
+      "title": "Current-main comparability and evidence convergence updates",
+      "summary": "Incorporate work landed after the original reconciliation baseline, including canonical metric comparability consumption and Brain evidence convergence.",
+      "details": "Main advanced 122 commits after the initial audit. VT-001 and VT-023 are now DONE. EvidenceRecord/derived-signal/Brain quality convergence also advanced and must shrink corresponding unfinished claims.",
+      "kind": "AUDIT",
+      "conversationState": "DISCOVERED",
+      "domains": [
+        "analytics",
+        "brain",
+        "documentation"
+      ],
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "surfaces": [
+        "Algorithm evaluation",
+        "Brain"
+      ],
+      "sourceRefs": [
+        "tasks/viewtube-one-goal-status.md",
+        "tasks/system-convergence/EVIDENCE-INTELLIGENCE-AUDIT.md"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [
+        "PR #511"
+      ],
+      "evidenceRefs": [
+        "VT-001 DONE",
+        "VT-023 DONE"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "current main refresh",
+        "comparability integration",
+        "evidence convergence"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "HIGH",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "SMALL",
+        "implementationRisk": "LOW",
+        "rationale": "Prevents freshly completed work from being reintroduced into the backlog."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "Current-main reconciliation audit",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ATTACH_RECEIPT_EVIDENCE",
+      "targetRefs": [
+        "tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md",
+        "VT-001",
+        "VT-023"
+      ],
+      "harvestedMaterial": [
+        "VT-024 remains open",
+        "refresh evidence-derived task states"
+      ],
+      "reviewNotes": "Audit baseline must move from 76519e3d to current main."
+    },
+    {
+      "itemId": "VT-CWI-024",
+      "title": "Current conversation backlog reconciliation mission",
+      "summary": "Continue the existing current-main backlog reconciliation mission using this conversation package as a governed source.",
+      "details": "The mission already exists on main. This conversation should become an intake package linked to it, not another program.",
+      "kind": "WORKFLOW",
+      "conversationState": "STARTED",
+      "domains": [
+        "documentation",
+        "task-index",
+        "conversation-os"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "surfaces": [
+        "Conversation Intake",
+        "Integrated Application"
+      ],
+      "sourceRefs": [
+        ".viewtube/exchange/missions/VT-MISSION-current-main-backlog-reconciliation.json"
+      ],
+      "changedPaths": [
+        "tasks/conversation-intake/"
+      ],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "reconciliation receipt recon-01"
+      ],
+      "dependencies": [
+        "Conversation handoff system"
+      ],
+      "blockers": [
+        "Task Index VNext writer unresolved"
+      ],
+      "similarityKeys": [
+        "conversation backlog reconciliation",
+        "current main backlog mission"
+      ],
+      "value": {
+        "creatorImpact": "CRITICAL",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "This is the governed path for integrating the user's remembered plans without duplication."
+      },
+      "relationship": "CONTINUATION",
+      "suggestedDestination": "VT-MISSION-current-main-backlog-reconciliation",
+      "reviewStatus": "RECONCILED",
+      "disposition": "UPDATE_EXISTING_PLAN",
+      "targetRefs": [
+        ".viewtube/exchange/missions/VT-MISSION-current-main-backlog-reconciliation.json",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "410-item range mapping",
+        "Settings evidence",
+        "new current-main completions",
+        "proper domain routing"
+      ],
+      "reviewNotes": "This item is the current execution thread."
+    }
+  ]
+}
