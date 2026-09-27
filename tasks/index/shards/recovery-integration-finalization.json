@@ -1,0 +1,2172 @@
+{
+  "schemaVersion": "viewtube.task-shard.v1",
+  "shardId": "recovery-integration-finalization",
+  "module": {
+    "id": "recovery-integration-finalization",
+    "title": "RECOVERY + INTEGRATION FINALIZATION",
+    "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+    "order": 10
+  },
+  "tasks": [
+    {
+      "id": "vt-2626",
+      "title": "Lock the recovered analytics branch as a recovery baseline",
+      "detail": "Preserve themotionvisual/fix/progress-visual-time-windows untouched as the known-good snapshot containing the recovered visual updates. Add a tag/backup branch so future cleanup cannot overwrite it.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 0
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2627",
+      "title": "Create a dedicated recovered-visuals cleanup branch",
+      "detail": "Branch from themotionvisual/fix/progress-visual-time-windows and make all repair/integration work there rather than modifying the recovery snapshot directly.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 1
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2628",
+      "title": "Perform final recovery-branch vs main audit",
+      "detail": "Produce a file-by-file and feature-by-feature comparison of progress-visual-time-windows against current main, categorized as same / recovery branch newer / main newer / conflicting / missing.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 2
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2629",
+      "title": "Recover only the desirable changes from the analytics branch into the application",
+      "detail": "Once the comparison is complete, selectively port the recovered visual changes rather than blindly merging the entire historical branch.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 3
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2630",
+      "title": "Verify Channel Progress recovery completely",
+      "detail": "Confirm Progress/Delta modes, candle-delta visualization, green/red signed changes, overlay/individual layouts, time-window handling and customized bucket labels all survive the final integration.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 4
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2631",
+      "title": "Verify Keyword Venn two-column Ranked By rail",
+      "detail": "Preserve the recovered grid-cols-2 Ranked By leader layout and make sure later styling/controller work does not revert it.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 5
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2632",
+      "title": "Verify Heat Matrix custom horizontal scrollbar",
+      "detail": "Preserve the 30px control, larger arrows, smooth track clicks, smooth arrow movement, draggable thumb and lock-timer behavior in the final application.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 6
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2633",
+      "title": "Fix the CSV uploader null-input crash",
+      "detail": "Resolve Cannot set properties of null (setting 'value') in the async VtSyncLocalAnalyticsPage upload handler by safely retaining/resetting the file input rather than accessing event.currentTarget after an async boundary.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 7
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2634",
+      "title": "Verify manual CSV imports populate Data Visuals end-to-end",
+      "detail": "Confirm uploaded CSV rows merge into the local snapshot and immediately feed charts, modules and tables without requiring connected-account sync.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 8
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2635",
+      "title": "Fix /api/account/snapshot failures in local/preview environments",
+      "detail": "Determine why local/Vercel Preview can return 500 or incomplete account state and make non-account-dependent analytics testing continue cleanly when account configuration is absent.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 9
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2636",
+      "title": "Stop Comment Responder duplicate metadata-fetch storms",
+      "detail": "Fix the repeated Fetching metadata for 506 missing videos... behavior. Deduplicate video IDs, cache in-flight/completed requests, prevent passive-effect reruns and only request genuinely unresolved metadata.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 10
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2637",
+      "title": "Add metadata-fetch batching/concurrency limits to Comment Responder",
+      "detail": "Large channel catalogs should be processed in bounded batches rather than triggering hundreds of requests or expensive state updates simultaneously.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 11
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2638",
+      "title": "Fix the Data Table requestAnimationFrame bottleneck",
+      "detail": "Investigate the VtSyncToolboxDataTable rAF handler taking ~100ms+ and remove unnecessary layout reads, repeated row measurements, DOM writes or whole-table recalculations.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 12
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2639",
+      "title": "Audit Data Table virtualization for very large datasets",
+      "detail": "Ensure 5,000+ row tables only render/measure visible rows and do not perform expensive work for offscreen data.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 13
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2640",
+      "title": "Complete the Master Data Table regression audit",
+      "detail": "Verify all earlier table fixes survived: real KPI-only summaries, no “Metric / Not available” cards, palette-colored collapsed groups, correct search styling, correct Longform/Shorts filter borders, toolbar palette, category palette and Videos as the default table.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 14
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2641",
+      "title": "Verify Channel table Engagement/Revenue group deduplication",
+      "detail": "Ensure netSubscribers lives inside Engagement and impressions inside Revenue without duplicated group headers.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 15
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2642",
+      "title": "Verify Channel totals card/playlist backfill logic",
+      "detail": "Preserve the logic that uses Daily data when undimensioned Channel totals incorrectly return missing/zero card and playlist-save metrics.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 16
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2643",
+      "title": "Audit tableRegistry/tableData/localSyncEngine mappings",
+      "detail": "Recheck the August VT-SYNC refactors so tables are drawing from the intended upstream dataset and no later work reverted mappings.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 17
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2644",
+      "title": "Remove remaining forced-reflow loops",
+      "detail": "Profile all repeated Forced reflow while executing JavaScript warnings and identify the components performing layout reads after synchronous DOM/style writes.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 18
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2645",
+      "title": "Preserve the optimized application scrollbar implementation",
+      "detail": "Keep rAF-coalesced syncing and avoid the old {subtree:true} MutationObserver behavior that caused analytics freezes.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 19
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2646",
+      "title": "Do not render the desktop application scrollbar on touch/mobile layouts",
+      "detail": "Keep the mobile scrollbar suppression introduced by the performance work and test it across iPhone/iPad sizes.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 20
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2647",
+      "title": "Audit content-visibility / offscreen analytics rendering",
+      "detail": "Ensure expensive Recharts and visual modules do not pay full layout/paint cost before entering or approaching the viewport.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 21
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2648",
+      "title": "Stop local/dev auth failures from endlessly retrying or spamming console/network",
+      "detail": "A missing/expired Google connection should enter a stable disconnected state rather than continually requesting google-proxy, comments or account state.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 22
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2649",
+      "title": "Prevent Comment Responder from auto-fetching protected YouTube data when disconnected",
+      "detail": "Gate passive metadata/comment fetches on verified account/auth state before issuing API calls.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 23
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2650",
+      "title": "Finish desktop/local Google popup auth cleanup",
+      "detail": "Mobile redirect handling was improved, but localhost still produces Cross-Origin-Opener-Policy ... window.closed warnings and LOGIN_ABORTED. Make the popup lifecycle resilient to COOP and detached-window behavior.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 24
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2651",
+      "title": "Handle LOGIN_ABORTED as a normal user-flow state",
+      "detail": "Avoid uncaught promise errors when the login window closes, the user cancels, the popup is blocked or authentication expires.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 25
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2652",
+      "title": "Compare claude/mobile-freezing-analytics-data-qwwof4 against recovery branch",
+      "detail": "Identify mobile/performance commits that should be selectively incorporated.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 26
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2653",
+      "title": "Compare codex/unified-account-auth-billing against recovery branch",
+      "detail": "Extract useful account/auth, diagnostics and later VT-SYNC/table fixes without replacing recovered analytics visuals.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 27
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2654",
+      "title": "Compare v0/perf/route-splitting-build-config against recovery branch",
+      "detail": "Determine whether route splitting, vendor chunking and related startup optimizations are still present or worth selectively porting.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 28
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2655",
+      "title": "Create a documented branch/commit recovery matrix",
+      "detail": "Record which branch/commit is authoritative for analytics visuals, mobile performance, auth, VT-SYNC/data tables and component-library work so this recovery problem does not happen again.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-integration-finalization",
+        "title": "RECOVERY + INTEGRATION FINALIZATION",
+        "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+        "order": 10,
+        "taskOrder": 29
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    }
+  ]
+}

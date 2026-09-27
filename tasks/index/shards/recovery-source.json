@@ -1,0 +1,3684 @@
+{
+  "schemaVersion": "viewtube.task-shard.v1",
+  "shardId": "recovery-source",
+  "module": {
+    "id": "recovery-source",
+    "title": "RECOVERY + SOURCE HEALTH",
+    "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+    "order": 0
+  },
+  "tasks": [
+    {
+      "id": "vt-1400",
+      "title": "Remove .DS_Store files from source",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 0
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2253",
+      "title": "Inventory possibly unused source files by resolving local imports instead of deleting candidates automatically",
+      "detail": "Create a static inventory script that lists possibly unused source files by resolving local imports instead of deleting candidates automatically",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 1
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2254",
+      "title": "Inventory possibly unused exported functions/types/components for manual review",
+      "detail": "Create a static inventory script that lists possibly unused exported functions/types/components for manual review",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 2
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2255",
+      "title": "Inventory Page/Route source files and flags likely unreferenced or unreachable pages",
+      "detail": "Create a page inventory script that discovers Page/Route source files and flags likely unreferenced or unreachable pages",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 3
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2256",
+      "title": "List routes with no visible navigation path",
+      "detail": "Create a route-versus-navigation audit that lists routes with no visible navigation path",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 4
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1487",
+      "title": "Audit registry entries against actual AppRoutes",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 5
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1382",
+      "title": "Preserve the uploaded working-tree state on a dedicated recovery branch before cleanup",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 6
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1383",
+      "title": "Commit or intentionally shelve uncommitted GraphsPageCharts changes",
+      "detail": "Commit or intentionally shelve the current uncommitted GraphsPageCharts changes",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 7
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1384",
+      "title": "Commit or intentionally shelve SubToolboxChartModule changes",
+      "detail": "Commit or intentionally shelve the current SubToolboxChartModule changes",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 8
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1385",
+      "title": "Commit or intentionally shelve TubeExplorerVisualModules changes",
+      "detail": "Commit or intentionally shelve the current TubeExplorerVisualModules changes",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 9
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1386",
+      "title": "Commit or intentionally shelve VisualModuleController changes",
+      "detail": "Commit or intentionally shelve the current VisualModuleController changes",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 10
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1387",
+      "title": "Review and preserve the untracked ViewTubeCartesian implementation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 11
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1388",
+      "title": "Review and preserve the untracked analyticsVisualContextStyle implementation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 12
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1389",
+      "title": "Build patch archive of uncommitted working tree",
+      "detail": "Create a patch archive of the current uncommitted working tree",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 13
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1390",
+      "title": "Compare root GraphsPageCharts.tsx against HEAD and active src version",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 14
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1391",
+      "title": "Compare root TubeExplorerVisualModules.tsx against HEAD and active src version",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 15
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1392",
+      "title": "Recreate the genuinely missing two-column Keyword Venn Ranked By layout",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 16
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1393",
+      "title": "Recover the deleted integrated Projects/Kanban implementation from Git history",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 17
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1394",
+      "title": "Compare recovered Projects/Kanban with ProjectCommandKanban and merge the best architecture",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 18
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1395",
+      "title": "Restore the useful deleted migration/governance documentation outside runtime src",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 19
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1396",
+      "title": "Create canonical-file registry for duplicated and historical implementations",
+      "detail": "Create one canonical-file registry for duplicated and historical implementations",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 20
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1225",
+      "title": "Audit every ViewTube-related Codex project and app",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 21
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1226",
+      "title": "Audit every ViewTube-related ChatGPT project and generated app",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 22
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1227",
+      "title": "Audit every ViewTube-related Claude project and generated app",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 23
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1228",
+      "title": "Audit every ViewTube-related Replit project and app",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 24
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1229",
+      "title": "Audit every ViewTube-related Base44 project and app",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 25
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1230",
+      "title": "Audit every ViewTube-related Antigravity project and app",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 26
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1397",
+      "title": "Go through every standalone ViewTube HTML file and previous full app version",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 27
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1398",
+      "title": "Maintain a permanent Prototype → Recover / Integrate / Certify / Archive ledger",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 28
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1399",
+      "title": "Remove ZIP archives from runtime src after their useful contents are inventoried",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 29
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1401",
+      "title": "Remove obsolete backup CSS and raw temporary reference files from runtime src",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 30
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1402",
+      "title": "Remove one-off Python repair scripts from runtime source after documenting anything still useful",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 31
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1403",
+      "title": "Remove zero-byte and abandoned generated files",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 32
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1404",
+      "title": "Remove duplicate helper utilities and dead source files after reachability review",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 33
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1405",
+      "title": "Remove unused dependencies after a dependency-usage audit",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 34
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1406",
+      "title": "Do not store or transfer node_modules as project state",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 35
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1407",
+      "title": "Make package-lock / lockfile the canonical dependency state",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 36
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1408",
+      "title": "Verify a clean npm ci install on macOS",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 37
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1409",
+      "title": "Verify a clean npm ci install on Linux CI",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 38
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1410",
+      "title": "Build current TypeScript error and build-time baseline",
+      "detail": "Create a current TypeScript error and build-time baseline",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 39
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1411",
+      "title": "Adopt a zero-new-TypeScript-errors rule",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 40
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1412",
+      "title": "Break oversized source files into maintainable modules where necessary",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 41
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1413",
+      "title": "Re-enable / strengthen source-governance checks that reject archives and temporary files inside src",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 42
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1414",
+      "title": "Create CI checks for source-tree hygiene",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 43
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2257",
+      "title": "Build visual/component inventory script that discovers hidden Chart / Visual / Graph / Heatmap / Network / Radar / Matrix / Scatter / Treemap / Sankey implementations",
+      "detail": "Create a visual/component inventory script that discovers hidden Chart / Visual / Graph / Heatmap / Network / Radar / Matrix / Scatter / Treemap / Sankey implementations",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 44
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2258",
+      "title": "Generate a permanent cleanup report that classifies each unused-code/page candidate as production / hidden intentional / prototype / archive / safe-to-remove",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 45
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2379",
+      "title": "Inventory every HTML file in the repository, archives, prototypes, references, exports, visual experiments, widget ideas, and legacy folders",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 46
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2380",
+      "title": "Categorize all HTML files into Production / Reference / Prototype / Widget Idea / Visual Experiment / Documentation / Archive / Safe-to-Delete",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 47
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2381",
+      "title": "Reorganize HTML files and folders into a predictable reference-library structure without breaking live imports or build paths",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 48
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2382",
+      "title": "Build HTML catalog/index that records file title, category, purpose, status, preview path, related production component, and whether it has been integrated",
+      "detail": "Create an HTML catalog/index that records file title, category, purpose, status, preview path, related production component, and whether it has been integrated",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 49
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2383",
+      "title": "Detect duplicate or near-duplicate HTML prototypes and mark the strongest version as canonical before archiving the rest",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "recovery-source",
+        "title": "RECOVERY + SOURCE HEALTH",
+        "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+        "order": 0,
+        "taskOrder": 50
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    }
+  ]
+}

@@ -1,0 +1,2244 @@
+{
+  "schemaVersion": "viewtube.task-shard.v1",
+  "shardId": "audience-analytics",
+  "module": {
+    "id": "audience-analytics",
+    "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+    "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+    "order": 7
+  },
+  "tasks": [
+    {
+      "id": "vt-1560",
+      "title": "Preserve the existing Google Search Console API client",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 0
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 3,
+        "label": "Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1561",
+      "title": "Preserve the legacy Search Console sync logic as migration reference",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 1
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 2,
+        "label": "Nearly Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1562",
+      "title": "Migrate Search Console queries/pages/dates/devices/countries into canonical ingestion",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 2
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1563",
+      "title": "Store Search Console clicks, impressions, CTR, and average position canonically",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 3
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1564",
+      "title": "Bind Search Console properties cleanly to ViewTube channels/projects",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 4
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1565",
+      "title": "Preserve the existing GA4 service foundation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 5
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 3,
+        "label": "Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1566",
+      "title": "Promote GA4 to a first-class canonical external ingest source",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 6
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1567",
+      "title": "Add GA4 property selection and binding",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 7
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1568",
+      "title": "Canonicalize GA4 traffic sources, landing pages, audience, and conversion signals where appropriate",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 8
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1569",
+      "title": "Correlate website traffic with YouTube publishing events",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 9
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1570",
+      "title": "Correlate YouTube traffic with downstream website behavior where data permits",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 10
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1571",
+      "title": "Normalize GA4 and Search Console timezones/freshness",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 11
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1356",
+      "title": "Explore Google Trends integration for topic-demand context",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 12
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1572",
+      "title": "Build External Discovery dashboard combining YouTube Search, Google Search, GA4, and trend signals",
+      "detail": "Create an External Discovery dashboard combining YouTube Search, Google Search, GA4, and trend signals",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 13
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1573",
+      "title": "Add external-source provenance badges throughout analytics",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 14
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1629",
+      "title": "Preserve the existing traffic-source data mappings and visual modules",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 15
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 2,
+        "label": "Nearly Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1630",
+      "title": "Finish canonical traffic source overview and detailed subtypes",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 16
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1631",
+      "title": "Finish daily traffic-source table with expandable days and mobile presentation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 17
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1632",
+      "title": "Finish YouTube Search terms, external URLs/apps, suggested source videos, playlist sources, and browse subtypes",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 18
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1633",
+      "title": "Finish format × traffic-source and format × playback-location analysis where supported",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 19
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1634",
+      "title": "Preserve existing demographic data/visualization work",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 20
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 2,
+        "label": "Nearly Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1635",
+      "title": "Finish channel-wide and supported daily demographics",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 21
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1636",
+      "title": "Finish age × gender sunburst and supporting tables",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 22
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1637",
+      "title": "Finish subscription status and viewer-behavior analysis",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 23
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1638",
+      "title": "Finish new / returning / unique viewer analysis",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 24
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1639",
+      "title": "Preserve existing country/state/DMA mapping work",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 25
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 2,
+        "label": "Nearly Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1640",
+      "title": "Finish country, state/province, DMA, region, and continent aggregation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 26
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1641",
+      "title": "Resolve and certify city analytics behavior",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 27
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1642",
+      "title": "Use State display naming consistently instead of province_country",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 28
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1643",
+      "title": "Preserve ZZ / Unknown geography behavior",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 29
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 2,
+        "label": "Nearly Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1644",
+      "title": "Finish geography maps, rankings, and time trends",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "audience-analytics",
+        "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+        "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+        "order": 7,
+        "taskOrder": 30
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    }
+  ]
+}

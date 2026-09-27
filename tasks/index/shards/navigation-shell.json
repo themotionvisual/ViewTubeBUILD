@@ -1,0 +1,2820 @@
+{
+  "schemaVersion": "viewtube.task-shard.v1",
+  "shardId": "navigation-shell",
+  "module": {
+    "id": "navigation-shell",
+    "title": "NAVIGATION + APPLICATION SHELL",
+    "subtitle": "Make every production destination easy to find, understand, and resume.",
+    "order": 4
+  },
+  "tasks": [
+    {
+      "id": "vt-2281",
+      "title": "Reduce persistent top navigation to core work surfaces and move Settings/User Guide administrative/help destinations into the application menu",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 0
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2282",
+      "title": "Group dropdown destinations by user intent: Continue Working / Create / Understand & Grow / Account & App / Help",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 1
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2284",
+      "title": "Expose live channel identity, connection/sync state, plan, AI credit tank, and one context-aware Connect/Refresh action in the dropdown header",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 2
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2285",
+      "title": "Move Dashboard-specific Rearrange / Lock / Add-Hide / Import / Export / Reset controls out of the global account menu and into an explicit Dashboard Customize surface",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 3
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2287",
+      "title": "Expose current user-facing destinations such as Research / Advanced Analytics(Graphs) / Data & Privacy while keeping Reference Studio, render benches, audits, and internal routes hidden",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 4
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2291",
+      "title": "Give every destination a short description explaining what the user can accomplish there",
+      "detail": "Give every destination a short user-facing description explaining what the user can accomplish there",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": true,
+      "quickWinSource": "legacy-default",
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 5
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1485",
+      "title": "Preserve the existing AdaptiveNavigationShell and multi-layout navigation foundation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 6
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 3,
+        "label": "Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1486",
+      "title": "Preserve the existing SuperTool registry as a foundation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 7
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 3,
+        "label": "Finished",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1490",
+      "title": "Classify each existing view as reachable-production / reachable-prototype / source-only / archive",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 8
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1491",
+      "title": "Integrate the existing SidebarChatbot source into the production shell",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 9
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1492",
+      "title": "Connect the navigation chatbot to Creator Brain context",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 10
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1493",
+      "title": "Teach the navigation chatbot the canonical tool, route, metric, video, project, and dataset registry",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 11
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1494",
+      "title": "Allow natural-language navigation to tools and pages",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 12
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1495",
+      "title": "Allow the chatbot to open a selected video/project/tool context directly",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 13
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1496",
+      "title": "Make the chatbot aware of route and selected entities",
+      "detail": "Make the chatbot aware of the current route and selected entities",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 14
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1497",
+      "title": "Let the chatbot explain where a metric or feature lives",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 15
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1498",
+      "title": "Integrate global search across tools, videos, projects, assets, notes, datasets, and help",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 16
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1499",
+      "title": "Add recent items and favorites to navigation/search",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 17
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-1500",
+      "title": "Make every major source-only production candidate either reachable or explicitly archived",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 18
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2066",
+      "title": "Make every normal route navigation load at the top of the destination page by default",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 19
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2067",
+      "title": "Define explicit scroll-preservation exceptions for browser Back/Forward, anchor/deep links, modal returns, and intentional resume-state workflows",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 20
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2068",
+      "title": "Build central ScrollRestorationController instead of letting individual pages implement conflicting scroll behavior",
+      "detail": "Create a central ScrollRestorationController instead of letting individual pages implement conflicting scroll behavior",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 21
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2069",
+      "title": "Add smooth decelerating glide/easing transition to the primary ViewTube scrollbar and programmatic scroll-to-top behavior",
+      "detail": "Add a smooth decelerating glide/easing transition to the primary ViewTube scrollbar and programmatic scroll-to-top behavior",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 22
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2070",
+      "title": "Make scrollbar glide duration scale naturally with distance so short moves do not feel sluggish and long moves do not snap",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 23
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2071",
+      "title": "Respect prefers-reduced-motion by disabling or simplifying scrollbar glide animation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 24
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2072",
+      "title": "Test route-top behavior with nested scroll containers, sticky headers, mobile navigation, and deep-linked visuals",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 25
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2073",
+      "title": "Add Blank Workspace route where a user can place any toolbox, visual, widget, KPI group, notes panel, or saved workflow",
+      "detail": "Add a Blank Workspace route where a user can place any toolbox, visual, widget, KPI group, notes panel, or saved workflow",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 26
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2074",
+      "title": "Let Blank Workspace layouts be named, duplicated, saved, reset, and set as a personal landing page",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 27
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2279",
+      "title": "Redesign the account/channel dropdown from a mostly settings-oriented menu into a user-facing ViewTube command/navigation center",
+      "detail": "Redesign the account/channel dropdown from a mostly settings-oriented menu into a user-facing ViewTube application command/navigation center",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 28
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2280",
+      "title": "Create canonical application-destination registry that drives top navigation, account dropdown, mobile drawer, navigation search, onboarding, and command palette",
+      "detail": "Create one canonical application-destination registry that drives top navigation, account dropdown, mobile drawer, navigation search, onboarding, and command palette",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 29
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2283",
+      "title": "Add real Continue Working shortcuts for recent project, recent Studio tool, recent analysis/editor state, and other resumable work",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 30
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2286",
+      "title": "Make Studio discoverable from the dropdown with useful descriptions plus recent/favorite/popular tool shortcuts without dumping every Studio toolbox into global navigation",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 31
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2289",
+      "title": "Add local/fuzzy navigation search to the dropdown with aliases for tools, metrics, visuals, projects, help, settings, and common user language",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 32
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2290",
+      "title": "Use the same canonical navigation groups and destination registry for the mobile drawer instead of maintaining an impoverished mobile-only link list",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 33
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2292",
+      "title": "Keep navigation focused on the ViewTube product model rather than exposing source-tree architecture or every route that happens to exist",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 34
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2371",
+      "title": "Make Video Editor appear exactly once in the canonical application destination registry with one production path and consistent label/icon/description",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 35
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2372",
+      "title": "Add Continue Working support for the most recently edited video project so users can return directly to the same editor project/context",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 36
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2373",
+      "title": "Ensure Editor navigation from mobile drawer, desktop top nav/dropdown, Studio Hub, Projects, and tool-pair suggestions resolves to the same canonical route",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 37
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 1,
+        "label": "Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2464",
+      "title": "Define logged-out route behavior for every production destination: demo/preview, sign-in gate, redirect, or unavailable state",
+      "detail": null,
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "navigation-shell",
+        "title": "NAVIGATION + APPLICATION SHELL",
+        "subtitle": "Make every production destination easy to find, understand, and resume.",
+        "order": 4,
+        "taskOrder": 38
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    }
+  ]
+}

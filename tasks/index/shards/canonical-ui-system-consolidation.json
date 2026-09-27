@@ -1,0 +1,3612 @@
+{
+  "schemaVersion": "viewtube.task-shard.v1",
+  "shardId": "canonical-ui-system-consolidation",
+  "module": {
+    "id": "canonical-ui-system-consolidation",
+    "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+    "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+    "order": 11
+  },
+  "tasks": [
+    {
+      "id": "vt-2656",
+      "title": "Turn the standalone component library into an actual application source of truth",
+      "detail": "The HTML master library is now useful for comparison, but the final canonical components still need to be implemented/reused inside the React application instead of remaining a reference artifact.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 0
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2657",
+      "title": "Finalize the ViewTube component taxonomy",
+      "detail": "Adopt the organized families from the latest master library: Foundations, Buttons, Toggles, Tooltips, Badges/Tags, Inputs, KPI/Cards, Scrollbars, Navigation, Toolboxes, Thumbnail/Vault modules, Widgets, Charts, Tables, Media controls, Editor and Feedback states.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 1
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2658",
+      "title": "Standardize MainToolbox / SubToolbox / MiniToolbox / MicroToolbox hierarchy",
+      "detail": "Make the React application consistently use the intended hierarchy instead of several competing shell implementations.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 2
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2659",
+      "title": "Apply canonical hierarchy stroke/shadow rules globally",
+      "detail": "Level-1 surfaces should use the established 4px / 6px treatment and inner/subtoolbox surfaces the 3px / 4px treatment where appropriate.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 3
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2660",
+      "title": "Standardize the canonical WidgetShell",
+      "detail": "Consolidate dashboard widgets around the 3px color-darkened exterior border, 40px header/icon rail and color-matched shadow system instead of allowing individual widgets to recreate shell styling.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 4
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2661",
+      "title": "Integrate SubtoolboxComponentSet into the application design system",
+      "detail": "Promote the Action, Toggle, expandable Dropdown and Status Strip rail controls into reusable React primitives rather than leaving them isolated in the reference files.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 5
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2662",
+      "title": "Consolidate all button implementations",
+      "detail": "Merge normal, primary/secondary, icon, large, split, WidgetAction, button-group, toolbar, editor and tactile button variants under a documented API while retaining intentional visual variants.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 6
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2663",
+      "title": "Consolidate all toggle/switch implementations",
+      "detail": "Bring Radix switches, WidgetSwitch, SubToolbox toggle, native-style toggles, checkbox/radio and tactile variants into a coherent control family.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 7
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2664",
+      "title": "Consolidate all tooltip systems",
+      "detail": "Reconcile LibraryTooltip, Tooltip.tsx, WidgetTooltip variants, hover cards, chart tooltips and specialized tooltip layouts so each has a defined purpose instead of overlapping implementations.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 8
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2665",
+      "title": "Consolidate badge/tag systems",
+      "detail": "Standardize semantic badges, Radix badges, status pills, WidgetTag and the Vault rainbow A→Z spectrum tag system while preserving their differing use cases.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 9
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2666",
+      "title": "Consolidate input/form styling",
+      "detail": "Adopt the canonical ViewTube input/textarea/select/focus rules throughout the app and remove components that still use unrelated browser/default styling.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 10
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2667",
+      "title": "Finalize KPI card system",
+      "detail": "Merge KPIStatCard, Standard KPI, WidgetMetric and analytics KPI strip patterns into documented size/context variants using the shared palette and delta treatment.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 11
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2668",
+      "title": "Replace browser-native-looking scrollbar demos/components",
+      "detail": "The real application/reference system should use the intended ViewTube scrollbar treatments where custom scrollbars are called for, not generic native-looking controls.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 12
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2669",
+      "title": "Finalize the 8-scrollbar design family",
+      "detail": "Decide where Solid Accent, Crisp White, Dual Tone, Ridged, Hazard, Double Inset, Inverted Split and Tinted Plate styles are appropriate and convert reusable ones into real components/utilities.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 13
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2670",
+      "title": "Standardize specialized scrollbar contexts",
+      "detail": "Keep separate intentional treatments for app desktop, Brain Chat, Thermal Imaging, scrollless bounded panels and mobile.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 14
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2671",
+      "title": "Finalize the Vault/Thumbnail module system in React",
+      "detail": "Integrate the complete landscape, portrait, square, audio and document permutations from the standalone/reference library into the actual Vault/asset components.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 15
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2672",
+      "title": "Preserve exact thumbnail aspect ratios everywhere",
+      "detail": "Verify 16:9, 9:16 and 1:1 media areas do not stretch or resize differently between module variants.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 16
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2673",
+      "title": "Finalize Vault module header/editing behavior",
+      "detail": "Confirm editable titles, black caret, selected-header transparency, matching corner selection radius, checkbox alignment and no title/header scrollbars.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 17
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2674",
+      "title": "Finalize Vault Notes behavior",
+      "detail": "Keep the uppercase NOTES: label, edit/save state, correct save-color mixing and overflow behavior.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 18
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2675",
+      "title": "Finalize Vault rainbow tag behavior",
+      "detail": "Implement alphabetical placement, A→Z color progression, add/select/remove/edit states and correct small badge geometry consistently across every asset layout.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 19
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2676",
+      "title": "Standardize the Vault play control",
+      "detail": "Preserve the pink/white bordered play control size and icon treatment across landscape, portrait and square modules.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 20
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2677",
+      "title": "Audit all dashboard widgets against toolboxWidgetSystem.css",
+      "detail": "Several widgets have genuinely specialized body layouts. Ensure Image Generator, Community Post, Goals Tracker, App Verification, Keyword Engine, Channel Overview and other specialized widgets are not being reduced to generic WidgetShell bodies.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 21
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2678",
+      "title": "Build the remaining specialized widget interiors from canonical CSS",
+      "detail": "The stylesheet contains many widget-specific structures beyond the handful currently recreated in the standalone library; convert those into actual application components.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 22
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2679",
+      "title": "Audit WidgetPrimitives.tsx usage across dashboard widgets",
+      "detail": "Replace one-off controls with canonical WidgetActionButton, WidgetSplitButton, WidgetSwitch, WidgetField, WidgetTag, WidgetStepTabs, WidgetDropzone, WidgetMetric, WidgetStatePanel, WidgetDisclosure and scroll primitives where appropriate.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 23
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2680",
+      "title": "Integrate Reference Studio primitives into the actual component/reference workspace",
+      "detail": "MainToolbox, SectionCard, SourceFrame, PillList, MetricTile and related reference components should be actual reusable app components, not only a standalone showcase.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 24
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2681",
+      "title": "Finish MiniToolboxLab integration",
+      "detail": "Decide which SubToolbox → MiniToolbox → MicroToolbox compositions are canonical and apply them to the real ViewTube tool hierarchy.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 25
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2682",
+      "title": "Integrate NativeUIKit selectively",
+      "detail": "Audit its exported demo families and promote useful components into the shared UI system rather than importing the entire experimental set indiscriminately.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 26
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2683",
+      "title": "Create a canonical ChartContainer/Tooltip/Legend layer",
+      "detail": "Standardize the shared chart.tsx primitives while allowing each visualization to retain its own composition.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 27
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2684",
+      "title": "Audit all GraphsPageCharts modules for final design fidelity",
+      "detail": "The recovered Graphs Page includes many unique visualizations; verify the application version matches the desired SVG/layout/controller designs rather than simplified substitutes.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 28
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2685",
+      "title": "Audit all TubeExplorer visual modules for final design fidelity",
+      "detail": "Preserve distinct experimental chart families such as Waterfall, Chrono Spiral, DNA Gel, Waveform, Orbital, Thermal, Barcode, Bubble Universe, Retention Atlas, Sankey/River, Beeswarm, calendar signatures, maps and network diagrams.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 29
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2686",
+      "title": "Create a chart/module controller standard",
+      "detail": "Reconcile VisualModuleController, RankedByRow, time-window controls, metric selectors, format filters and visualization-specific controller rows under one reusable API.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 30
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2687",
+      "title": "Finalize the RankedByRow system",
+      "detail": "Ensure all eligible charts use the newer reusable controller rather than native selects or one-off dropdown implementations.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 31
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2688",
+      "title": "Integrate VT_E1 editor UI system into the component standard",
+      "detail": "Timeline toolbar, media/settings modules, color swatches, tool menus and editor buttons should use the same shared ViewTube primitives where practical.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 32
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2689",
+      "title": "Finalize VT_E1 Shorts reframing system",
+      "detail": "Crop frame, split frame, 9:16 output monitor, safe zones, source/output stages, scrubber and reframing controls still need application-level polish and integration.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 33
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2690",
+      "title": "Finalize VT_E1 timeline visual system",
+      "detail": "Clips, tracks, sticky labels, ruler, segments, keyframes and playhead should be standardized and responsive.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 34
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2691",
+      "title": "Standardize Sidebar primitives",
+      "detail": "Consolidate Sidebar provider, rail, groups, menu buttons, badges, submenus, mobile overlay and skeleton states into the shared navigation system.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 35
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2692",
+      "title": "Build an in-app Component Catalog / Reference Studio route",
+      "detail": "Move the useful portions of the standalone master component HTML into an application route where actual React components can be viewed, tested and compared.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 36
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2693",
+      "title": "Make the Component Catalog render real React components, not screenshots/recreations",
+      "detail": "Each catalog entry should import the production component so the reference library always reflects the application automatically.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 37
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2694",
+      "title": "Add component-family filtering/search to the in-app catalog",
+      "detail": "Buttons, toggles, tooltips, modules, charts, widgets, etc. should be directly searchable and filterable.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 38
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2695",
+      "title": "Add source/component provenance to the catalog",
+      "detail": "Show canonical component name, production file, experimental alternatives and whether a component is Canonical / Legacy / Experimental / Deprecated.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 39
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2696",
+      "title": "Create a deprecation plan for duplicate component implementations",
+      "detail": "Once families are consolidated, identify duplicate or obsolete button/toggle/tooltip/widget/module CSS and React implementations and remove them gradually.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 40
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2697",
+      "title": "Create shared design tokens instead of repeated hard-coded values",
+      "detail": "Centralize ViewTube palette colors, strokes, radii, shadows, control heights, hierarchy dimensions and typography so the different systems cannot drift again.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 41
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2698",
+      "title": "Resolve CSS cascade conflicts between global UI and dashboard-barrier UI",
+      "detail": "Ensure global input/button/scrollbar rules do not unintentionally leak into chart interiors, widgets, Vault modules or editor surfaces.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 42
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2699",
+      "title": "Complete chart-interior CSS isolation audit",
+      "detail": "Verify SVGs, Recharts controls, inputs and legends inside .vt-chart-interior are protected from unrelated toolbox styling without suppressing intentional visual effects.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 43
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2700",
+      "title": "Run full mobile QA on the consolidated component system",
+      "detail": "Test the real application at narrow iPhone widths for horizontal overflow, touch target sizing, toolbar wrapping, module stacking, custom controls and hidden scrollbar behavior.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 44
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2701",
+      "title": "Run performance QA after component consolidation",
+      "detail": "Recheck forced-reflow warnings, rAF duration, React rerenders and initial-load bundle size after replacing duplicate implementations with shared components.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 45
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2702",
+      "title": "Build visual regression screenshots for canonical components",
+      "detail": "Capture approved reference images for buttons, controls, toolboxes, asset modules, widgets and major charts so future changes can be compared automatically.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 46
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2703",
+      "title": "Create a final “ViewTube UI Canonical Specification” document",
+      "detail": "Record the approved component families, hierarchy rules, palette, stroke/shadow rules, mobile behavior and which variants are canonical versus experimental.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 47
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2704",
+      "title": "Move approved standalone-library designs into production incrementally",
+      "detail": "Treat the organized master HTML as a selection/reference artifact only; each approved family still needs to be deliberately migrated into the actual application.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 48
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    },
+    {
+      "id": "vt-2705",
+      "title": "Delete/archive temporary standalone-library iterations after canonicalization",
+      "detail": "Once the final master system is represented in React, archive Current, Complete, VisualSystems, SourceTrue, ALL_Added, etc. so future work does not accidentally use an obsolete version as the reference.",
+      "kind": null,
+      "lifecycle": null,
+      "health": [],
+      "priority": null,
+      "quickWin": false,
+      "quickWinSource": null,
+      "owner": null,
+      "domains": [],
+      "masterTools": [],
+      "programs": [],
+      "capabilities": [],
+      "creatorLifecycle": [],
+      "module": {
+        "id": "canonical-ui-system-consolidation",
+        "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+        "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+        "order": 11,
+        "taskOrder": 49
+      },
+      "maturity": null,
+      "acceptance": [],
+      "verificationProfile": {
+        "required": [],
+        "optional": []
+      },
+      "evidenceRefs": [],
+      "relationships": {
+        "parent": [],
+        "children": [],
+        "requires": [],
+        "blocks": [],
+        "relatedTo": [],
+        "duplicateOf": [],
+        "mergedInto": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "splitFrom": [],
+        "implementsCapability": [],
+        "verifies": [],
+        "discoveredBy": [],
+        "derivedFrom": []
+      },
+      "sourceRefs": [
+        {
+          "type": "LEGACY_TASK_INDEX",
+          "source": "ViewTube-Task-Index(5).html",
+          "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b"
+        }
+      ],
+      "legacyStatusClaim": {
+        "code": 0,
+        "label": "Not Started",
+        "assessment": "CLAIMED",
+        "source": "ViewTube-Task-Index(5).html",
+        "importedAt": "2026-09-27"
+      },
+      "legacyContext": null,
+      "reconciliationRequired": true,
+      "nextAction": {
+        "kind": "RECONCILE",
+        "description": "Reconcile this legacy task against current main, governing authorities, active missions/PRs, and evidence before assigning canonical lifecycle."
+      },
+      "historyRefs": [
+        "HIST-LEGACY-IMPORT-2026-09-27"
+      ],
+      "createdAt": null,
+      "updatedAt": "2026-09-27"
+    }
+  ]
+}
