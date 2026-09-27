@@ -12,8 +12,13 @@
         "CAP-OUTCOME-LEARNING"
       ],
       "survivor": "docs/domains/BRAIN.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-ANALYTICS",
@@ -23,8 +28,13 @@
         "CAP-EVIDENCE-INTELLIGENCE"
       ],
       "survivor": "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-PROJECTS",
@@ -33,8 +43,13 @@
         "CAP-PROJECT-CONTENT-IDENTITY"
       ],
       "survivor": "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-ASSET-VAULT",
@@ -43,8 +58,13 @@
         "CAP-ASSET-LINEAGE"
       ],
       "survivor": "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-EDITOR-REMOTION",
@@ -54,8 +74,13 @@
         "CAP-CREATOR-OPERATIONS"
       ],
       "survivor": "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-WIDGETS",
@@ -64,8 +89,13 @@
         "CAP-WIDGET-SURFACES"
       ],
       "survivor": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-TOOLBOX",
@@ -75,8 +105,13 @@
         "CAP-VERIFICATION"
       ],
       "survivor": "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-PUBLISHING",
@@ -87,8 +122,13 @@
         "CAP-ASSET-LINEAGE"
       ],
       "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-DOCS-AGENTS",
@@ -98,8 +138,13 @@
         "CAP-VERIFICATION"
       ],
       "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     },
     {
       "id": "PLAN-FAMILY-MOBILE-RESPONSIVE",
@@ -110,8 +155,13 @@
         "CAP-VERIFICATION"
       ],
       "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
-      "members": [],
-      "status": "ACTIVE"
+      "members": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "status": "RECONCILING"
     }
   ]
 }
