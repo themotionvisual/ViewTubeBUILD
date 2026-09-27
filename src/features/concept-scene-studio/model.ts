@@ -39,6 +39,7 @@ export interface ProductionScene {
  camera: string
  visualPrompt: string
  assetNeeds: string[]
+ motionBrief: string
  durationSeconds: number
  transition: string
  continuity: string
@@ -170,6 +171,7 @@ export const createScenesFromConcept = (
    camera,
    visualPrompt: `Create scene ${sceneNumber} for “${concept.angle}”. ${concept.visualLanguage} ${camera} Tone: ${clean(brief.tone, "cinematic")}. Preserve factual clarity and continuity with adjacent scenes.`,
    assetNeeds,
+   motionBrief: `Animate only what clarifies ${purpose.toLowerCase()} Use restrained parallax, motivated graphic reveals, and movement consistent with ${camera.toLowerCase()}`,
    durationSeconds,
    transition: index === count - 1 ? "End hold / resolve" : role === "PIVOT" ? "Motivated reveal cut" : "Evidence-matched cut",
    continuity: `Maintain the selected ${concept.label.toLowerCase()} visual language, palette, subject identity, geography, and evidence boundaries.`,
@@ -210,6 +212,7 @@ export const buildProductionHandoff = (
     visualPrompt: scene.visualPrompt,
     camera: scene.camera,
     transition: scene.transition,
+    motionBrief: scene.motionBrief,
    })),
   },
   videoDirector: {
@@ -223,6 +226,8 @@ export const buildProductionHandoff = (
     shot: scene.shot,
     camera: scene.camera,
     prompt: scene.visualPrompt,
+    motionBrief: scene.motionBrief,
+    assetNeeds: scene.assetNeeds,
     durationSeconds: scene.durationSeconds,
    })),
   },
