@@ -40,9 +40,9 @@ Historical documents may retain lineage references only if those links remain re
 
 ## Active rewires required before archive
 
-1. `agent/registry/references.md` — stop presenting the September 11 unfinished master as a current task-index source; point task state to Task Authority / current task projection and keep the donor only as historical/reference lineage.
-2. `tasks/viewtube-finish-program/todo.md` — replace its architecture source pointer with `docs/programs/INTEGRATED_APPLICATION.md` while retaining the dated program as donor provenance.
-3. `tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md` — after the archive move, reference the consolidation manifest / archived source rather than the active root path.
+1. [x] `agent/registry/references.md` — rewired to Task Authority / current governance; the September 11 file remains donor lineage only.
+2. [x] `tasks/viewtube-finish-program/todo.md` — rewired to `docs/programs/INTEGRATED_APPLICATION.md` and explicitly demoted to a transition/alias projection.
+3. [ ] `tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md` — after the archive move, reference the consolidation manifest / archived source rather than the active root path.
 
 ## Intentional lineage
 
@@ -53,7 +53,7 @@ Historical documents may retain lineage references only if those links remain re
 - [x] source family inventoried;
 - [x] unique task/program/idea/governance/reference material has a destination;
 - [x] inbound references discovered and classified;
-- [ ] active references rewired;
+- [ ] active references rewired — 2 of 3 immediate rewires complete; final audit link waits for archive destination;
 - [ ] historical references updated to archive/manifest destinations;
 - [ ] source bytes copied to Removed Archive;
 - [ ] registry/archive index updated;
