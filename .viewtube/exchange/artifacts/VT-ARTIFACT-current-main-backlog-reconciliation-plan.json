@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "viewtube.artifact-record.v1",
+  "artifactId": "VT-ARTIFACT-current-main-backlog-reconciliation-plan",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "taskIds": [],
+  "title": "Current-main backlog reconciliation plan",
+  "type": "plan",
+  "status": "CANONICAL",
+  "source": "docs/programs/INTEGRATED_APPLICATION.md#current-main-backlog-reconciliation-plan",
+  "canonicalTarget": "docs/programs/INTEGRATED_APPLICATION.md",
+  "producedBy": "viewtube-document-system",
+  "verified": false,
+  "notes": [
+    "Reconciled against main 76519e3d81f33df4a3084f49a369f5edbb1ee937.",
+    "The program section is canonical for cross-system sequencing; exact work status remains Task Authority.",
+    "Dated audits and conversation summaries remain donor/evidence sources until item-by-item reconciliation completes."
+  ]
+}
