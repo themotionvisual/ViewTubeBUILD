@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "viewtube.capability-homes.v1",
+  "lastEdited": "2026-09-27",
+  "source": "docs/architecture/capabilities.json",
+  "homes": [
+    {
+      "id": "HOME-CAP-CREATOR-CONTEXT",
+      "capabilityId": "CAP-CREATOR-CONTEXT",
+      "path": "docs/capabilities/creator-context.md",
+      "owner": "Creator Context & Knowledge",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-CREATOR-CONTEXT"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-EVIDENCE-INTELLIGENCE",
+      "capabilityId": "CAP-EVIDENCE-INTELLIGENCE",
+      "path": "docs/capabilities/evidence-intelligence.md",
+      "owner": "Evidence & Intelligence",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI",
+        "PLAN-FAMILY-ANALYTICS"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-EVIDENCE"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-PROJECT-CONTENT-IDENTITY",
+      "capabilityId": "CAP-PROJECT-CONTENT-IDENTITY",
+      "path": "docs/capabilities/project-content-identity.md",
+      "owner": "Projects + ContentBuild",
+      "authority": "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-PROJECTS",
+        "PLAN-FAMILY-PUBLISHING"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-PROJECT"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-ASSET-LINEAGE",
+      "capabilityId": "CAP-ASSET-LINEAGE",
+      "path": "docs/capabilities/asset-lineage.md",
+      "owner": "Asset Engine",
+      "authority": "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT",
+        "PLAN-FAMILY-PUBLISHING"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-ASSET"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-CREATOR-OPERATIONS",
+      "capabilityId": "CAP-CREATOR-OPERATIONS",
+      "path": "docs/capabilities/creator-operations.md",
+      "owner": "Creator Operations & Generation",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-EDITOR-REMOTION"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-OPERATIONS"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-OUTCOME-LEARNING",
+      "capabilityId": "CAP-OUTCOME-LEARNING",
+      "path": "docs/capabilities/outcome-learning.md",
+      "owner": "Outcomes, Evaluation & Learning",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-OUTCOME"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-BRAIN-EXPERIENCE",
+      "capabilityId": "CAP-BRAIN-EXPERIENCE",
+      "path": "docs/capabilities/brain-experience.md",
+      "owner": "Brain Runtime",
+      "authority": "docs/domains/BRAIN.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-BRAIN"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-ANALYTICS-CANON",
+      "capabilityId": "CAP-ANALYTICS-CANON",
+      "path": "docs/capabilities/analytics-canon.md",
+      "owner": "VT-SYNC + analytics-canon",
+      "authority": "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-ANALYTICS"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-EDITOR-RENDER",
+      "capabilityId": "CAP-EDITOR-RENDER",
+      "path": "docs/capabilities/editor-render.md",
+      "owner": "Editor + Remotion",
+      "authority": "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-EDITOR-REMOTION",
+        "PLAN-FAMILY-MOBILE-RESPONSIVE"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-EDITOR"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-PUBLISH",
+      "capabilityId": "CAP-PUBLISH",
+      "path": "docs/capabilities/publish.md",
+      "owner": "Publisher",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-PUBLISH"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-WIDGET-SURFACES",
+      "capabilityId": "CAP-WIDGET-SURFACES",
+      "path": "docs/capabilities/widget-surfaces.md",
+      "owner": "Dashboard Widget System",
+      "authority": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-WIDGETS",
+        "PLAN-FAMILY-TOOLBOX",
+        "PLAN-FAMILY-MOBILE-RESPONSIVE"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-WIDGETS"
+      ],
+      "openQuestionIds": []
+    },
+    {
+      "id": "HOME-CAP-DOCUMENT-GOVERNANCE",
+      "capabilityId": "CAP-DOCUMENT-GOVERNANCE",
+      "path": "docs/capabilities/document-governance.md",
+      "owner": "Documentation Governance",
+      "authority": "docs/governance/DOCUMENTATION.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-DOCS"
+      ],
+      "openQuestionIds": [
+        "QUESTION-001",
+        "QUESTION-002",
+        "QUESTION-003",
+        "QUESTION-004",
+        "QUESTION-005",
+        "QUESTION-006"
+      ]
+    },
+    {
+      "id": "HOME-CAP-VERIFICATION",
+      "capabilityId": "CAP-VERIFICATION",
+      "path": "docs/capabilities/verification.md",
+      "owner": "Verification",
+      "authority": "docs/governance/VERIFICATION.md",
+      "planFamilyIds": [
+        "PLAN-FAMILY-TOOLBOX",
+        "PLAN-FAMILY-DOCS-AGENTS",
+        "PLAN-FAMILY-MOBILE-RESPONSIVE"
+      ],
+      "codeOwnershipIds": [
+        "OWNER-VERIFY"
+      ],
+      "openQuestionIds": [
+        "QUESTION-003"
+      ]
+    }
+  ]
+}
