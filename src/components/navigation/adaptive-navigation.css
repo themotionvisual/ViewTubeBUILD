@@ -965,7 +965,18 @@
   width: auto;
   max-height: calc(100dvh - 85px);
 }
-.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main { grid-area: 2 / 1; padding: 20px 16px 300px; }
+.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main {
+  grid-area: 2 / 1;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 20px 8px 300px;
+  scrollbar-gutter: auto;
+}
+@media (hover:none) and (pointer:coarse) {
+  .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main {
+    padding-inline: 8px;
+  }
+}
 .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--editor { padding: 6px; }
 .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--brain { overflow: hidden; padding: 6px; }
 
