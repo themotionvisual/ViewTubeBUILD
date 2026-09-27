@@ -1,8 +1,8 @@
 # ViewTube Toolbox UI Master Resource
 
 **Status:** Canonical living design-system authority  
-**Updated:** 2026-09-26  
-**Last audited main:** `36c16918283e1239d460f95e07478f6547412430`  
+**Updated:** 2026-09-27  
+**Last audited main:** `d8381cd4b956cc99367cd11776b5cd5f131d5704`  
 **Canonical owner / concern:** Production Toolbox/Subtoolbox shell hierarchy, Studio control/layout rules, responsive shell behavior, shared state/motion/accessibility rules, certification and migration policy.  
 **Executable authority:** `src/components/subtoolbox/tokens.ts`, `src/components/Toolbox.tsx`, `src/styles/toolbox-system.css`, `src/styles/subtoolbox-system.css`, and their contract tests.  
 **Related scoped authority:** `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` owns Component Library/catalog presentation and primitive-correction notes. Dashboard widgets and Analytics Data Visuals retain separate registries/contracts.  
@@ -14,7 +14,8 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-09-26 | Toolbox cross-app responsive governance | GPT-5.6 Sol + GitHub | Added cross-app guard against fixed-width header action clusters and breakpoint-scoped desktop equal-height panels in Media Analyzer / Storyboard Studio | PR #470 / `fix/toolbox-cross-app-governance-2026-09-26` | IMPLEMENTED ON BRANCH / CI PENDING | Mobile stacks remain intrinsic by construction; desktop equalization remains at `md` / `xl`. `SeoGenerator` remains a live separate production route with legacy hand-built header controls and is a consolidation/migration target, not removed in this wave. |
+| 2026-09-27 | SEO Generator canonical Toolbox migration | GPT-5.6 Sol + GitHub | Migrated the live `/seo-generator` surface from duplicate VIDEO PUBLISHER chrome, native controls and legacy `Standard*` fields to canonical Toolbox header toggles, fields, upload target, buttons, layouts and output cards | PR #474 merged / `896520f8c` | MERGED / PRODUCTION BUILD + FOCUSED CONTRACTS + SOURCE GOVERNANCE + LOCAL SMOKE GREEN | SEO generation, Brain state, Sheets export, Drive sync and ZIP behavior preserved. Keep SEO Generator and Video Publisher separate until a deliberate capability-consolidation plan is approved. |
+| 2026-09-26 | Toolbox cross-app responsive governance | GPT-5.6 Sol + GitHub | Added cross-app guard against fixed-width header action clusters and breakpoint-scoped desktop equal-height panels in Media Analyzer / Storyboard Studio | PR #470 merged / `37faf393` | MERGED / RESPONSIVE GOVERNANCE GREEN | Mobile stacks remain intrinsic by construction; desktop equalization remains at `md` / `xl`. Follow-up SEO Generator primitive migration completed in PR #474. |
 | 2026-09-26 | Toolbox responsive stabilization | GPT-5.6 Sol + GitHub | Protected mobile title allocation, moved optional main-header actions to a secondary strip, restored intrinsic mobile SubToolbox height, removed perf.css geometry ownership, normalized 44px header targets and responsive upload height | PR #468 / `fix/toolbox-responsive-contract-2026-09-26` | IMPLEMENTED / CI + VISUAL CERTIFICATION PENDING | Baseline audit 11/20: Accessibility 2, Performance 3, Responsive 1, Theming 3, Implementation Integrity 2. Target is 20/20 after screenshot certification. |
 | 2026-09-25 | Mobile Render preview correction audit | GPT-5.6 Sol + GitHub + iPhone screenshots | Re-opened Toolbox spacing, dropdown state, collapse icon, Vault assets, palette order and Component Library contracts | PR #432 merged; main `3d9bb8fe` | OPEN CORRECTION WAVE | Keep PR #432 header-action isolation, 16px mobile inputs, VisualViewport handling and paint-safe spacing intent; restore the established four-arrow collapse icon. |
 | 2026-09-24 | Documentation authority consolidation | GPT-5.6 Sol + GitHub | Re-audited tokens/CSS/tests, separated shell vs control ladders, and demoted stale Studio migration geometry | `988098840050f4b658a266e1a7d6fe1c4d939c81` | CURRENT CODE AUTHORITY / VISUAL CERTIFICATION STILL REQUIRED | Desktop shell: T0=80/26, T1=56/20, T2=48/18, T3=32/12. Mobile shell: Toolbox=56, SubToolbox=44 with desktop title sizes preserved. |
@@ -213,7 +214,7 @@ Use status vocabulary: `CANONICAL`, `IMPLEMENTED`, `VERIFIED`, `MIGRATE`, `LEGAC
 
 ## 18. Current audit findings
 
-**2026-09-26 cross-application follow-up:** `MediaAnalyzer` and `StoryboardStudio` still used unconditional `h-full` on equal-height desktop/wide layouts. Those callers are being breakpoint-scoped so the shared mobile intrinsic-height contract is not dependent on override specificity. `SeoGenerator` is confirmed as a live `/seo-generator` production route with a second hand-built VIDEO PUBLISHER-style header/action implementation; preserve its feature behavior, but migrate its header/actions and legacy `Standard*` controls into the canonical primitive system before any SEO/Publisher consolidation decision.
+**2026-09-27 cross-application follow-up:** PR #470 merged the breakpoint-scoped equal-height contract for `MediaAnalyzer` and `StoryboardStudio`, so phone stacks remain intrinsic without depending on override specificity. PR #474 then migrated the live `/seo-generator` route from its duplicate VIDEO PUBLISHER-style header/action implementation and legacy `Standard*` controls to the canonical primitive system while preserving SEO generation/export/sync behavior. SEO Generator and Video Publisher remain intentionally separate production tools pending a deliberate capability-consolidation decision.
 
 
 ### Responsive stabilization baseline — 2026-09-26
@@ -250,6 +251,9 @@ Persistent shell + explicit disconnected/data states. Do not conflate no comment
 
 ### Video Publisher
 Normalize geometry only while preserving publishing behavior.
+
+### SEO Generator
+Canonical Toolbox/Studio primitive migration completed in PR #474. Preserve SEO generation, Brain writeback, Sheets export, Drive sync and ZIP behavior. Do not reintroduce native page-local buttons/inputs, legacy `Standard*` controls, hard-coded Toolbox shell colors or the duplicate VIDEO PUBLISHER identity. Any future SEO Generator ↔ Video Publisher consolidation is a feature-architecture decision, not a visual-system cleanup.
 
 ### Thumbnail Studio
 Primary acceptance-test candidate for nested modules, inputs, actions, uploads and collapsed sections.
