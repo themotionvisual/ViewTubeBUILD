@@ -1,5 +1,9 @@
+// @vitest-environment jsdom
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { createRoot } from "react-dom/client"
+import { act } from "react"
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
 import { describe, expect, it } from "vitest"
 import { Settings } from "lucide-react"
 import {
@@ -67,5 +71,46 @@ describe("SubToolbox split-left primitives", () => {
     expect(html).toContain("vt-subtoolbox-kpi-header")
     expect(html).toContain("vt-subtoolbox-kpi-body")
     expect(html).toContain("$478.05")
+  })
+})
+
+describe("split menu interaction", () => {
+  it("portals the open menu, commits the controlled choice, and restores focus on Escape", async () => {
+    const host = document.createElement("div")
+    host.style.setProperty("--pair-a", "#fa618a")
+    host.style.setProperty("--pair-b", "#c0f240")
+    document.body.append(host)
+    const root = createRoot(host)
+    const options = [{ value: "videos", label: "Videos" }, { value: "playlists", label: "Playlists" }]
+    const selected: string[] = []
+    const Controlled = () => {
+      const [value, setValue] = React.useState("videos")
+      return <SubToolboxSplitDropdown ariaLabel="Dataset" value={value} options={options} onChange={(next) => {
+        selected.push(next)
+        setValue(next)
+      }} />
+    }
+
+    try {
+      await act(async () => root.render(<Controlled />))
+      const trigger = host.querySelector<HTMLButtonElement>(".vt-subtoolbox-split-dropdown-trigger")!
+      await act(async () => trigger.click())
+      const menu = document.body.querySelector<HTMLDivElement>(".vt-subtoolbox-split-dropdown-menu")!
+      expect(menu).toBeTruthy()
+      expect(host.contains(menu)).toBe(false)
+      expect(menu.style.position).toBe("fixed")
+      await act(async () => menu.querySelectorAll<HTMLButtonElement>("button")[1].click())
+      expect(selected).toEqual(["playlists"])
+      expect(trigger.textContent).toContain("Playlists")
+      expect(document.body.querySelector(".vt-subtoolbox-split-dropdown-menu")).toBeNull()
+      await act(async () => trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })))
+      expect(document.activeElement).toBe(document.body.querySelector(".vt-subtoolbox-split-dropdown-menu button:not(:disabled)"))
+      await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })))
+      expect(document.activeElement).toBe(trigger)
+      expect(document.body.querySelector(".vt-subtoolbox-split-dropdown-menu")).toBeNull()
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+    }
   })
 })
