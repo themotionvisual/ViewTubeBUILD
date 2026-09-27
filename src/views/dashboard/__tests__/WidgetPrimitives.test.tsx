@@ -474,15 +474,14 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain("text-overflow: clip")
   })
 
-  it("gives the stacked VIDEO split bay enough width for its label and chevron at every height", () => {
-    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height, 32px) * 1.22)")
-    expect(variantsCss).toContain("overflow: visible")
+  it("keeps the VIDEO split bay mathematically square while fitting its label and chevron", () => {
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height, 32px) - (var(--vt-primitive-stroke, 2px) * 2))")
     expect(variantsCss).not.toContain("--widget-video-split-bay: 48px")
     expect(variantsCss).not.toContain("--widget-video-split-bay: 54px")
-    expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
-    expect(variantsCss).toContain("is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 10px")
-    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
-    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector svg { width: 14px; height: 14px; }")
+    expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 7px")
+    expect(variantsCss).toContain("is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 10px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }")
   })
 
   it("makes the video menu search and option rows truly edge-to-edge", () => {
