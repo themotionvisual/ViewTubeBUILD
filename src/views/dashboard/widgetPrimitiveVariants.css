@@ -182,7 +182,7 @@
 }
 
 .widget-video-select-trigger {
-  --widget-video-split-bay: calc(var(--vt-primitive-height, 32px) * 1.22);
+  --widget-video-split-bay: calc(var(--vt-primitive-height, 32px) - (var(--vt-primitive-stroke, 2px) * 2));
   width: 100%;
   display: grid;
   grid-template-columns: var(--widget-video-split-bay) minmax(0, 1fr);
@@ -201,7 +201,7 @@
   height: 100%;
   display: grid;
   grid-template-rows: 1fr 1fr;
-  overflow: visible;
+  overflow: hidden;
   border-inline-end: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, #243247));
   background: color-mix(in srgb, var(--widget-color, #34cdea) 82%, white);
 }
@@ -239,12 +239,12 @@
 .widget-video-select-trigger.is-height-18 .widget-video-select-trigger-selector > span + span {
   border-block-start-width: 1px;
 }
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px; letter-spacing: .02em; }
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 10px; letter-spacing: .02em; }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px; letter-spacing: .025em; }
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector svg { width: 9px; height: 9px; }
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector svg { width: 14px; height: 14px; }
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 7px; letter-spacing: 0; }
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 8px; letter-spacing: 0; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 10px; letter-spacing: 0; }
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector svg { width: 8px; height: 8px; }
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector svg { width: 10px; height: 10px; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }
 
 
 .widget-video-select-trigger-copy {
