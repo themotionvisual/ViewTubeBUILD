@@ -105,17 +105,20 @@ describe("mobile widget density and edge contracts", () => {
     expect(shellCss).toContain("grid-column:full-start / full-end")
     expect(mobile).not.toContain(".vt-widget-full-bleed")
     expect(assetCss).toContain("vt-asset-engine-slot-panel")
+    expect(assetCss).toContain("overflow:visible")
+    expect(assetCss).toContain("grid-template-columns:repeat(4,minmax(0,1fr))")
   })
 
   it("keeps Publishing Command full width and compact", () => {
     expect(flightCss).toContain(".vt-publishing-command__manual-list")
     expect(flightCss).toContain("min-height:28px")
-    expect(flightCss).toContain("margin-inline:calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))")
+    expect(flightCss).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
   })
 
   it("uses canonical text field primitives in Video Uploader", () => {
     expect(uploaderSource).toContain("WidgetTextInput")
     expect(uploaderSource).toContain("WidgetTextArea")
+    expect(settingsCss).toContain("grid-template-columns:repeat(2,minmax(0,1fr))")
   })
 
   it("keeps Settings dense on compact widths", () => {
