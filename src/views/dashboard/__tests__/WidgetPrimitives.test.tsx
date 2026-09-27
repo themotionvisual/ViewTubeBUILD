@@ -474,9 +474,9 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain("text-overflow: clip")
   })
 
-  it("keeps every VIDEO split bay square while scaling the label and chevron by control height", () => {
-    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
-    expect(variantsCss).not.toContain("--widget-video-split-bay: 40px")
+  it("gives the stacked VIDEO split bay enough width for its label and chevron at every height", () => {
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height, 32px) * 1.22)")
+    expect(variantsCss).toContain("overflow: visible")
     expect(variantsCss).not.toContain("--widget-video-split-bay: 48px")
     expect(variantsCss).not.toContain("--widget-video-split-bay: 54px")
     expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
@@ -487,11 +487,11 @@ describe("expanded widget compound primitives", () => {
 
   it("makes the video menu search and option rows truly edge-to-edge", () => {
     expect(extensionSource).toContain('className="widget-video-select-menu-search-row"')
-    expect(extensionSource).toContain('height={height} tone="primary"')
+    expect(extensionSource).toContain('height={height} tone="default"')
     expect(variantsCss).toContain(".widget-video-select.is-open > .widget-video-select-menu")
     expect(variantsCss).toContain("padding: 0")
-    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-menu-search-row")
-    expect(variantsCss).toContain("border-radius: 0")
+    expect(variantsCss).toContain(".widget-video-select-menu-search-row")
+    expect(variantsCss).not.toContain(".widget-video-select.is-open .widget-video-select-menu-search-row:focus-within {\n  border: 0")
     expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-option")
     expect(variantsCss).toContain("grid-template-columns: calc(var(--vt-primitive-height, 38px) * 1.7778)")
     expect(variantsCss).toContain(".widget-video-select-option-media")
@@ -653,7 +653,7 @@ describe("reference-library interaction recovery contracts", () => {
 
     expect(matrixCss).toContain(".widget-search-input:focus-within")
     expect(matrixCss).toContain("border-color: var(--widget-field-focus-border)")
-    expect(matrixCss).toContain("background: var(--widget-field-focus-fill)")
+    expect(matrixCss).toContain("background: #fff !important")
     expect(matrixCss).toContain("0 0 16px 2px var(--widget-field-focus-glow)")
     expect(matrixCss).toContain("caret-color: var(--widget-color, #34cdea)")
 
