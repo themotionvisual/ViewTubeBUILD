@@ -755,10 +755,10 @@ describe("reference library recovery completion", () => {
     expect(matrixCss).toContain("grid-column: full-start / full-end")
   })
 
-  it("lets the video menu expand beyond a narrow trigger while remaining viewport bounded", () => {
-    expect(extensionSource).toContain("VIDEO_MENU_MIN_WIDTH")
-    expect(extensionSource).toContain("Math.max(rect.width, VIDEO_MENU_MIN_WIDTH[height])")
-    expect(extensionSource).toContain("Math.min(preferredWidth, window.innerWidth - 16)")
+  it("keeps the video menu exactly aligned to the trigger width", () => {
+    expect(extensionSource).not.toContain("VIDEO_MENU_MIN_WIDTH")
+    expect(extensionSource).toContain("const width=rect.width")
+    expect(extensionSource).toContain("width:`${width}px`")
   })
 
   it("offers small and large data-grid density from one canonical primitive", () => {
