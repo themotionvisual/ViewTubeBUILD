@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"
+import React, { useCallback, useEffect, useState, useRef } from "react"
 import { useLocation } from "react-router-dom"
 import {
  generateThumbnail,
@@ -25,6 +25,9 @@ import {
  SubToolboxDropdownControl,
 } from "../components/Toolbox"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { ViewTubeHandoffReceiver } from "../components/ViewTubeHandoffReceiver"
+import type { ViewTubeActionPacket } from "../services/viewTubeToolChains"
+import type { LongformOptimizationHandoffPayload } from "../services/longformOptimization"
 import {
  SubToolboxButton,
  SubToolboxFileTarget,
@@ -81,6 +84,26 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
  // Core States
  const [prompt, setPrompt] = useState("")
  const [hookText, setHookText] = useState("")
+
+ const handleLongformOptimizerHandoff = useCallback((packet: ViewTubeActionPacket) => {
+  if (packet.sourceToolId !== "longform-optimizer") return
+  const payload = packet.payload as LongformOptimizationHandoffPayload
+  const metadata = payload.currentMetadata
+  const recommendation = payload.recommendation
+  const thumbnailAnalysis = payload.thumbnail?.analysis
+  const promptAdditions = [
+   `Create or refine a YouTube thumbnail for: ${metadata?.title || packet.title}`,
+   recommendation?.keyInsight ? `Longform Optimizer diagnosis: ${recommendation.keyInsight}` : packet.summary,
+   recommendation?.body ? `Optimization report: ${recommendation.body}` : "",
+   thumbnailAnalysis?.concept ? `Current thumbnail concept: ${thumbnailAnalysis.concept}` : "",
+   thumbnailAnalysis?.style ? `Current thumbnail style: ${thumbnailAnalysis.style}` : "",
+   payload.experiment?.thumbnailAbc ? "Prepare three coordinated thumbnail candidates for A/B/C testing." : "Prepare one best-fit thumbnail direction; A/B/C testing is disabled for this handoff.",
+  ].filter(Boolean)
+  setHookText(metadata?.title || "")
+  setPrompt(promptAdditions.join("\n\n"))
+  setActiveTab("generate")
+  setIsOpen(true)
+ }, [])
 
  useEffect(() => {
   if (videoManagerHandoff?.source !== "video-manager") return
@@ -411,6 +434,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
      />
     </div>
    }>
+   <ViewTubeHandoffReceiver targetToolId="thumbnail-studio" onPacket={handleLongformOptimizerHandoff} />
    {/* Generated History Bar */}
    {activeTab === "generate" && history.length > 0 && (
     <div className="w-full mb-2 sm:mb-4 lg:mb-8 flex gap-2 sm:gap-4 lg:gap-6 overflow-x-auto pb-2 sm:pb-4 custom-scrollbar">
