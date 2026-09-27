@@ -358,6 +358,25 @@
         "docs/governance/TASK_AUTHORITY.md",
         "docs/programs/INTEGRATED_APPLICATION.md"
       ]
+    },
+    {
+      "id": "DOC-GOV-CONVERGENCE",
+      "path": "docs/governance/CONVERGENCE.md",
+      "class": "CONSTITUTION",
+      "status": "ACTIVE",
+      "concern": "convergence-governance",
+      "owner": "Documentation Governance + Product Architecture + Task Authority",
+      "productionDate": "2026-09-27",
+      "lastEdited": "2026-09-27",
+      "lastAuditedMainSha": "4c18a8de6c97c4d172df6528ff483fa6a08c4e5c",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/governance/DOCUMENTATION.md",
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/TASK_AUTHORITY.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ]
     }
   ],
   "legacyGlobalSources": [
