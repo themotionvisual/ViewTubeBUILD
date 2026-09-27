@@ -1,6 +1,7 @@
 import type { CreatorBrainResponse } from "../types"
 import { runBrainTask } from "./brain/runtime/BrainRuntime"
 import type { BrainRuntimeRequest } from "./brain/runtime/BrainRuntimeContracts"
+import { analyzeLongformThumbnail } from "./brain/longformThumbnailAnalysis"
 import {
   appendContentBuildEvent,
   ensureContentBuild,
@@ -22,9 +23,13 @@ import {
 export interface LongformThumbnailAnalysis {
   status: "ready" | "missing" | "stale"
   concept?: string
+  subjects?: string[]
   style?: string
   composition?: string
   text?: string
+  visualHierarchy?: string
+  emotionalTone?: string
+  promiseAlignment?: string
   notes?: string
   evidenceId?: string
 }
@@ -208,6 +213,48 @@ export const buildLongformOptimizationContext = (
   }
 }
 
+type LongformThumbnailAnalyzer = (input: {
+  channelId: string
+  projectId?: string | null
+  videoId: string
+  title: string
+  description?: string | null
+  tags?: string[]
+  thumbnailUrl: string
+}) => Promise<{ analysis: LongformThumbnailAnalysis; record: { id: string } }>
+
+export const enrichLongformVideoWithThumbnailAnalysis = async (input: {
+  channelId?: string | null
+  projectId?: string | null
+  video: LongformOptimizationVideoInput
+  allowModel?: boolean
+  analyzeThumbnail?: LongformThumbnailAnalyzer
+}): Promise<LongformOptimizationVideoInput> => {
+  if (input.video.thumbnailAnalysis?.status === "ready") return input.video
+  if (!input.allowModel || !input.channelId || !input.video.thumbnailUrl) return input.video
+
+  try {
+    const result = await (input.analyzeThumbnail || analyzeLongformThumbnail)({
+      channelId: input.channelId,
+      projectId: input.projectId || null,
+      videoId: input.video.videoId,
+      title: input.video.title,
+      description: input.video.description || "",
+      tags: input.video.tags || [],
+      thumbnailUrl: input.video.thumbnailUrl,
+    })
+    return {
+      ...input.video,
+      thumbnailAnalysis: { ...result.analysis, evidenceId: result.analysis.evidenceId || result.record.id },
+    }
+  } catch {
+    // Thumbnail vision is useful evidence, but a CDN/CORS/provider failure must not
+    // block the rest of the longform analysis. The context builder will preserve
+    // thumbnail_visual_analysis as an explicit missing-evidence signal.
+    return input.video
+  }
+}
+
 const evaluationTargetsFor = (context: LongformOptimizationContext): AlgorithmEvaluationTarget[] => {
   const candidates: Array<[string, number | null]> = [
     ["views", context.analytics.views],
@@ -248,13 +295,38 @@ export const runLongformOptimizationAnalysis = async (input: {
   experiment: LongformExperimentChoice
   brainRuntime: Pick<BrainRuntimeRequest, "snapshot" | "systemPrompt" | "growthContext" | "allowModel">
 }): Promise<LongformOptimizationAnalysis> => {
-  const context = buildLongformOptimizationContext(input.video, input.experiment)
   const build = ensureContentBuild({
     videoId: input.video.videoId,
     channelId: input.channelId || null,
     legacyProjectId: null,
     toolId: "longform-optimizer",
   })
+  const enrichedVideo = await enrichLongformVideoWithThumbnailAnalysis({
+    channelId: input.channelId || null,
+    projectId: input.projectId || null,
+    video: input.video,
+    allowModel: input.brainRuntime.allowModel,
+  })
+  const context = buildLongformOptimizationContext(enrichedVideo, input.experiment)
+  const thumbnailEvidenceId = context.thumbnail.analysis?.evidenceId || null
+  const priorThumbnailEvidenceId = input.video.thumbnailAnalysis?.evidenceId || null
+
+  if (build && thumbnailEvidenceId && thumbnailEvidenceId !== priorThumbnailEvidenceId) {
+    appendContentBuildEvent({
+      contentBuildId: build.id,
+      eventType: "tool.output.recorded",
+      entityType: "thumbnail-analysis",
+      entityId: thumbnailEvidenceId,
+      actorType: "brain",
+      toolId: "longform-optimizer",
+      evidenceIds: [thumbnailEvidenceId],
+      resultingState: context.thumbnail.analysis,
+      metadata: {
+        source: "governed-thumbnail-vision",
+        videoId: input.video.videoId,
+      },
+    })
+  }
 
   const result = await runBrainTask({
     snapshot: input.brainRuntime.snapshot,
