@@ -23,6 +23,7 @@ describe("Brain Channel Knowledge integration", () => {
   expect(orchestrator).toContain("creatorContext.channelKnowledge")
   expect(orchestrator.match(/creatorContext\.channelKnowledge/g)?.length || 0).toBeGreaterThanOrEqual(2)
   expect(orchestrator).not.toContain("loadRelevantChannelKnowledge")
+  expect(orchestrator).not.toContain("channelKnowledge: creatorContext")
  })
 
  it("preserves contradiction and provenance labels in prompt context", () => {
