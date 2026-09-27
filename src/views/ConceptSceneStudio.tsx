@@ -25,6 +25,19 @@ import { useBrain } from "../context/useBrain"
 import { resolveWorkspaceContentBuildToolContext } from "../services/asset-engine/ToolContext"
 import { createSuperToolActionPacket } from "../services/superToolActionPackets"
 import {
+ addAssetVariant,
+ createAssetVariantGroup,
+ createVersionedAsset,
+} from "../services/assetEngine"
+import {
+ prepareGenerationRequest,
+ recordToolReceipt,
+} from "../services/asset-engine/GenerationWorkflow"
+import {
+ generateConceptDirections,
+ generateScenePlan,
+} from "../services/brain/conceptSceneAssets"
+import {
  buildProductionHandoff,
  createConceptCandidates,
  createScenesFromConcept,
@@ -59,6 +72,7 @@ type StoredDraft = {
  concepts: ConceptDirection[]
  selectedConceptId: string | null
  scenes: ProductionScene[]
+ scriptBeatsText: string
 }
 
 const readDraft = (): StoredDraft | null => {
@@ -73,6 +87,7 @@ const readDraft = (): StoredDraft | null => {
    concepts: parsed.concepts,
    selectedConceptId: typeof parsed.selectedConceptId === "string" ? parsed.selectedConceptId : null,
    scenes: parsed.scenes,
+   scriptBeatsText: typeof parsed.scriptBeatsText === "string" ? parsed.scriptBeatsText : "",
   }
  } catch {
   return null
@@ -88,7 +103,7 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
  isOpenInitial = false,
  paletteIndex = 11,
 }) => {
- const { brain, setStoryboardState } = useBrain()
+ const { brain, setStoryboardState, authState } = useBrain()
  const initial = useMemo(() => readDraft(), [])
  const [brief, setBrief] = useState<ConceptBrief>(initial?.brief || {
   ...defaultBrief,
@@ -98,6 +113,9 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
  const [selectedConceptId, setSelectedConceptId] = useState<string | null>(initial?.selectedConceptId || null)
  const [scenes, setScenes] = useState<ProductionScene[]>(initial?.scenes || [])
  const [sceneCount, setSceneCount] = useState(Math.max(3, initial?.scenes.length || 6))
+ const [scriptBeatsText, setScriptBeatsText] = useState(initial?.scriptBeatsText || "")
+ const [conceptGenerating, setConceptGenerating] = useState(false)
+ const [sceneGenerating, setSceneGenerating] = useState(false)
  const [isOpen, setIsOpen] = useState(isOpenInitial)
  const [handoffStatus, setHandoffStatus] = useState("No production handoff sent yet.")
 
@@ -111,30 +129,222 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
   if (typeof window === "undefined") return
   const timer = window.setTimeout(() => {
    try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ brief, concepts, selectedConceptId, scenes }))
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ brief, concepts, selectedConceptId, scenes, scriptBeatsText }))
    } catch {
     // Draft persistence must never interrupt editing.
    }
   }, 180)
   return () => window.clearTimeout(timer)
- }, [brief, concepts, selectedConceptId, scenes])
+ }, [brief, concepts, selectedConceptId, scenes, scriptBeatsText])
 
  const updateBrief = <K extends keyof ConceptBrief>(key: K, value: ConceptBrief[K]) =>
   setBrief(current => ({ ...current, [key]: value }))
 
- const forgeConcepts = () => {
-  const next = createConceptCandidates(brief)
-  setConcepts(next)
-  setSelectedConceptId(next[0]?.id || null)
+ const resolveGenerationChannelId = () =>
+  contentContext?.build.channelId || (authState as { channelId?: string | null } | null)?.channelId || null
+
+ const forgeConcepts = async () => {
+  const fallback = createConceptCandidates(brief)
+  const channelId = resolveGenerationChannelId()
+  setConceptGenerating(true)
   setScenes([])
-  setHandoffStatus("Three creative directions forged. Choose one before building scenes.")
+  try {
+   if (!channelId) {
+    setConcepts(fallback)
+    setSelectedConceptId(fallback[0]?.id || null)
+    setHandoffStatus("Three local directions forged. Connect a channel or active ContentBuild to use governed Brain generation.")
+    return
+   }
+   const prepared = contentContext ? prepareGenerationRequest({
+    contentBuildId: contentContext.contentBuildId,
+    channelId,
+    projectId: contentContext.build.legacyProjectId || null,
+    toolId: "creator-canvas-os",
+    operation: "forge-concepts",
+    targetSlot: "concept",
+    mode: "new-option",
+    creatorIntent: `Forge three distinct creative directions for: ${brief.idea}`,
+    requestedSlots: ["concept", "script", "storyboard"],
+    constraints: { brief },
+    outputSpec: { candidateCount: 3, structured: true },
+   }) : null
+   const generated = await generateConceptDirections({
+    context: { channelId },
+    brief: { ...brief },
+    ...(contentContext?.build.legacyProjectId ? { projectId: contentContext.build.legacyProjectId } : {}),
+   })
+   const output = generated.record.output
+   const conceptsFromBrain: ConceptDirection[] | null = output?.concepts?.length === 3
+    ? output.concepts.map((concept, index) => ({ ...concept, id: concept.id?.trim() || `concept-ai-${index + 1}` }))
+    : null
+   const resolved = conceptsFromBrain || fallback
+   setConcepts(resolved)
+   setSelectedConceptId(resolved[0]?.id || null)
+
+   if (prepared && conceptsFromBrain) {
+    const group = createAssetVariantGroup({
+     contentBuildId: prepared.request.contentBuildId,
+     slot: "concept",
+     label: "Concept Forge directions",
+     sourceToolId: "creator-canvas-os",
+     metadata: { requestId: prepared.request.id, traceId: generated.trace.id },
+    })
+    const created = conceptsFromBrain.map((concept, index) => {
+     const asset = createVersionedAsset({
+      sourceToolId: "creator-canvas-os",
+      sourceKind: "super-tool",
+      payloadKind: "json",
+      name: concept.label,
+      summary: concept.angle,
+      kind: "json",
+      artifactKind: "json",
+      payload: concept,
+      tags: ["concept-forge", "creative-direction", `candidate-${index + 1}`],
+      slot: "concept",
+      label: concept.label,
+      context: {
+       contentBuildId: prepared.request.contentBuildId,
+       channelId,
+       projectId: prepared.request.projectId,
+       projectName: contentContext?.build.legacyProjectName || null,
+       stage: "concept",
+       traceId: generated.trace.id,
+       evidence: generated.record.evidenceRefs.map(id => ({ id })),
+       provenance: [generated.record.id, prepared.request.id],
+      },
+     })
+     addAssetVariant({
+      contentBuildId: prepared.request.contentBuildId,
+      groupId: group.id,
+      assetId: asset.asset.id,
+      versionId: asset.version?.id || null,
+      label: concept.label,
+      score: concept.readiness,
+      sourceToolId: "creator-canvas-os",
+      metadata: { conceptId: concept.id, traceId: generated.trace.id },
+     })
+     return asset
+    })
+    recordToolReceipt({
+     request: prepared.request,
+     outputAssetIds: created.map(item => item.asset.id),
+     generationRecordId: generated.record.id,
+     versionIds: created.map(item => item.version?.id).filter((id): id is string => Boolean(id)),
+     variantGroupId: group.id,
+     traceId: generated.trace.id,
+     summary: "Generated three governed Concept Forge directions and attached them as ContentBuild variants.",
+     metadata: { providerPath: "governed-asset-generator", brainAssetRecordId: generated.record.id },
+    })
+    setHandoffStatus(`Three Brain-generated directions saved with variant lineage · ${generated.record.status.replaceAll("_", " ")}.`)
+   } else {
+    setHandoffStatus(conceptsFromBrain
+     ? `Three governed Brain directions forged · ${generated.record.status.replaceAll("_", " ")}.`
+     : "Brain generation was incomplete; local production-safe concept directions were restored.")
+   }
+  } catch (error) {
+   console.warn("[ConceptSceneStudio] Concept generation fell back to local directions.", error)
+   setConcepts(fallback)
+   setSelectedConceptId(fallback[0]?.id || null)
+   setHandoffStatus("Brain generation was unavailable, so local production-safe concept directions were restored.")
+  } finally {
+   setConceptGenerating(false)
+  }
  }
 
- const buildScenes = () => {
+ const buildScenes = async () => {
   if (!selectedConcept) return
-  const next = createScenesFromConcept(selectedConcept, brief, sceneCount)
-  setScenes(next)
-  setHandoffStatus(`${next.length} editable production scenes created from ${selectedConcept.label}.`)
+  const fallback = createScenesFromConcept(selectedConcept, brief, sceneCount)
+  const channelId = resolveGenerationChannelId()
+  const scriptBeats = scriptBeatsText.split(/\\n+/).map(beat => beat.trim()).filter(Boolean)
+  setSceneGenerating(true)
+  try {
+   if (!channelId) {
+    setScenes(fallback)
+    setHandoffStatus(`${fallback.length} local production scenes created from ${selectedConcept.label}.`)
+    return
+   }
+   const prepared = contentContext ? prepareGenerationRequest({
+    contentBuildId: contentContext.contentBuildId,
+    channelId,
+    projectId: contentContext.build.legacyProjectId || null,
+    toolId: "creator-canvas-os",
+    operation: "design-scenes",
+    targetSlot: "storyboard",
+    mode: "new-version",
+    creatorIntent: `Design ${sceneCount} production scenes for ${selectedConcept.label}.`,
+    requestedSlots: ["concept", "script", "storyboard"],
+    constraints: { brief, selectedConcept, scriptBeats },
+    outputSpec: { sceneCount, includesMotionBrief: true, includesAssetNeeds: true },
+   }) : null
+   const generated = await generateScenePlan({
+    context: { channelId },
+    brief: { ...brief },
+    selectedConcept: { ...selectedConcept },
+    sceneCount,
+    scriptBeats,
+    ...(contentContext?.build.legacyProjectId ? { projectId: contentContext.build.legacyProjectId } : {}),
+   })
+   const output = generated.record.output
+   const validRoles: ProductionScene["role"][] = ["HOOK","SETUP","PROOF","ESCALATION","PIVOT","PAYOFF"]
+   const scenesFromBrain: ProductionScene[] | null = output?.scenes?.length === sceneCount
+    ? output.scenes.map((scene, index) => ({
+       ...scene,
+       id: scene.id?.trim() || `scene-ai-${index + 1}`,
+       order: index + 1,
+       role: validRoles.includes(scene.role as ProductionScene["role"])
+        ? scene.role as ProductionScene["role"]
+        : index === 0 ? "HOOK" : index === output.scenes.length - 1 ? "PAYOFF" : "PROOF",
+      }))
+    : null
+   const resolved = scenesFromBrain || fallback
+   setScenes(resolved)
+
+   if (prepared && scenesFromBrain) {
+    const created = createVersionedAsset({
+     sourceToolId: "creator-canvas-os",
+     sourceKind: "super-tool",
+     payloadKind: "storyboard",
+     name: `${selectedConcept.label} scene blueprint`,
+     summary: `${resolved.length} governed production scenes with shot, motion, asset and continuity briefs.`,
+     kind: "json",
+     artifactKind: "json",
+     payload: { selectedConceptId: selectedConcept.id, scenes: resolved, notes: output?.notes || [] },
+     tags: ["scene-design", "storyboard", "production-blueprint"],
+     slot: "storyboard",
+     label: "Scene Design Studio blueprint",
+     context: {
+      contentBuildId: prepared.request.contentBuildId,
+      channelId,
+      projectId: prepared.request.projectId,
+      projectName: contentContext?.build.legacyProjectName || null,
+      stage: "visual-plan",
+      traceId: generated.trace.id,
+      evidence: generated.record.evidenceRefs.map(id => ({ id })),
+      provenance: [generated.record.id, prepared.request.id, selectedConcept.id],
+     },
+    })
+    recordToolReceipt({
+     request: prepared.request,
+     outputAssetIds: [created.asset.id],
+     generationRecordId: generated.record.id,
+     versionIds: created.version?.id ? [created.version.id] : [],
+     traceId: generated.trace.id,
+     summary: `Generated and attached ${resolved.length} governed production scenes.`,
+     metadata: { providerPath: "governed-asset-generator", brainAssetRecordId: generated.record.id, scriptBeatCount: scriptBeats.length },
+    })
+    setHandoffStatus(`${resolved.length} Brain-generated scenes saved to the active ContentBuild · ${generated.record.status.replaceAll("_", " ")}.`)
+   } else {
+    setHandoffStatus(scenesFromBrain
+     ? `${resolved.length} governed Brain scenes created from ${selectedConcept.label}.`
+     : "Brain scene generation was incomplete; the local production-safe blueprint was restored.")
+   }
+  } catch (error) {
+   console.warn("[ConceptSceneStudio] Scene generation fell back to local blueprint.", error)
+   setScenes(fallback)
+   setHandoffStatus("Brain scene generation was unavailable, so the local production-safe blueprint was restored.")
+  } finally {
+   setSceneGenerating(false)
+  }
  }
 
  const updateScene = <K extends keyof ProductionScene>(id: string, key: K, value: ProductionScene[K]) =>
@@ -294,7 +504,7 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
          <StandardInput aria-label="Target runtime minutes" type="number" min={1} max={180} value={brief.runtimeMinutes} onChange={event => updateBrief("runtimeMinutes", Math.max(1, Number(event.target.value) || 1))} style={{ fontSize: "16px" }} />
         </div>
         <div className="flex items-end">
-         <SubToolboxGridActionButton label="FORGE 3 DIRECTIONS" iconName="sparkles" tone="yellow" onClick={forgeConcepts} disabled={!brief.idea.trim()} className="w-full" />
+         <SubToolboxGridActionButton label={conceptGenerating ? "FORGING…" : "FORGE 3 DIRECTIONS"} iconName="sparkles" tone="yellow" onClick={() => void forgeConcepts()} disabled={!brief.idea.trim() || conceptGenerating} className="w-full" />
         </div>
        </div>
       </SubToolbox>
@@ -335,7 +545,7 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
          })}
          <div className="grid grid-cols-[100px_1fr] gap-2">
           <StandardInput aria-label="Scene count" type="number" min={3} max={12} value={sceneCount} onChange={event => setSceneCount(Math.max(3, Math.min(12, Number(event.target.value) || 6)))} style={{ fontSize: "16px" }} />
-          <SubToolboxGridActionButton label="BUILD SCENE BLUEPRINT" iconName="video" tone="cyan" onClick={buildScenes} disabled={!selectedConcept} />
+          <SubToolboxGridActionButton label={sceneGenerating ? "DESIGNING…" : "BUILD SCENE BLUEPRINT"} iconName="video" tone="cyan" onClick={() => void buildScenes()} disabled={!selectedConcept || sceneGenerating} />
          </div>
         </div>
        ) : (
@@ -356,6 +566,18 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
        overflowVisible
        helpText="Scenes are production blueprints, not just script paragraphs. Every scene carries intent, shot grammar, prompt material, asset needs, timing, transition, and continuity."
       >
+       <div className="mb-2 rounded-[9px] border-[3px] border-black bg-[#F6F8FB] p-2">
+        <label className={compactLabel}>SCRIPT BEATS</label>
+        <StandardTextArea
+         aria-label="Script beats"
+         value={scriptBeatsText}
+         onChange={event => setScriptBeatsText(event.target.value)}
+         placeholder={"Paste or write one script beat per line. Scene Design preserves these as structural source material.\n\nExample:\nThe impossible result\nThe deception is established\nThe trap closes\nThe payoff"}
+         minHeight="112px"
+         style={{ minHeight: "112px", textTransform: "none", fontWeight: 700, fontSize: "16px" }}
+        />
+        <p className="mt-1 text-[9px] font-bold leading-snug text-[#26324A]/60">Optional · one beat per line · carried into governed scene generation and the production packet.</p>
+       </div>
        {scenes.length ? (
         <div className="space-y-2">
          {scenes.map((scene, index) => (
@@ -393,6 +615,10 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
              <label className={compactLabel}>GENERATION PROMPT</label>
              <StandardTextArea aria-label={`Scene ${scene.order} generation prompt`} value={scene.visualPrompt} onChange={event => updateScene(scene.id, "visualPrompt", event.target.value)} minHeight="86px" style={{ minHeight: "86px", textTransform: "none", fontWeight: 700, fontSize: "16px" }} />
             </div>
+            <div className="md:col-span-2">
+             <label className={compactLabel}>MOTION BRIEF</label>
+             <StandardTextArea aria-label={`Scene ${scene.order} motion brief`} value={scene.motionBrief} onChange={event => updateScene(scene.id, "motionBrief", event.target.value)} minHeight="72px" style={{ minHeight: "72px", textTransform: "none", fontWeight: 700, fontSize: "16px" }} />
+            </div>
             <div className="grid grid-cols-[110px_1fr] gap-2 md:col-span-2">
              <div>
               <label className={compactLabel}>SECONDS</label>
@@ -427,7 +653,8 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
        openUnits={4}
        helpText="Each handoff records a shared action packet, generation artifact, workflow chain, and ContentBuild event before navigating to the destination."
       >
-       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+       <div className={compactLabel}>READINESS REVIEW</div>
+       <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         <div className="rounded-[7px] border-[2px] border-black bg-white p-2"><div className={compactLabel}>DIRECTION</div><div className="mt-1 text-[11px] font-[1000] uppercase">{selectedConcept?.label || "—"}</div></div>
         <div className="rounded-[7px] border-[2px] border-black bg-white p-2"><div className={compactLabel}>SCENES</div><div className="mt-1 text-[11px] font-[1000]">{scenes.length}</div></div>
         <div className="rounded-[7px] border-[2px] border-black bg-white p-2"><div className={compactLabel}>ASSETS</div><div className="mt-1 text-[11px] font-[1000]">{new Set(scenes.flatMap(scene => scene.assetNeeds)).size}</div></div>
