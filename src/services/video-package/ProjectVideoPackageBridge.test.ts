@@ -3,6 +3,7 @@ import type { Project, VaultAsset } from "../../types"
 import {
   createContentBuild,
   getContentBuild,
+  listContentBuildEvents,
   resetContentBuildRepositoryForTests,
 } from "../asset-engine/ContentBuildRepository"
 import {
@@ -96,6 +97,28 @@ describe("Project Video Package bridge", () => {
       kind: "thumbnail",
     }))
     expect(listVideoPackages()).toHaveLength(1)
+
+    const build = getContentBuild("cb-a")!
+    const thumbnailGroup = build.variantGroups.find(group => group.slot === "thumbnail")
+    expect(thumbnailGroup?.selectedAssetId).toBe("vault-thumb-a")
+    expect(thumbnailGroup?.finalAssetId).toBeNull()
+
+    const events = listContentBuildEvents("cb-a")
+    expect(events.filter(event => event.eventType === "asset.selected" && event.entityId === "thumbnail")).toHaveLength(1)
+    expect(events.filter(event => event.eventType === "asset.finalized" && event.entityId === "thumbnail")).toHaveLength(0)
+  })
+
+  it("does not implicitly finalize a canonical thumbnail when package scope is unavailable", () => {
+    const updated = selectProjectVideoPackageThumbnail(project(), thumbnailAsset(), {
+      channelId: null,
+      sourceToolId: "project-builder",
+    })
+
+    expect(updated).toBeNull()
+    expect(getContentBuild("cb-a")?.selections.thumbnail).toBe("vault-thumb-a")
+    const events = listContentBuildEvents("cb-a")
+    expect(events.filter(event => event.eventType === "asset.selected" && event.entityId === "thumbnail")).toHaveLength(1)
+    expect(events.filter(event => event.eventType === "asset.finalized" && event.entityId === "thumbnail")).toHaveLength(0)
   })
 
   it("still selects the canonical ContentBuild thumbnail when channel package scope is unavailable", () => {
