@@ -38,6 +38,18 @@ describe("mobile widget density and edge contracts", () => {
     expect(shellCss).toContain(".vt-widget-shadow-safe")
   })
 
+  it("keeps shell interior geometry out of the legacy monolith", () => {
+    expect(legacy).not.toContain("margin-top: -3px")
+    expect(legacy).not.toContain("padding: var(--vt-widget-body-inset)")
+    expect(legacy).not.toContain("display: flex;\n  flex-direction: column;\n  flex: 1;\n  min-height: 0;\n  overflow: visible;\n}\n\n/* Modules that own their section spacing")
+    expect(legacy).not.toContain(".vt-widget {\n  margin-bottom: 4px")
+    expect(legacy).not.toContain(".flex-1.flex.flex-col.gap-2.overflow-y-auto")
+    expect(legacy).not.toContain("textarea.vt-textarea {\n  margin: 4px")
+    expect(shellCss).toContain("display:grid")
+    expect(shellCss).toContain("padding:0")
+    expect(shellCss).toContain("grid-column:full-start / full-end")
+  })
+
   it("keeps scrolling geometry on canonical named tracks without negative-margin width compensation", () => {
     expect(scrollbar).not.toContain("margin-inline-end: calc(-1 * var(--widget-content-inset))")
     expect(scrollbar).not.toContain("margin-inline-start: calc(-1 * var(--widget-content-inset))")

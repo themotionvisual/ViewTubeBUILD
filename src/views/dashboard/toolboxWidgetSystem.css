@@ -142,42 +142,21 @@
   height: 100%;
 }
 
-:where(.dashboard-barrier) .vt-widget-content {
-  margin-top: -3px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: visible;
-}
-
 :where(.dashboard-barrier) .vt-widget,
 :where(.dashboard-barrier) .vt-widget-body,
 :where(.dashboard-barrier) .vt-widget-content {
   overflow-x: visible;
 }
 
+/* Widget interior geometry is owned exclusively by widgetShellOwnership.css.
+   Do not re-introduce body padding, negative content overlap, flex layout, or
+   flush/inset sizing here: unlayered legacy rules outrank the layered shell and
+   recreate the white interior lanes / clipped full-bleed edges. */
 :where(.dashboard-barrier) .vt-widget-body {
-  --vt-widget-body-inset: var(--widget-content-inset);
   background: var(--bg-widget);
-  padding: var(--vt-widget-body-inset);
   color: var(--text-main);
   transition: background-color var(--transition), color var(--transition);
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: visible;
 }
-
-/* Modules that own their section spacing can meet the shell dividers directly.
-   Inset remains the default so form-heavy and prose widgets do not regress. */
-:where(.dashboard-barrier) .vt-widget-body--flush {
-  --vt-widget-body-inset: 0px;
-}
-
-/* Widget interior geometry moved to widgetShellOwnership.css.
-   The legacy monolith no longer owns FULL / SHADOW-SAFE / INSET / OVERLAY. */
 
 :where(.dashboard-barrier) .widget-section {
   min-width: 0;
@@ -4220,37 +4199,9 @@ textarea.vt-input:focus {
 
 }
 
-/* Widget shadow clearance is owned by the slot/scroll safe-zone, never by
-   a one-sided margin that changes dashboard geometry. */
-.vt-widget {
-  margin-bottom: 4px;
-  margin-right: 0;
-}
-
-/* Add padding to the parent container so the shadow has room to be visible */
-.flex-1.flex.flex-col.gap-2.overflow-y-auto {
-  padding: 8px !important;
-  /* Adjust margins if needed to keep alignment */
-  margin: -8px; 
-}
-
-/* Ensure the textarea itself doesn't cause its own clipping */
-textarea.vt-textarea {
-  margin: 4px; /* Creates space for its own glow */
-}
-/* Remove the manual margins causing the shift */
-textarea.vt-textarea {
-  width: 100% !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  box-sizing: border-box; /* Ensures padding/border don't add to width */
-}
-
-/* Ensure the parent provides the even gap for the shadow */
-.flex-1.flex.flex-col.gap-2.overflow-y-auto {
-  padding-left: 8px !important;
-  padding-right: 8px !important;
-}
+/* Legacy shadow-clearance margin/padding hacks removed.
+   Widget spacing, focus/shadow clearance, and scrolling are owned by the
+   canonical slot, shell zones, and WidgetScrollArea contracts. */
 
 /* Custom KPI Video Module Styles */
 .kpi-video-card {
