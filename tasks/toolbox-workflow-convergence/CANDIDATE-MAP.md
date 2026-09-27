@@ -7,12 +7,12 @@
 | Candidate | Work family | Existing authority / prior art | Proposed relationship | Primary acceptance |
 | --- | --- | --- | --- | --- |
 | C1 | Widget → Toolbox promotion contract | Widget Master + Toolbox UI Master | EXTEND | shared open/resume/context contract used by 2+ pairs |
-| C2 | Registry handoff metadata | Universal Tool Handoffs + WidgetRegistry | EXTEND | accepts/produces/next/context validated from registry |
-| C3 | Universal operation identity | system-convergence Creator Operations | CONTINUATION | packet/receipt/generation/trace share operation/workflow identity |
-| C4 | Workflow recipe registry | Universal Tool Handoffs + new specification | EXTEND | forty recipes encoded as validated templates, not task records |
-| C5 | Workflow chain viewer | Universal Tool Handoffs item 10 | CONTINUATION | exact source/artifact/evidence/outcome trace visible |
-| C6 | Brain destination ranking | Universal Tool Handoffs item 8 | CONTINUATION | compatible bounded ranking with manual override |
-| C7 | Handoff preference feedback | Universal Tool Handoffs item 9 + governed learning | CONTINUATION | enabled-only governed feedback, no direct model memory |
+| C2 | Registry handoff metadata | Universal Tool Handoffs + VIEWTUBE_TOOL_CAPABILITIES + WidgetRegistry | EXTEND / PARTIAL | accepts/produces already exist; add required-context/mutation/resume + WidgetRegistry bridge |
+| C3 | Universal operation identity | ActionPacket → GenerationRecord/Vault/ContentBuild foundation + system convergence | CONTINUATION / PARTIAL | existing receipts converge on one operation/workflow identity |
+| C4 | Workflow recipe registry | 8 existing VIEWTUBE_SUGGESTED_TOOL_CHAINS + new specification | EXTEND / PARTIAL | forty recipes generalize existing templates and remain non-task records |
+| C5 | Workflow chain viewer | WorkflowChainBuilder + workflowEngine + universal handoff receipts | CONVERGE / PARTIAL | existing chain UI shows exact packet/artifact/evidence/outcome trace |
+| C6 | Brain destination ranking | rankWorkflowTargets preference ranking + Brain/context systems | CONTINUATION / PARTIAL | add bounded Project/evidence/required-context ranking with manual override |
+| C7 | Handoff preference feedback | viewTubeWorkflowLearning + SendToMenu | IMPLEMENTED FOUNDATION / CONNECT | accepted/rejected signals already gated; certify + connect to governed outcomes |
 | C8 | Core tool promotion wave | Widget Master consolidation + existing Studio tools | MERGE / RESTRUCTURE | explicit widget/toolbox capability matrices and no duplicate owners |
 | C9 | Domain workbench consolidation | Widget Master section 4 | CONTINUATION | absorbed capabilities retain owners and persisted-layout migration |
 | C10 | Identity continuity certification | Projects/ContentBuild + Asset Engine + ActionPacket | VERIFICATION / INTEGRATION | exact IDs survive supported handoffs |
