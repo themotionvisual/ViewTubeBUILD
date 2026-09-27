@@ -62,6 +62,11 @@ When beginning work:
 4. For `review` items, verify the claim against current code/tests before relying on it.
 5. Update the existing authority instead of creating another "master" document unless a genuinely separate scope exists.
 
+
+## Current handoff maps
+
+- [Toolbox UI + CSS Master Handoff](./handoffs/VIEWTUBE_TOOLBOX_UI_CSS_MASTER_HANDOFF.md) — complete continuation map for Toolbox/SubToolbox geometry, CSS ownership, palette, responsive behavior, primitives, certification, governance and current visual-verification priorities. Subordinate to current code/tests and the Toolbox UI Master Resource.
+
 ## Current consolidation status
 
 **Wave 1:** merged — registry + governance + entrypoint.
