@@ -1,4 +1,5 @@
 import type { AlgorithmSignal } from "./AlgorithmStrategyEngine"
+import type { DerivedSignal } from "./EvidenceRecord"
 
 export interface ExternalAnomalySignal {
  id: string
@@ -43,27 +44,61 @@ const mapKind = (input: ExternalAnomalySignal): AlgorithmSignal["kind"] => {
  return "unknown"
 }
 
+export const anomalyToDerivedSignal = (anomaly: ExternalAnomalySignal): DerivedSignal => ({
+ id: `derived:anomaly:${anomaly.id}`,
+ kind: "anomaly",
+ channelId: anomaly.channelId,
+ videoId: anomaly.relatedVideoIds?.[0] || null,
+ label: [anomaly.entity || anomaly.family, anomaly.anomalyType].filter(Boolean).join(" "),
+ metric: anomaly.metric,
+ currentValue: anomaly.currentValue,
+ baselineValue: anomaly.baselineValue,
+ delta: (
+  typeof anomaly.currentValue === "number"
+  && typeof anomaly.baselineValue === "number"
+ )
+  ? anomaly.currentValue - anomaly.baselineValue
+  : null,
+ relativeDelta: anomaly.relativeDelta,
+ confidence: anomaly.confidence,
+ impact: anomaly.impactScore,
+ evidenceIds: [...new Set(anomaly.evidenceIds)],
+ derivation: {
+  method: "external-anomaly-normalization",
+  version: "v1",
+  deterministic: true,
+ },
+ metadata: {
+  family: anomaly.family,
+  anomalyType: anomaly.anomalyType,
+  datasetId: anomaly.datasetId,
+ },
+})
+
 /**
  * This bridge intentionally does NOT detect anomalies.
  * It only converts an already-detected, evidence-backed anomaly into a generic
  * algorithm decision signal so the parent intelligence system can consider it.
  */
-export const anomalyToAlgorithmSignal = (anomaly: ExternalAnomalySignal): AlgorithmSignal => ({
- id: `anomaly:${anomaly.id}`,
- origin: "anomaly",
- kind: mapKind(anomaly),
- channelId: anomaly.channelId,
- videoId: anomaly.relatedVideoIds?.[0] || null,
- entity: anomaly.entity,
- metric: anomaly.metric,
- currentValue: anomaly.currentValue,
- baselineValue: anomaly.baselineValue,
- relativeDelta: anomaly.relativeDelta,
- impactScore: anomaly.impactScore,
- confidence: anomaly.confidence,
- evidenceIds: [...new Set(anomaly.evidenceIds)],
- context: anomaly.context,
-})
+export const anomalyToAlgorithmSignal = (anomaly: ExternalAnomalySignal): AlgorithmSignal => {
+ const derived = anomalyToDerivedSignal(anomaly)
+ return {
+  id: `anomaly:${anomaly.id}`,
+  origin: "anomaly",
+  kind: mapKind(anomaly),
+  channelId: anomaly.channelId,
+  videoId: derived.videoId,
+  entity: anomaly.entity,
+  metric: derived.metric,
+  currentValue: derived.currentValue,
+  baselineValue: derived.baselineValue,
+  relativeDelta: derived.relativeDelta,
+  impactScore: derived.impact ?? anomaly.impactScore,
+  confidence: derived.confidence,
+  evidenceIds: derived.evidenceIds,
+  context: anomaly.context,
+ }
+}
 
 export const escalateAnomaliesToAlgorithmSignals = (
  anomalies: ExternalAnomalySignal[],
