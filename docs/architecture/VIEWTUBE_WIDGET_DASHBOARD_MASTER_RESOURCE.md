@@ -2242,3 +2242,109 @@ Dashboard-local development should consider these stable product ideas before in
 ### Dashboard integration rule
 
 Promote an idea only after checking current widget overlap/consolidation candidates. New views register through the canonical Widget Registry, use shared primitives/shell/certification, support truthful preview/disconnected states, and consume owning capabilities rather than becoming backend owners. Preserve each \`IDEA-DASH-*\` ID in scoped tasks/PRs until shipped, merged, deferred or retired.
+
+
+---
+
+## AK. Longform Optimizer implementation — 2026-09-27
+
+**Branch:** `feature/longform-optimization-widget`  
+**PR:** #498  
+**Stable widget ID:** `longform-optimizer`  
+**Status:** IMPLEMENTED ON BRANCH / CERTIFICATION IN PROGRESS
+
+### Creator job
+
+Monitor successful longform videos, analyze the strongest existing performers first, let the creator override selection with any eligible longform video, recommend evidence-backed package/metadata/routing changes, hand the recommendation into deeper ViewTube tools, and preserve measured follow-through without creating another analytics, Brain, asset or generic ledger authority.
+
+### Canonical ownership
+
+- **Ranking/context orchestration:** `src/services/longformOptimization.ts`.
+- **UI:** `src/views/dashboard/widgets/LongformOptimizationWidget.tsx`.
+- **Widget-local composition only:** `src/views/dashboard/widgets/LongformOptimizationWidget.css`.
+- **Registry/renderer:** `src/views/dashboard/widgets/newWidgetSet.ts`.
+- **Reasoning:** canonical `BrainRuntime` with the governed Brain snapshot/system-prompt/growth-context envelope.
+- **Analytics truth:** existing VT-SYNC / dashboard canonical rows; the optimizer does not persist its own metric truth.
+- **Video identity:** canonical video catalog plus analytics rows.
+- **Work/change lineage:** ContentBuild events.
+- **Recommendation/outcome lineage:** Algorithm Intelligence events and monitoring/evaluation owners.
+- **Assets:** Asset Engine / Vault via existing ActionPacket handoff persistence.
+- **Cross-tool handoffs:** `ViewTubeActionPacket` to Thumbnail Studio, Video Manager, Content Analysis and AI Brain.
+- **External YouTube mutation:** remains outside this widget and approval-gated by existing publishing/management owners.
+
+### Compact production composition
+
+Default allocation is **half × tall**, with **medium → xtall** height support and **half → full** width support.
+
+The visible surface deliberately compresses backend intelligence into four jobs:
+
+1. select a video / prioritize top performers;
+2. read the AI optimization report;
+3. inspect or mark a recommended change;
+4. inspect measured outcomes and add creator review.
+
+The default interior is row-first:
+
+- video selector + Title A/B/C + Thumbnail A/B/C + Analyze;
+- compact selected-video KPI strip;
+- `REPORT | CHANGES | OUTCOME` canonical step tabs;
+- one active workflow body rather than three stacked vertical workspaces.
+
+### Analysis contract
+
+The context packet preserves, when available:
+
+- current title;
+- description;
+- tags;
+- transcript/captions text;
+- thumbnail URL;
+- existing canonical thumbnail/media-analysis evidence;
+- category;
+- playlist membership;
+- views;
+- revenue;
+- likes;
+- comments;
+- watch time;
+- impressions;
+- CTR;
+- AVP;
+- creator A/B/C choices.
+
+Missing transcript or thumbnail-vision evidence remains explicitly missing. The widget does not fabricate a visual inspection merely because a thumbnail URL exists. A future canonical `vision.analyze` capability can fill that evidence slot without changing the widget contract.
+
+### Outcome and experiment rules
+
+- title A/B/C and thumbnail A/B/C are independent creator-controlled toggles;
+- analysis may explicitly recommend **LEAVE UNCHANGED**;
+- marking a recommendation applied records canonical execution/experiment lineage rather than performing an external mutation;
+- execution attaches the existing Algorithm Monitoring schedule with a seven-day final evaluation window;
+- measured analytics and creator review remain distinct evidence streams;
+- the widget refuses to manufacture D−7 / D+7 rows from channel-level data when video-scoped daily evidence is unavailable.
+
+### TDD / verification receipt
+
+RED was proven in release run `36327642725`:
+- missing `longformOptimization.ts`;
+- missing widget TSX/CSS;
+- missing registry entry.
+
+GREEN evidence on the implementation pass:
+- `src/services/longformOptimization.test.ts` — **2/2 passed**;
+- `src/views/dashboard/__tests__/LongformOptimizationWidget.contract.test.ts` — **3/3 passed**;
+- production build passed;
+- source governance passed;
+- local smoke passed.
+
+Static-quality and the repository-wide full suite still contain unrelated pre-existing failures outside the Longform Optimizer change set. The feature-introduced BrainRuntime envelope mismatch found by static-quality was corrected by routing through the same governed snapshot/system-prompt/growth-context contract used by Brain Hub.
+
+### Remaining certification
+
+Before merge:
+- confirm post-fix release run has no Longform Optimizer static/type failures;
+- rendered desktop half/tall certification;
+- rendered 390px portrait certification;
+- phone landscape certification;
+- verify dropdown, both A/B/C toggles, Analyze, tabs, change execution, creator review and ActionPacket handoffs;
+- confirm current-main mergeability before merge.
