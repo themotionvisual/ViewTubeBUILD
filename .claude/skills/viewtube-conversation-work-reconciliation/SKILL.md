@@ -28,6 +28,9 @@ For every work item:
    Inspect current main when implementation/completion is claimed.
 
 2. SEARCH PRIOR ART
+   - Capability home + `governance/convergence/plan-families.json`;
+   - `ideas/registry.json`;
+   - code ownership / open questions / improvement recommendations when relevant;
    - Task Index / Task Authority;
    - Integrated Application Program;
    - Product Architecture / Capability Registry;
@@ -93,3 +96,11 @@ If multiple plans/conversations cover the same feature/process/tool/widget/page/
 - preserve duplicate plans just because their titles differ;
 - promote low-confidence brainstorms directly into committed work;
 - delete source material before unique-content accounting.
+
+
+## Convergence action
+
+When conversation work overlaps an existing feature/tool/system/process, select:
+`EXTEND → COMBINE → MERGE → GENERALIZE → ADAPT → CREATE_REVIEW`.
+
+Record plan-family survivor and Plan Merge record for nontrivial consolidation.
