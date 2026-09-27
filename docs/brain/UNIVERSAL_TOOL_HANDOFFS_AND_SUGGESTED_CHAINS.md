@@ -102,15 +102,19 @@ Widget participation should stay compact: status, evidence, selection, quick act
 
 A chain recommendation is not permission to perform an external write. Sending context between ViewTube tools is an internal handoff. Posting a comment, publishing/uploading, modifying external data, or other external mutations must still pass the relevant creator approval and User Control gates.
 
-## Next implementation section
+## Current implementation status and next section
 
-1. Add a reusable `SendToMenu` UI component.
-2. Wire Thumbnail Studio output -> Publisher / Video Manager / Vault.
-3. Wire Community Posts to accept image packets.
-4. Wire Video Manager selection -> Content Analysis / End-Screen Architect / Brain.
-5. Wire Comment Responder audience requests -> Brain / Projects / Community Posts.
-6. Wire script/storyboard outputs -> Projects / Storyboard / Editor / Vault.
-7. Extend WidgetRegistry with handoff metadata.
-8. Let Brain rank compatible destinations using channel profile + current project + evidence + User Controls.
-9. Record accepted/rejected suggestions so Brain can learn preferred workflows when creator learning is enabled.
-10. Add a workflow-chain viewer showing source, transformations, destination, artifacts, evidence, and current status.
+Current-main reconciliation at `3ed2bc91f324338fd110a160d65ddbed93806142` changes several older “next” items into implemented or partial foundations:
+
+1. **SendToMenu — IMPLEMENTED FOUNDATION.** `src/components/SendToMenu.tsx` resolves compatible targets, persists the packet, records an audit event, ranks destinations, records creator-learning preference signals and routes with packet identity.
+2. **Thumbnail Studio handoff — IMPLEMENTED PRODUCER / RECEIVER PARITY PARTIAL.** `ThumbnailHandoffBar.tsx` produces a universal thumbnail packet and suggests Publisher, Manager, Pre-Launch, Vault and Editor. Destination-specific consumption still needs capability-parity certification.
+3. **Community Posts image intake — REGISTRY READY / RECEIVER INTEGRATION OPEN.** The universal capability registry declares image intake, but current-main search did not establish a dedicated universal receiver on the Community Posts surface.
+4. **Video Manager selection → Analysis / End Screen / Brain — OPEN PRODUCER INTEGRATION.** Current Manager contains a universal receiver for specific inbound optimization packets; a canonical outbound selection packet still needs explicit implementation/certification.
+5. **Comment Responder audience request → Brain / Projects / Community — OPEN PRODUCER INTEGRATION.**
+6. **Script/storyboard → Project / Storyboard / Editor / Vault — PARTIAL.** Super Tool packets and universal payload compatibility exist, but exact producer/receiver continuity must be certified rather than assumed.
+7. **Tool capability metadata — IMPLEMENTED FOUNDATION / WIDGET BRIDGE OPEN.** `VIEWTUBE_TOOL_CAPABILITIES` already owns `accepts` and `produces`; remaining work is required-context, mutation/resume semantics and WidgetRegistry/tool-registry convergence rather than recreating these fields.
+8. **Destination ranking — IMPLEMENTED FOUNDATION / CONTEXT EXPANSION OPEN.** `rankWorkflowTargets` already adapts order from creator-learning signals; bounded Project/evidence/required-context ranking remains open.
+9. **Accepted/rejected workflow preference signals — IMPLEMENTED FOUNDATION.** `buildWorkflowSelectionSignals` records the chosen target positively and skipped-higher-ranked targets negatively; persistence is gated by the creator-learning User Control. Remaining work is governed outcome/evaluation integration and certification.
+10. **Workflow chain UI/storage — IMPLEMENTED PARALLEL FOUNDATION / CONVERGENCE OPEN.** `WorkflowChainBuilder.tsx` and `workflowEngine.ts` already create chains, steps, statuses and artifact links. They must be reconciled with universal ActionPacket receipts, evidence IDs, canonical identities and outcomes rather than replaced by a second chain viewer.
+
+The next work should therefore focus on **convergence and continuity**, not rebuilding these foundations: expand universal packet identity/provenance, wire the missing producers/receivers, bridge widget/tool registries, converge the existing WorkflowChainBuilder with universal receipts, and certify the pilot chains defined by the Toolbox Promotion + Workflow Chain specification.
