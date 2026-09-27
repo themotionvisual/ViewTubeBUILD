@@ -1,6 +1,8 @@
 # ViewTube Toolbox UI Master Resource
 
 **Status:** Canonical living design-system authority  
+**Production Date:** 2026-09-14
+**Last Edited:** 2026-09-27
 **Updated:** 2026-09-27  
 **Last audited main:** `d8381cd4b956cc99367cd11776b5cd5f131d5704`  
 **Canonical owner / concern:** Production Toolbox/Subtoolbox shell hierarchy, Studio control/layout rules, responsive shell behavior, shared state/motion/accessibility rules, certification and migration policy.  
@@ -14,6 +16,7 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-27 | Toolbox UI + CSS continuation | Codex | Portaled the canonical split-left dropdown menu outside bounded panels, bridged its inherited palette, added viewport placement and keyboard focus/selection behavior | `fix/toolbox-split-dropdown-interaction-2026-09-27`; `SubToolboxSplitPrimitives.tsx`, CSS and interaction test | IMPLEMENTED / FOCUSED TEST + BUILD GREEN / VISUAL CERTIFICATION OPEN | VT-032 continuation. Browser screenshot certification remains open in this environment; do not generalize this receipt to other dropdown families. |
 | 2026-09-27 | Toolbox UI + CSS conversation continuation handoff | GPT-5.6 Sol + GitHub | Added a conversation-derived continuation handoff preserving the responsive audit baseline, 3 P1 + 4 P2 root causes, header allocation law, intrinsic mobile sizing contract, CSS ownership boundaries, PR #468/#470/#474 receipts, visual certification matrix and next migration waves | `docs/handoffs/VIEWTUBE_TOOLBOX_UI_CSS_CONVERSATION_HANDOFF.md` | HANDOFF CREATED | Subordinate to current code/tests, this master resource and the existing master handoff; intended to preserve reasoning and implementation continuity without creating parallel authority. |
 | 2026-09-27 | Toolbox UI + CSS master handoff | GPT-5.6 Sol + GitHub | Added a complete continuation handoff covering hierarchy, CSS ownership, geometry, palette, responsive rules, primitives, portals, keyboard behavior, certification, governance, debugging and next steps | `docs/handoffs/VIEWTUBE_TOOLBOX_UI_CSS_MASTER_HANDOFF.md` | HANDOFF CREATED | Handoff is subordinate to current code/tests and this canonical master; use it to orient the next implementation agent without creating parallel authority. |
 | 2026-09-27 | SEO Generator canonical Toolbox migration | GPT-5.6 Sol + GitHub | Migrated the live `/seo-generator` surface from duplicate VIDEO PUBLISHER chrome, native controls and legacy `Standard*` fields to canonical Toolbox header toggles, fields, upload target, buttons, layouts and output cards | PR #474 merged / `896520f8c` | MERGED / PRODUCTION BUILD + FOCUSED CONTRACTS + SOURCE GOVERNANCE + LOCAL SMOKE GREEN | SEO generation, Brain state, Sheets export, Drive sync and ZIP behavior preserved. Keep SEO Generator and Video Publisher separate until a deliberate capability-consolidation plan is approved. |
@@ -206,7 +209,7 @@ Use status vocabulary: `CANONICAL`, `IMPLEMENTED`, `VERIFIED`, `MIGRATE`, `LEGAC
 | Toolbox/Subtoolbox shells | yes | yes | visual required | 80/56 authority implemented on `fix/toolbox-geometry-authority-2026-09-22`; visual certification required before VERIFIED |
 | Standard buttons | yes | yes | required | IMPLEMENTED |
 | Split-left actions | yes | yes | partial | IMPLEMENTED |
-| Analytics split-left dropdown | yes | yes | static-render yes | IMPLEMENTED / TEST-CERTIFIED; visual certification open |
+| Analytics split-left dropdown | yes | yes | static render + controlled interaction/portal test | IMPLEMENTED / TEST-CERTIFIED; visual certification open |
 | Inputs/Textareas | yes | yes | required | IMPLEMENTED |
 | Checkbox/Radio/Switch/Toggle | yes/partial | expanding | required | IMPLEMENTED / MIGRATE |
 | Tags/Badges | yes | yes | required | IMPLEMENTED |
@@ -440,7 +443,7 @@ Keep the isolated header action/help/collapse layout, 16px minimum mobile editab
 Top spacing is certified by visible painted clearance, not raw padding numbers. The first control under a Toolbox, SubToolbox, or MiniSubToolbox header must have visually equal top/side/bottom clearance after accounting for child strokes, hard shadows and focus outlines. The Video Manager Thumbnail MiniSubToolbox is the primary acceptance case; Upload/Generate must not crowd the top or right header edges.
 
 ### 24.3 P1 custom-dropdown state regression
-Observed behavior: choosing a new custom-dropdown option closes the menu but leaves the old visible value. Treat all custom Toolbox dropdown families as unverified until interaction-tested. Every controlled dropdown must derive its trigger from the current controlled value, dispatch the selection exactly once, reflect the parent state immediately, and close after dispatch. Audit `SubToolboxDropdownControl`, `SubToolboxTopTitleDropdown`, split-left dropdowns, StudioDropdown, video selectors and any legacy custom select still in production. Add interaction tests, not only static source tests.
+Observed behavior: choosing a new custom-dropdown option closes the menu but leaves the old visible value. Treat custom Toolbox dropdown families as unverified until interaction-tested. Every controlled dropdown must derive its trigger from the current controlled value, dispatch the selection exactly once, reflect the parent state immediately, and close after dispatch. The split-left dropdown now has a controlled interaction/portal test; audit `SubToolboxDropdownControl`, `SubToolboxTopTitleDropdown`, StudioDropdown, video selectors and any legacy custom select still in production. Add interaction tests, not only static source tests.
 
 ### 24.4 Vault asset-module donor-parity system
 `VaultAssetModule` is the current production compound for Creator Vault assets. Its fixed 276×189 donor geometry, 30px header, explicit landscape/portrait layouts, half-height audio/document variants, editable title, inline spectrum tag editor, selection placement and dirty-save notes are governed by `VAULT_ASSET_MODULE_DNA` and `docs/ui/VAULT_ASSET_MODULE_REFERENCE_PARITY.md`. Creator Vault and the Studio Hub primitive track must render the same component/CSS. `SubToolboxVaultAsset` remains only as a compatibility primitive while consumers migrate; do not use it as the visual authority for new Vault work.
