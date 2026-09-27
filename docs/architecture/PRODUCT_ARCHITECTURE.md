@@ -7,7 +7,7 @@
 **Concern:** creator lifecycle, Master Tools, capabilities, product boundaries, and canonical system topology  
 **Owner:** Product Architecture  
 **Registry ID:** DOC-ARCH-PRODUCT  
-**Last Audited Main SHA:** ee02fdbd1af2be30e81de7955dad188999a03ac4  
+**Last Audited Main SHA:** 3ed2bc91f324338fd110a160d65ddbed93806142
 **Supersedes:** docs/architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md after migration certification  
 **Consolidates:** durable target architecture from docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md  
 **Related Authorities:** docs/architecture/capabilities.json; docs/programs/INTEGRATED_APPLICATION.md; scoped Domain Authorities
@@ -36,6 +36,20 @@ Discover → Validate → Design → Produce → Assemble → Package → Publis
 12. Monetization & Operations Hub
 
 Master Tools are product groupings, not backend owners. Widgets are views into capabilities, not separate products.
+
+### Dashboard instrument → Toolbox workstation boundary
+
+Dashboard and Toolbox are different presentation scales over the same canonical capabilities.
+
+- **Dashboard instruments** should optimize for glanceability, status, compact evidence, bounded controls, one or a few high-value actions, and resumable handoff.
+- **Toolbox workstations** should own deep multi-stage creator work such as editing, generation queues, variant comparison, provenance/lineage, approvals, history, and repeated cross-tool handoffs.
+- A complex capability may have both: the Dashboard keeps a compact instrument while the Toolbox exposes the full workflow.
+- Promotion never creates another backend owner or private synchronized copy of Project, ContentBuild, Asset, Package, Evidence, Operation or Outcome state.
+- Cross-tool workflows preserve canonical identity through `ViewTubeActionPacket` and the Creator Operations convergence path rather than URL-only navigation or copied UI state.
+
+The detailed promotion criteria, twenty current candidates, workflow-envelope contract and forty reusable creator workflow recipes live in `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`. These recipes are orchestration prior art, not forty automatic capabilities or task identities.
+
+The compact-widget versus full-workstation boundary and reusable cross-tool workflow recipes are specified in `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`. That specification is subordinate to this architecture: a promoted Toolbox remains a surface over existing capabilities, and a workflow recipe remains orchestration over existing owners rather than a new domain or persistence system.
 
 ## Six canonical convergence systems
 

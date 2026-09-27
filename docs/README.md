@@ -39,6 +39,7 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Project / ContentBuild workflow | [Projects / ContentBuild Workflow Master Resource](./architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md) |
 | Asset Engine | [Asset Engine Master Resource](./architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md) |
 | Toolbox / Subtoolbox / Studio UI system | [Toolbox UI Master Resource](./architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md) |
+| Dashboard → Toolbox promotion + workflow chains | [Toolbox Promotion + Workflow Chain Specification](./specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md) |
 | Studio component library / primitive corrections | [Studio Hub Component Library Source of Truth](./ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md) |
 | Dashboard widget production metadata | [WidgetRegistry.ts](../src/views/dashboard/WidgetRegistry.ts) (code authority); [Widget Certification Master](./architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md) tracks certification |
 | Analytics / VT-SYNC architecture + migration | [Analytics / VT-SYNC Master Resource](./analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md) |
@@ -68,6 +69,8 @@ When beginning work:
 
 
 ## Current handoff maps
+
+- [Toolbox Promotion + Workflow Chains](./specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md) — subordinate specification for compact Dashboard-instrument vs Toolbox-workstation promotion, twenty promotion/consolidation candidates, forty cross-tool creator recipes, shared handoff identity, and the proposal workspace at `tasks/toolbox-workflow-convergence/`. Recipes are orchestration prior art, not automatic tasks.
 
 - [Toolbox UI + CSS Master Handoff](./handoffs/VIEWTUBE_TOOLBOX_UI_CSS_MASTER_HANDOFF.md) — complete continuation map for Toolbox/SubToolbox geometry, CSS ownership, palette, responsive behavior, primitives, certification, governance and current visual-verification priorities. Subordinate to current code/tests and the Toolbox UI Master Resource.
 - [Toolbox UI + CSS Conversation Continuation Handoff](./handoffs/VIEWTUBE_TOOLBOX_UI_CSS_CONVERSATION_HANDOFF.md) — conversation-derived continuation map preserving the September 26–27 responsive audit, 3 P1 + 4 P2 findings, PR #468/#470/#474 implementation receipts, header-allocation law, intrinsic-height contract and next certification/migration work.

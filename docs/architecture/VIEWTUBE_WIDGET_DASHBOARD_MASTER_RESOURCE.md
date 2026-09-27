@@ -3,7 +3,7 @@
 **Status:** CANONICAL LIVING WIDGET / DASHBOARD PLANNING + IMPLEMENTATION RESOURCE  
 **Created:** 2026-09-25  
 **Last edited:** 2026-09-27  
-**Last audited main:** `cf67573c2ce8eee58f5a63f7d2ae547e165ff3c8`  
+**Last audited main:** `3ed2bc91f324338fd110a160d65ddbed93806142`  
 **Current registered widget count:** 68  
 **Executable authority:** `src/views/dashboard/WidgetRegistryBase.ts`, `src/views/dashboard/WidgetRegistry.ts`, `src/views/dashboard/WidgetRenderer.tsx`, `src/views/dashboard/WidgetRendererBase.tsx`, `src/views/dashboard/WidgetShell.tsx`, `src/views/dashboard/DashboardCanvas.tsx`, `src/views/dashboard/storage.ts`, `src/views/dashboard/widgetCertification.ts`, `src/views/dashboard/WidgetPrimitives.tsx`, and widget-local modules under `src/views/dashboard/widgets/`.  
 **Design-system authority:** `.claude/skills/viewtube-widget-dashboard-system/`, `.claude/skills/viewtube-widget-dashboard/`, `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`, and the canonical widget primitives.  
@@ -25,6 +25,12 @@ Order of authority:
 6. **Historical Library artifacts / HTML atlases** — design and feature donors only; never override current runtime truth.
 
 When counts or implementation status conflict, remeasure current `main`; do not preserve stale numbers merely because an older document says them.
+
+### Dashboard instrument vs Toolbox workstation
+
+The Dashboard must not become a grid of full creator applications. When a widget needs multi-stage editing, generation queues, lineage/provenance, approvals, variant comparison, history, or repeated cross-tool routing, preserve a compact Dashboard instrument and move the deep workflow into a Toolbox workstation that uses the same canonical backend owners.
+
+The detailed promotion law and twenty audited promotion/consolidation candidates are maintained in `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`. Use that specification together with this Widget authority and the Toolbox UI authority before adding another large widget or embedding a full Studio tool inside `WidgetShell`.
 
 ---
 
@@ -291,6 +297,28 @@ Keep these independent unless later evidence proves duplication:
 - UI Reference Library vs Settings — developer/reference surface vs user settings.
 
 ---
+
+## 4.5. Widget → Toolbox promotion boundary
+
+The Dashboard should remain an instrument panel. A widget may expose status, a signature visualization, bounded controls, a quick action and a resumable handoff, but it should not become a permanently expanded multi-page application just to preserve feature parity.
+
+Use `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md` for the current promotion audit and workflow-chain contract. It identifies twenty existing/proposed surfaces that should be audited for one of five dispositions:
+
+- `KEEP_WIDGET`;
+- `PROMOTE_TOOLBOX`;
+- `WIDGET_PLUS_TOOLBOX`;
+- `MERGE_WORKBENCH`;
+- `RETIRE_AFTER_PARITY`.
+
+Promotion is required for review when a surface accumulates multiple workflow stages, editable asset families, async job state, variant comparison, lineage/provenance, approvals, history, or repeated cross-tool handoffs. File size is evidence for review, not the decision criterion.
+
+The likely first `WIDGET_PLUS_TOOLBOX` cohort is Video Director, Video Publisher, Video Manager, Video Autopsy, Daily Oracle, Brain Hub, Video Asset Engine and the Thumbnail Studio family. Comment Responder/Operator, Metadata/SEO, Retention, Keyword, Publishing Calendar, Audience, Discovery/Distribution and Monetization should be evaluated primarily as consolidation/workbench families.
+
+Compact and full surfaces must share canonical domain state. Do not mount a Dashboard `WidgetShell` inside Studio/Toolbox and do not mount a full Toolbox inside a Dashboard widget as a shortcut.
+
+### Workflow-chain relationship
+
+The same specification preserves forty creator workflow recipes, but they are **not forty widget requirements and not forty task records**. Dashboard widgets participate as evidence sources, compact actions, packet producers/consumers and resume points. Cross-tool continuity should be implemented through shared handoff metadata and ActionPacket/operation identity rather than bespoke widget-to-widget wiring.
 
 ## 5. Empty, disconnected and no-data preview framework
 

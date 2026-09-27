@@ -4,7 +4,7 @@
 **Production Date:** 2026-09-14
 **Last Edited:** 2026-09-27
 **Updated:** 2026-09-27  
-**Last audited main:** `d8381cd4b956cc99367cd11776b5cd5f131d5704`  
+**Last audited main:** `3ed2bc91f324338fd110a160d65ddbed93806142`  
 **Canonical owner / concern:** Production Toolbox/Subtoolbox shell hierarchy, Studio control/layout rules, responsive shell behavior, shared state/motion/accessibility rules, certification and migration policy.  
 **Executable authority:** `src/components/subtoolbox/tokens.ts`, `src/components/Toolbox.tsx`, `src/styles/toolbox-system.css`, `src/styles/subtoolbox-system.css`, and their contract tests.  
 **Related scoped authority:** `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` owns Component Library/catalog presentation and primitive-correction notes. Dashboard widgets and Analytics Data Visuals retain separate registries/contracts.  
@@ -16,6 +16,7 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-27 | Toolbox promotion + workflow convergence | GPT-5.6 Sol + GitHub | Connected the Toolbox authority to the compact Dashboard-instrument → full Toolbox-workstation boundary and shared workflow-chain specification | `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`; `tasks/toolbox-workflow-convergence/` | PLANNING / AUTHORITY LINKED | Promotion changes presentation scale only; it must not create duplicate persistence or embed WidgetShell as a Toolbox shortcut. |
 | 2026-09-27 | Toolbox UI + CSS continuation | Codex | Portaled the canonical split-left dropdown menu outside bounded panels, bridged its inherited palette, added viewport placement and keyboard focus/selection behavior | `fix/toolbox-split-dropdown-interaction-2026-09-27`; `SubToolboxSplitPrimitives.tsx`, CSS and interaction test | IMPLEMENTED / FOCUSED TEST + BUILD GREEN / VISUAL CERTIFICATION OPEN | VT-032 continuation. Browser screenshot certification remains open in this environment; do not generalize this receipt to other dropdown families. |
 | 2026-09-27 | Toolbox UI + CSS conversation continuation handoff | GPT-5.6 Sol + GitHub | Added a conversation-derived continuation handoff preserving the responsive audit baseline, 3 P1 + 4 P2 root causes, header allocation law, intrinsic mobile sizing contract, CSS ownership boundaries, PR #468/#470/#474 receipts, visual certification matrix and next migration waves | `docs/handoffs/VIEWTUBE_TOOLBOX_UI_CSS_CONVERSATION_HANDOFF.md` | HANDOFF CREATED | Subordinate to current code/tests, this master resource and the existing master handoff; intended to preserve reasoning and implementation continuity without creating parallel authority. |
 | 2026-09-27 | Toolbox UI + CSS master handoff | GPT-5.6 Sol + GitHub | Added a complete continuation handoff covering hierarchy, CSS ownership, geometry, palette, responsive rules, primitives, portals, keyboard behavior, certification, governance, debugging and next steps | `docs/handoffs/VIEWTUBE_TOOLBOX_UI_CSS_MASTER_HANDOFF.md` | HANDOFF CREATED | Handoff is subordinate to current code/tests and this canonical master; use it to orient the next implementation agent without creating parallel authority. |
@@ -40,6 +41,22 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 8. **Reference Library = certification surface.** Production primitives must be demonstrated there using the same exports/tokens.
 9. **No parallel authority.** Page-local CSS, prototypes and compatibility components cannot silently create a second geometry system.
 10. **Business behavior is preserved during visual migration.** Presentation migration and data/feature removal ship separately.
+
+11. **Dashboard promotion preserves ownership.** A Dashboard widget may hand off to a Toolbox workstation when the job becomes multi-stage, but the two surfaces must consume the same canonical domain state rather than synchronize duplicate local stores.
+12. **Promotion is composition, not embedding.** Do not solve promotion by mounting a full `WidgetShell` inside a Toolbox or mounting a full Studio Toolbox inside a Dashboard widget. Share capability/state contracts below the top-level surface.
+
+## 1.5. Toolbox promotion composition contract
+
+The product-level decision for when a Dashboard widget should remain compact versus hand off to a deeper workstation is defined in `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`.
+
+For Toolbox implementation:
+
+- the compact widget carries selected Project/video/asset/package context through the universal handoff contract;
+- the Toolbox opens directly to the relevant internal page/mode when safe and available;
+- closing/returning preserves canonical selection and does not fork state;
+- promoted tools continue to use this document's Toolbox/SubToolbox hierarchy, controls, focus states, responsive laws and certification requirements;
+- a promoted tool may expose additional pages and deeper operations, but should not grow a second private capability model;
+- Dashboard-specific shell geometry remains owned by the Widget system.
 
 ## 2. Canonical hierarchy
 
