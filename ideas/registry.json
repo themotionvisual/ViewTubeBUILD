@@ -17,6 +17,13 @@
       "title": "Current-Main Audit Expansion Opportunities",
       "sourceType": "historical-audit",
       "itemCount": 55
+    },
+    {
+      "id": "IDEA-LIST-PAGE-FEATURES-001",
+      "path": "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+      "title": "Page Surface Feature Opportunities — 80 Ideas + 5 Consolidation Layers",
+      "sourceType": "conversation",
+      "itemCount": 85
     }
   ],
   "ideas": [
@@ -2617,6 +2624,2011 @@
         "PLAN-FAMILY-BRAIN-AI",
         "PLAN-FAMILY-PROJECTS"
       ]
+    },
+    {
+      "id": "IDEA-DASH-001",
+      "title": "Creator Command Center",
+      "summary": "One master module showing channel health, active projects, urgent tasks, publishing pipeline, anomalies, opportunities, AI recommendations, and recent changes.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "creator command center",
+        "dashboard creator command center"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-002",
+      "title": "Opportunity Radar",
+      "summary": "Continuously surfaces unusually strong topics, videos, formats, traffic sources, search terms, audience behaviors, and content gaps worth investigating.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "opportunity radar",
+        "dashboard opportunity radar"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-003",
+      "title": "Channel Pulse",
+      "summary": "A compact real-time health instrument combining views, watch time, subscribers, revenue, CTR, retention, publishing frequency, and momentum versus normal ranges.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "channel pulse",
+        "dashboard channel pulse"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-004",
+      "title": "Anomaly Monitor",
+      "summary": "Detects significant deviations across videos and channel metrics and explains what changed, when, and possible contributing signals.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "anomaly monitor",
+        "dashboard anomaly monitor"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-005",
+      "title": "Today / This Week Workspace",
+      "summary": "Turns analytics, projects, tasks, comments, deadlines, and publishing plans into a prioritized operational view.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "today / this week workspace",
+        "dashboard today / this week workspace"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-006",
+      "title": "AI Brain Briefing",
+      "summary": "Generates a channel-aware briefing from Channel Knowledge, Evidence, projects, historical performance, audience behavior, and current objectives.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-CONTEXT",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "ai brain briefing",
+        "dashboard ai brain briefing"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-007",
+      "title": "Content Pipeline Visualizer",
+      "summary": "Shows every piece of content moving through Idea → Research → Script → Production → Edit → Package → Publish → Measure → Learn.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "content pipeline visualizer",
+        "dashboard content pipeline visualizer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-008",
+      "title": "Goal & Forecast Tracker",
+      "summary": "Tracks user-defined goals such as subscribers, uploads, revenue, watch hours, project completion, or content cadence and shows progress trajectories without replacing measured data.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-ANALYTICS-CANON",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "goal & forecast tracker",
+        "dashboard goal & forecast tracker"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-009",
+      "title": "Recent Changes / Activity Ledger",
+      "summary": "Unified log/projection of uploads, edits, AI generations, analytics changes, project actions, Vault additions, tests, and system activity.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "recent changes / activity ledger",
+        "dashboard recent changes / activity ledger"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-DASH-010",
+      "title": "Dashboard Composer",
+      "summary": "Full widget layout editor allowing saved dashboards for Channel, Production, Revenue, Shorts, Research, Projects, or custom workflows.",
+      "category": "Product Surface Features",
+      "subcategory": "Dashboard",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-DASHBOARD",
+      "similarityKeys": [
+        "dashboard composer",
+        "dashboard dashboard composer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-001",
+      "title": "Unified Content Builder",
+      "summary": "A central creation environment connecting idea generation, research, scripting, assets, video generation, editing, packaging, publishing, and measurement.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE",
+        "CAP-EDITOR-RENDER",
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "unified content builder",
+        "studio unified content builder"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-002",
+      "title": "AI Director",
+      "summary": "Converts a concept or script into scenes, shot lists, visual prompts, camera directions, transitions, audio ideas, pacing, and generation instructions.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "ai director",
+        "studio ai director"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-003",
+      "title": "Research Workbench",
+      "summary": "Gather sources, evidence, quotes, images, references, competing videos, historical materials, notes, and citations into a project-aware research workspace.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "research workbench",
+        "studio research workbench"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-004",
+      "title": "Script Studio",
+      "summary": "Channel-aware writing environment with structure analysis, hooks, pacing, scene links, claims/evidence, narration timing, revisions, and AI assistance.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "script studio",
+        "studio script studio"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-005",
+      "title": "Video Generation Console",
+      "summary": "Unified interface for image-to-video, text-to-video, avatar, B-roll, animation, Remotion, voice, music, and batch generation providers.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "video generation console",
+        "studio video generation console"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-006",
+      "title": "Thumbnail Studio",
+      "summary": "Thumbnail ideation, generation, composition, title pairing, variants, historical-performance context, and experiment management.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "thumbnail studio",
+        "studio thumbnail studio"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-007",
+      "title": "Packaging Studio",
+      "summary": "Build title, description, tags, chapters, thumbnail, pinned comment, community post, Shorts derivatives, end screens, and publishing metadata together.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE",
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "packaging studio",
+        "studio packaging studio"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-008",
+      "title": "Asset Engine",
+      "summary": "Automatically determines what assets a project requires, finds existing assets, identifies missing ones, and generates or requests what is still needed.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "asset engine",
+        "studio asset engine"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-009",
+      "title": "Content Repurposing Lab",
+      "summary": "Turn a long-form project into Shorts, clips, social posts, community posts, alternate cuts, images, quotes, or follow-up content.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "content repurposing lab",
+        "studio content repurposing lab"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-STUDIO-010",
+      "title": "Production Recipe System",
+      "summary": "Save reusable creation workflows such as historical Shorts, long documentaries, tutorials, and other formats including tools, prompts, stages, presets, and expected assets.",
+      "category": "Product Surface Features",
+      "subcategory": "Studio",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-BRAIN-EXPERIENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-STUDIO",
+      "similarityKeys": [
+        "production recipe system",
+        "studio production recipe system"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-001",
+      "title": "Project Command Board",
+      "summary": "Unified Project Builder + Board showing lifecycle, stage, readiness, assets, blockers, tasks, publishing target, and ContentBuild state.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "project command board",
+        "projects project command board"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-002",
+      "title": "Smart Project Templates",
+      "summary": "Create projects from reusable structures with predefined stages, briefs, asset requirements, checklists, tools, and AI instructions.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "smart project templates",
+        "projects smart project templates"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-003",
+      "title": "Project Readiness Engine",
+      "summary": "Evaluates whether research, script, visuals, audio, metadata, thumbnail, legal/policy checks, and publishing requirements are complete.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-ASSET-LINEAGE",
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "project readiness engine",
+        "projects project readiness engine"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-004",
+      "title": "Dependency & Blocker Graph",
+      "summary": "Visually shows which unfinished task, asset, decision, generation, or approval is preventing another stage from progressing.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "dependency & blocker graph",
+        "projects dependency & blocker graph"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-005",
+      "title": "Project Memory",
+      "summary": "Persistent project-scoped record containing decisions, versions, rejected directions, research, style decisions, generated assets, prompts, and lessons.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-CREATOR-CONTEXT",
+        "CAP-BRAIN-EXPERIENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "project memory",
+        "projects project memory"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-006",
+      "title": "Project Timeline",
+      "summary": "Chronological view of meaningful project events, including AI work, edits, files, generations, renders, publishing changes, and analytics.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "project timeline",
+        "projects project timeline"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-007",
+      "title": "Project Intelligence Panel",
+      "summary": "Project-specific recommendations derived from Channel Knowledge, evidence, historical performance, audience, and comparable content.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "project intelligence panel",
+        "projects project intelligence panel"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-008",
+      "title": "Multi-Video Campaigns",
+      "summary": "Group related projects into series, campaigns, playlists, historical arcs, courses, launches, or experimentation programs.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "multi-video campaigns",
+        "projects multi-video campaigns"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-009",
+      "title": "Version & Experiment Manager",
+      "summary": "Track alternative scripts, edits, titles, thumbnails, hooks, cuts, generation prompts, and packaging variants.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-ASSET-LINEAGE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "version & experiment manager",
+        "projects version & experiment manager"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-PROJ-010",
+      "title": "Post-Publish Learning Loop",
+      "summary": "After publishing, attach performance evidence and validated lessons back to the project and governed Channel Knowledge/learning systems.",
+      "category": "Product Surface Features",
+      "subcategory": "Projects",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-OUTCOME-LEARNING",
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-PROJECTS",
+      "similarityKeys": [
+        "post-publish learning loop",
+        "projects post-publish learning loop"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-001",
+      "title": "Analytics Explorer",
+      "summary": "Flexible query workspace capable of comparing supported metrics, dimensions, time periods, formats, traffic sources, geography, or project/video scope.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "analytics explorer",
+        "analytics analytics explorer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-002",
+      "title": "Performance Decomposition",
+      "summary": "Explain changes by breaking growth or decline into impressions, CTR, retention, traffic sources, returning viewers, geography, format, and other measurable contributors.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "performance decomposition",
+        "analytics performance decomposition"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-003",
+      "title": "Audience Journey Map",
+      "summary": "Show supported viewer paths from discovery through watching, continuation, subscription, return, playlists, or exit while marking unavailable transitions.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "audience journey map",
+        "analytics audience journey map"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-004",
+      "title": "Video Lifecycle Analyzer",
+      "summary": "Visualize Launch → Growth → Plateau → Revival → Long-tail behavior and compare lifecycle shapes across videos.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "video lifecycle analyzer",
+        "analytics video lifecycle analyzer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-005",
+      "title": "Retention Intelligence Lab",
+      "summary": "Detect hooks, dips, spikes, rewatch points, abandonment zones, chapter effects, duration patterns, and recurring retention structures.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "retention intelligence lab",
+        "analytics retention intelligence lab"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-006",
+      "title": "Traffic Intelligence",
+      "summary": "Deep explorer for browse, suggested, search, Shorts feed, external, playlists, channel pages, notifications, end screens, and related supported sources.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "traffic intelligence",
+        "analytics traffic intelligence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-007",
+      "title": "Content Pattern Discovery",
+      "summary": "Find correlations between topics, lengths, styles, titles, thumbnail traits, upload timing, structure, formats, and measured performance while distinguishing correlation from causation.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "content pattern discovery",
+        "analytics content pattern discovery"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-008",
+      "title": "Comparative Cohorts",
+      "summary": "Build groups such as topic families, Shorts under 30 seconds, tutorials, videos over an impression threshold, or time-based upload cohorts and compare them.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "comparative cohorts",
+        "analytics comparative cohorts"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-009",
+      "title": "Experiment Analytics",
+      "summary": "Central ledger/view for thumbnail, title, format, workflow, publishing, or content experiments with hypotheses, measured results, and evidence.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "experiment analytics",
+        "analytics experiment analytics"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-AN-010",
+      "title": "Analytics-to-Brain Learning Pipeline",
+      "summary": "Convert validated analytical findings into structured evidence and learning candidates that BrainRuntime and Channel Knowledge can retrieve later.",
+      "category": "Product Surface Features",
+      "subcategory": "Analytics",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-OUTCOME-LEARNING",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-ANALYTICS",
+      "similarityKeys": [
+        "analytics-to-brain learning pipeline",
+        "analytics analytics-to-brain learning pipeline"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-001",
+      "title": "AI Rough Cut",
+      "summary": "Assemble a proposed initial edit from script, narration, footage, generated media, timestamps, and scene definitions.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "ai rough cut",
+        "editor ai rough cut"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-002",
+      "title": "Script-Synchronized Timeline",
+      "summary": "Link timeline sections directly to script paragraphs, narration sentences, scenes, evidence, and source assets.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "script-synchronized timeline",
+        "editor script-synchronized timeline"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-003",
+      "title": "Smart B-Roll Manager",
+      "summary": "Identify sections needing visual coverage and recommend existing Vault assets or generation prompts/operations.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-ASSET-LINEAGE",
+        "CAP-BRAIN-EXPERIENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "smart b-roll manager",
+        "editor smart b-roll manager"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-004",
+      "title": "Scene Inspector",
+      "summary": "Selecting a scene exposes its script, assets, prompt, camera treatment, audio, captions, effects, sources, and alternatives.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-ASSET-LINEAGE",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "scene inspector",
+        "editor scene inspector"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-005",
+      "title": "Timeline Intelligence",
+      "summary": "Detect dead space, pacing problems, missing media, overly long static sections, audio gaps, duplicate footage, and unresolved placeholders.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "timeline intelligence",
+        "editor timeline intelligence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-006",
+      "title": "Version Branching",
+      "summary": "Create alternate cuts without duplicating the entire project: Short cut, long cut, social cut, experimental hook, revised intro, and similar variants.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-ASSET-LINEAGE",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "version branching",
+        "editor version branching"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-007",
+      "title": "Visual Style System",
+      "summary": "Apply project-level typography, colors, motion language, captions, transitions, overlays, grain, framing, and recurring graphics consistently.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "visual style system",
+        "editor visual style system"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-008",
+      "title": "Remotion Component Browser",
+      "summary": "Drag reusable animated components, charts, maps, lower thirds, timelines, backgrounds, diagrams, and historical visuals directly into the edit.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "remotion component browser",
+        "editor remotion component browser"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-009",
+      "title": "AI Edit Assistant",
+      "summary": "Conversational editing proposals such as shortening an intro, replacing B-roll, or normalizing captions, with preview/diff/approval before mutation.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "ai edit assistant",
+        "editor ai edit assistant"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-EDIT-010",
+      "title": "Automated Quality Control",
+      "summary": "Before render, inspect missing files, clipping, blank frames, silent audio, caption overflow, unsafe crop areas, broken transitions, incorrect ratios, and render configuration.",
+      "category": "Product Surface Features",
+      "subcategory": "Editor",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-EDITOR",
+      "similarityKeys": [
+        "automated quality control",
+        "editor automated quality control"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-001",
+      "title": "Universal Asset Library",
+      "summary": "Images, video, audio, documents, generated assets, references, templates, prompts, renders, project materials, and source material in one canonical library experience.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "universal asset library",
+        "vault universal asset library"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-002",
+      "title": "Semantic Asset Search",
+      "summary": "Search by meaning rather than filename, including scenes, subjects, locations, visual traits, and intended use.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "semantic asset search",
+        "vault semantic asset search"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-003",
+      "title": "Asset Intelligence Enrichment",
+      "summary": "Automatically derive descriptions, tags, entities, dates, colors, ratios, media properties, provenance, and project relationships with factual/inferred status.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "asset intelligence enrichment",
+        "vault asset intelligence enrichment"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-004",
+      "title": "Asset Relationship Graph",
+      "summary": "Connect source → edit → derivative → generation → project → published video → performance evidence.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "asset relationship graph",
+        "vault asset relationship graph"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-005",
+      "title": "Duplicate & Near-Duplicate Detector",
+      "summary": "Find identical files, resized copies, near-identical generations, alternate encodes, and redundant imports.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "duplicate & near-duplicate detector",
+        "vault duplicate & near-duplicate detector"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-006",
+      "title": "Smart Collections",
+      "summary": "Dynamic collections based on tags, projects, subjects, formats, generation models/providers, dates, people, usage frequency, or custom rules.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "smart collections",
+        "vault smart collections"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-007",
+      "title": "Asset Usage History",
+      "summary": "Show where each asset appears across videos, projects, generations, thumbnails, edits, and published content.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "asset usage history",
+        "vault asset usage history"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-008",
+      "title": "Asset Version Families",
+      "summary": "Group original, crop, retouch, upscale, animation, alternate generation, edited audio, and derivative files as one lineage.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "asset version families",
+        "vault asset version families"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-009",
+      "title": "Vault Inbox / Import Station",
+      "summary": "Batch upload/intake with classification, tagging, duplicate checks, metadata extraction, and project assignment.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "vault inbox / import station",
+        "vault vault inbox / import station"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-VAULT-010",
+      "title": "Missing Asset Finder",
+      "summary": "Compare active projects against Asset Engine requirements and identify missing images, footage, narration, music, documents, graphics, or generated material.",
+      "category": "Product Surface Features",
+      "subcategory": "Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-VAULT",
+      "similarityKeys": [
+        "missing asset finder",
+        "vault missing asset finder"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-001",
+      "title": "AI Brain Control Center",
+      "summary": "Manage models, providers, reasoning levels/profiles, context/memory sources, evidence policies, tools, permissions, and contextual scope.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "ai brain control center",
+        "settings ai brain control center"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-002",
+      "title": "Creator Profile & Style DNA",
+      "summary": "Define voice, audience, visual language, topics, editorial principles, recurring formats, preferences, and channel-specific creative identity.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "creator profile & style dna",
+        "settings creator profile & style dna"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-003",
+      "title": "Integration Manager",
+      "summary": "One place for YouTube, Google, AI providers, image/video generation services, storage, publishing, analytics, and future connectors.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "integration manager",
+        "settings integration manager"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-004",
+      "title": "Automation Center",
+      "summary": "Control syncs, project automations, asset processing, publishing workflows, analytics refreshes, notifications, and AI routines.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "automation center",
+        "settings automation center"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-005",
+      "title": "Data & Sync Controller",
+      "summary": "Configure datasets, lifetime/7/28/90/365 windows, dimensions, traffic sources, geographic scope, schedules, failures, and status.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "data & sync controller",
+        "settings data & sync controller"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-006",
+      "title": "Model Routing Rules",
+      "summary": "Decide which approved models/providers handle research, scripting, reasoning, images, video, summaries, metadata, classification, or inexpensive batch jobs.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-BRAIN-EXPERIENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "model routing rules",
+        "settings model routing rules"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-007",
+      "title": "Workspace & Interface Profiles",
+      "summary": "Save UI density, dashboard layouts, navigation choices, themes, mobile layouts/behaviors, toolbox settings, and creator-specific workspace presets.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "workspace & interface profiles",
+        "settings workspace & interface profiles"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-008",
+      "title": "Notifications & Attention Rules",
+      "summary": "Fine control over what deserves interruption: anomalies, publishing failures, render completion, comments, project blockers, sync problems, or opportunity alerts.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "notifications & attention rules",
+        "settings notifications & attention rules"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-009",
+      "title": "Privacy / Data Governance Center",
+      "summary": "Show what data exists, where it came from, where AI may use it, retention settings, exports, permissions, and deletion controls.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "privacy / data governance center",
+        "settings privacy / data governance center"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-SET-010",
+      "title": "System Health & Diagnostics",
+      "summary": "Authentication status, API health, synchronization, queues, provider status, storage, broken connections, errors, migrations, configuration problems, and repair actions.",
+      "category": "Product Surface Features",
+      "subcategory": "Settings",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-SETTINGS",
+      "similarityKeys": [
+        "system health & diagnostics",
+        "settings system health & diagnostics"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-001",
+      "title": "Interactive ViewTube Academy",
+      "summary": "Structured learning paths from first channel connection through advanced AI, analytics, production, and automation.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "interactive viewtube academy",
+        "user guide interactive viewtube academy"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-002",
+      "title": "Contextual Help Mode",
+      "summary": "Toggle explanations directly on pages, controls, widgets, metrics, and workflows.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "contextual help mode",
+        "user guide contextual help mode"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-003",
+      "title": "Ask ViewTube Guide",
+      "summary": "AI assistant grounded in ViewTube documentation, features, architecture, current UI, workflows, known issues, and tutorials.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "ask viewtube guide",
+        "user guide ask viewtube guide"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-004",
+      "title": "Workflow Cookbook",
+      "summary": "Step-by-step recipes such as creating a Short, researching a historical video, diagnosing CTR, or building a thumbnail experiment.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "workflow cookbook",
+        "user guide workflow cookbook"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-005",
+      "title": "Feature Explorer",
+      "summary": "Searchable catalog of every page, widget, tool, primitive, AI capability, command, integration, and automation.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "feature explorer",
+        "user guide feature explorer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-006",
+      "title": "Interactive Guided Tours",
+      "summary": "Walk users through real interfaces while highlighting controls and requiring simple actions rather than relying on static documentation.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "interactive guided tours",
+        "user guide interactive guided tours"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-007",
+      "title": "Metric Encyclopedia",
+      "summary": "Explain analytics metrics, dimensions, sources, limitations, compatible comparisons, and appropriate interpretation.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "metric encyclopedia",
+        "user guide metric encyclopedia"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-008",
+      "title": "What Can I Do? Navigator",
+      "summary": "User describes a goal and ViewTube routes them to the correct tool/workflow and prepares the appropriate handoff.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "what can i do? navigator",
+        "user guide what can i do? navigator"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-009",
+      "title": "Release & Change Center",
+      "summary": "Human-readable record of new features, redesigned tools, migrations, renamed systems, deprecated functionality, and important behavioral changes.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "release & change center",
+        "user guide release & change center"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-GUIDE-010",
+      "title": "Troubleshooting & System Doctor",
+      "summary": "Diagnose missing analytics, broken sign-in, failed generations, unavailable assets, render errors, sync failures, or empty widgets and route toward owning remediation.",
+      "category": "Product Surface Features",
+      "subcategory": "User Guide",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PAGE-USER-GUIDE",
+      "similarityKeys": [
+        "troubleshooting & system doctor",
+        "user guide troubleshooting & system doctor"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-ARCH-001",
+      "title": "Intelligence Layer",
+      "summary": "Unify AI Brain, Creator Context/Channel Knowledge, Evidence & Intelligence, specialist intelligence, analytics learning, Project Memory, and governed outcomes/learning behind existing owners.",
+      "category": "Product Architecture",
+      "subcategory": "Consolidation Layers",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PRODUCT-ARCHITECTURE",
+      "similarityKeys": [
+        "intelligence layer",
+        "consolidation layers intelligence layer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-ARCH-002",
+      "title": "ContentBuild Layer",
+      "summary": "Treat Idea → Research → Script → Assets → Production → Edit → Packaging → Publish → Performance → Learning as one continuous Project/ContentBuild lifecycle.",
+      "category": "Product Architecture",
+      "subcategory": "Consolidation Layers",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-ASSET-LINEAGE",
+        "CAP-PUBLISH",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PRODUCT-ARCHITECTURE",
+      "similarityKeys": [
+        "contentbuild layer",
+        "consolidation layers contentbuild layer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-ARCH-003",
+      "title": "Asset Layer",
+      "summary": "Unify Vault, Asset Engine, generations, provenance, version families, project relationships, render outputs, and publication asset identity.",
+      "category": "Product Architecture",
+      "subcategory": "Consolidation Layers",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE",
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PRODUCT-ARCHITECTURE",
+      "similarityKeys": [
+        "asset layer",
+        "consolidation layers asset layer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-ARCH-004",
+      "title": "Measurement Layer",
+      "summary": "Connect analytics, anomalies, experiments, opportunities, outcomes, cohorts, and evidence without creating parallel analytics truth.",
+      "category": "Product Architecture",
+      "subcategory": "Consolidation Layers",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PRODUCT-ARCHITECTURE",
+      "similarityKeys": [
+        "measurement layer",
+        "consolidation layers measurement layer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
+    },
+    {
+      "id": "IDEA-ARCH-005",
+      "title": "Orchestration Layer",
+      "summary": "Connect Projects, tasks, operations, automation, workflows, integrations, approvals, notifications, and system state through shared contracts.",
+      "category": "Product Architecture",
+      "subcategory": "Consolidation Layers",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-PUBLISH"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PRODUCT-ARCHITECTURE",
+      "similarityKeys": [
+        "orchestration layer",
+        "consolidation layers orchestration layer"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ],
+      "sourceListId": "IDEA-LIST-PAGE-FEATURES-001",
+      "status": "UNREVIEWED"
     }
   ]
 }
