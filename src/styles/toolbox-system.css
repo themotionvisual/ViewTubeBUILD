@@ -394,7 +394,8 @@
   .vt-toolbox-header-secondary-actions .vt-toolbox-header-toggle {
     height: 44px;
     min-height: 44px;
-    min-width: 148px;
+    width: max-content;
+    min-width: 0;
     max-width: 100%;
   }
 
