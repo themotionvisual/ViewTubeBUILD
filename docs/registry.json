@@ -96,13 +96,17 @@
       "owner": "Integrated Application Program",
       "productionDate": "2026-09-26",
       "lastEdited": "2026-09-27",
-      "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
+      "lastAuditedMainSha": "76519e3d81f33df4a3084f49a369f5edbb1ee937",
       "supersedes": [
         "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
       ],
       "relatedAuthorities": [
         "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md",
-        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/DOCUMENTATION.md",
+        "docs/governance/TASK_AUTHORITY.md",
+        "docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md"
       ]
     },
     {
