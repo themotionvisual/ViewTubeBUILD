@@ -1,992 +1,1347 @@
 ---
-title: YouTube Metrics and Dimensions Master Glossary
-short_title: Metrics & Dimensions
+title: How to Read YouTube Analytics
+short_title: Analytics Guide
 resource_id: youtube-metrics-dimensions-glossary
-resource_type: reference-guide
+resource_type: creator-guide
 category: Analytics
-secondary_categories: APIs, Data Architecture, Reporting, YouTube Studio
-audience: YouTube creators, analysts, developers
-difficulty: Intermediate to Advanced
-estimated_read_time: 35–45 minutes
+secondary_categories: Metrics, Dimensions, Filters, Traffic Sources, Audience, Revenue
+audience: YouTube creators
+difficulty: Beginner to Intermediate
+estimated_read_time: 25–35 minutes
 production_date: 2026-09-26
 last_researched: 2026-09-26
 recommended_review_date: 2026-12-26
-research_status: source-grounded with official API mappings prioritized
-version: 1.0
+research_status: creator-first and source-grounded
+version: 2.0
 official_sources_prioritized: true
 viewtube_resource: true
-tags: metrics, dimensions, youtube-analytics-api, youtube-reporting-api, youtube-data-api, studio, shorts, revenue, traffic-sources, retention
-related_viewtube_tools: Analytics, VT-SYNC, Intelligence Hub, AI Brain, Projects
-related_resources: How YouTube Recommendations and Discovery Work; Shorts vs Long-Form; Traffic Sources and Discovery Pathways; Audience Retention and Watch Behavior; Reading Analytics Correctly
+tags: analytics, metrics, dimensions, filters, traffic-sources, retention, audience, revenue, shorts, comparisons
+related_viewtube_tools: Analytics, VT-SYNC, Intelligence Hub, AI Brain, Content Analysis, Projects
+related_resources: How YouTube Finds Viewers for Your Videos; Shorts vs Long-Form; Traffic Sources and Discovery Pathways; Audience Retention and Watch Behavior; Reading Analytics Correctly
 ---
 
-# YouTube Metrics and Dimensions Master Glossary
+# How to Read YouTube Analytics
 
-## Quick-Reference Summary
+YouTube Analytics becomes useful when it helps you answer a creator question.
 
-YouTube analytics is not one database exposed through four interchangeable interfaces. It is an **analytics ecosystem** made of several surfaces with different purposes, schemas, latency, aggregation rules, privacy behavior, and supported fields.
+It becomes confusing when it turns into a wall of numbers.
 
-The four surfaces creators and developers most often confuse are:
+This guide teaches the system from the creator's point of view: **what each kind of data means, how metrics and dimensions fit together, how filters change the answer, how to compare performance correctly, and how to use the result inside ViewTube.**
 
-| Surface | Primary job | Query style | Best for | Important limitation |
-|---|---|---|---|---|
-| YouTube Studio | Interactive creator analysis | UI-driven | Daily creator decisions, charts, audience insights, retention, Shorts diagnostics | Not every Studio metric has a public API equivalent |
-| YouTube Analytics API v2 | Targeted custom reports | Synchronous query | Dashboards, custom analysis, filtered metric/dimension queries | Only documented metric/dimension combinations are valid |
-| YouTube Reporting API v1 | Scheduled bulk exports | Asynchronous daily CSV | Warehouses, ETL, long-running channel/content-owner pipelines | Fixed report schemas; no on-demand arbitrary grouping |
-| YouTube Data API v3 | Resource metadata and management | Resource requests | Titles, descriptions, thumbnails, playlists, channel/video metadata | Not a substitute for performance analytics |
+You do not need to memorize every field. You need to know how to ask the data a good question.
 
-> **Key distinction:** Google describes the Analytics API as supporting “real-time queries.” That means the request is executed synchronously against the analytics service; it does **not** mean every metric represents live event telemetry with zero processing delay.
-
-### Architecture at a Glance
-
-```mermaid
-flowchart LR
-    A[YouTube Events] --> B[Studio Analytics]
-    A --> C[Analytics API v2]
-    A --> D[Reporting API v1]
-    E[YouTube Data API v3] --> F[Metadata Enrichment]
-    C --> G[Custom Dashboards]
-    D --> H[Warehouse / ETL]
-    F --> G
-    F --> H
-```
-
-A reliable ViewTube data system therefore needs to know not only **what a metric means**, but also:
-
-- which surface exposes it;
-- which dimensions it can be combined with;
-- whether it is core or non-core;
-- whether the value is estimated;
-- whether privacy thresholds can hide detail;
-- whether Shorts, VOD, live, playlists, or Content Owner reports change its meaning;
-- whether the same concept has a different field name in another API.
+> **Creator principle:** A metric is a measurement. A dimension tells you how that measurement is broken down. A filter narrows the data. A time window tells you when. Together, they form a useful question.
 
 ---
 
-## Analytics Surface Architecture
+## Metrics, Dimensions, Filters and Time Windows
 
-### YouTube Studio
+These four ideas are the foundation of YouTube analytics.
 
-YouTube Studio is the creator-facing analytical workspace. It provides:
+### Metric — What are you measuring?
 
-- overview and key metric cards;
-- Reach, Engagement, Audience, Revenue and Content analysis;
-- audience-retention visualizations;
-- Shorts-specific reports such as **Shown in feed** and **How many chose to view**;
-- new, casual and regular viewer segments;
-- Advanced Mode for deeper filtering and comparison.
+A **metric** is a number.
 
-Studio is a presentation layer, not a raw-schema browser. Some Studio concepts are assembled from internal systems and are not guaranteed to appear as public Analytics API metrics.
+Examples:
 
-### YouTube Analytics API v2
+- views;
+- watch time;
+- average view duration;
+- average percentage viewed;
+- impressions;
+- CTR;
+- subscribers gained;
+- estimated revenue.
 
-The Analytics API uses:
+If you ask, “How many views did I get?” **views** is the metric.
 
-`GET https://youtubeanalytics.googleapis.com/v2/reports`
+### Dimension — How do you want to break it apart?
 
-The `reports.query` method accepts combinations of:
+A **dimension** groups a metric.
 
-- metrics;
-- dimensions;
-- filters;
-- sort instructions;
-- date ranges;
-- channel/content-owner identity.
+Examples:
 
-The API uses mostly **camelCase** names such as:
+- day;
+- video;
+- country;
+- traffic source;
+- device;
+- age group;
+- gender;
+- subscription status.
 
-- `estimatedMinutesWatched`
-- `averageViewDuration`
-- `averageViewPercentage`
-- `subscribersGained`
-- `estimatedRevenue`
+If you ask, “How many views did each video get?” then:
 
-> **Important:** A metric existing in the metric reference does not mean it can be combined with every dimension. The supported report tables are the authority for valid combinations.
+- metric = views;
+- dimension = video.
 
-### YouTube Reporting API v1
+If you ask, “Where did my views come from?” then:
 
-The Reporting API is designed for scheduled bulk exports.
+- metric = views;
+- dimension = traffic source.
 
-A client creates a reporting job, then downloads versioned daily CSV files. Reports are generated asynchronously. Google’s guide states that clients can begin retrieving reports within 48 hours of job creation; the REST reference also describes jobs as generating daily reports and notes availability within roughly the first day. Build pipelines to tolerate asynchronous arrival rather than depend on an exact hour.
+### Filter — Which part should be included?
 
-Reporting fields generally use **snake_case**, for example:
+A **filter** removes data you do not want in the answer.
 
-- `watch_time_minutes`
-- `average_view_duration_seconds`
-- `estimated_partner_revenue`
-- `traffic_source_type`
+Examples:
 
-Bulk reports have predefined schemas. You do **not** choose arbitrary dimensions per request.
+- only Shorts;
+- only one video;
+- only United States viewers;
+- only YouTube Search traffic;
+- only subscribers;
+- only a project group.
 
-### YouTube Data API v3
+A filter does not create a new metric. It narrows the data being measured.
 
-The Data API supplies structural and descriptive YouTube resources.
+### Time window — When are we measuring?
 
-Typical uses:
+Examples:
 
-- map `video_id` to title and description;
-- retrieve thumbnails;
-- retrieve channel metadata;
-- inspect playlists and playlist items;
-- read public statistics;
-- manage supported account resources.
+- today;
+- last 7 days;
+- last 28 days;
+- first 24 hours;
+- first 7 days after publishing;
+- this month;
+- lifetime.
 
-A warehouse commonly joins Reporting API rows to Data API resources for human-readable metadata.
+The exact same video can look excellent or weak depending on the window you choose.
 
-> **Data governance:** Google’s Reporting API documentation notes that stored Data API resource metadata must be refreshed or deleted in accordance with YouTube API Services policies. Do not treat copied metadata as permanent static truth.
+### One complete analytics question
 
----
+**“How many views did this long-form video get from YouTube Search in its first 28 days?”**
 
-## Surface Capability Matrix
-
-| Capability | Studio | Analytics API v2 | Reporting API v1 | Data API v3 |
-|---|---:|---:|---:|---:|
-| Interactive creator charts | Yes | No | No | No |
-| Custom metric/dimension queries | Limited UI | Yes | No | No |
-| Scheduled bulk CSV | No | No | Yes | No |
-| Resource metadata | Limited | IDs in reports | IDs in reports | Yes |
-| Monetization metrics | Yes if eligible | Yes with monetary scope | Yes with monetary scope/report type | Limited statistics only |
-| Retention curve analysis | Yes | Yes for supported retention reports | Not a 1:1 bulk equivalent | No |
-| Traffic-source detail | Yes | Yes for supported source types | Yes | No |
-| Playlist performance | Yes | Yes | Yes | Playlist metadata only |
-| Privacy/anonymization effects | Yes | Yes | Yes | Resource-policy dependent |
-| Server-side custom sorting/filtering | UI controls | Yes | Fixed reports / client ETL | Resource query parameters |
-
----
-
-## Authentication, Authorization and Identity
-
-Analytics and Reporting API access requires OAuth 2.0 user authorization.
-
-### Primary Analytics Scopes
-
-| Scope | Use |
+| Analytics part | Value |
 |---|---|
-| `yt-analytics.readonly` | Read non-monetary YouTube Analytics reports |
-| `yt-analytics-monetary.readonly` | Read monetary and non-monetary analytics reports |
-| `youtube` | Manage account resources and Analytics groups where supported |
-| `youtube.readonly` | Read YouTube account/resource information |
-| `youtubepartner` | Content-owner/partner asset access where applicable |
+| Metric | Views |
+| Dimension | Day or traffic source, depending on the chart |
+| Filter | One video + YouTube Search |
+| Time window | First 28 days |
+| Scope | Long-form video |
 
-### Authentication Checklist
-
-- [ ] Create or select a Google Cloud project.
-- [ ] Enable the required YouTube APIs.
-- [ ] Configure the OAuth consent screen.
-- [ ] Create the correct OAuth client type.
-- [ ] Request the minimum scopes needed.
-- [ ] Store refresh tokens securely for background jobs.
-- [ ] Treat access tokens as secrets.
-- [ ] Handle revoked authorization and expired credentials.
-- [ ] Verify the authenticated Google identity is linked to the intended YouTube channel or Brand Account.
-
-### Service Accounts
-
-> **Important limitation:** The YouTube Data API does not support the OAuth service-account flow for channel-linked user data. Google documents that attempts to use a service account where a linked YouTube identity is required can produce `NoLinkedYouTubeAccount`.
-
-For YouTube channel analytics systems, use user OAuth authorization and securely stored refresh tokens rather than assuming a Cloud service account can impersonate a channel.
+That is much more useful than simply opening a dashboard and staring at “views.”
 
 ---
 
-## Data Timing, Processing and Privacy
+## The Creator Analytics Map
 
-### Query Time vs Data Freshness
+Most creator analytics fit into a simple journey:
 
-A synchronous Analytics API response can still contain processed data whose newest values lag behind current activity.
+\`\`\`mermaid
+flowchart LR
+    A[People Encounter the Video] --> B[Some Choose It]
+    B --> C[They Watch]
+    C --> D[They React and Continue or Leave]
+    D --> E[Some Return or Subscribe]
+    E --> F[Some Viewing Produces Revenue]
+\`\`\`
 
-Do not use “real-time query” as a synonym for “zero-latency analytics.”
+Different metrics help you understand each stage.
 
-### Reporting API Windows
+| Creator stage | Useful evidence |
+|---|---|
+| Exposure | Impressions, shown in feed, traffic sources |
+| Choice | CTR, chose to view / swiped away |
+| Viewing | Views, watch time, AVD, APV, retention |
+| Response | Likes, comments, shares, subscribers |
+| Audience relationship | Unique viewers, new/returning viewers, subscriber status |
+| Business outcome | Revenue, RPM, CPM, monetized playbacks |
 
-Bulk reports:
-
-- represent a defined reporting period;
-- are updated daily;
-- may arrive asynchronously;
-- can include replacement/backfill data;
-- have retention windows for downloadable report files.
-
-A warehouse should therefore be **idempotent**: newer files covering the same period can replace earlier ingested versions.
-
-### Pacific-Time Reporting
-
-Reporting API `date` rows use Pacific time boundaries. Depending on daylight saving time, the offset can be UTC-7 or UTC-8, and DST transition days can contain 23 or 25 hours.
-
-> **Analytics trap:** Never assume a YouTube reporting “day” is the same interval as a UTC calendar day.
-
-### Data Anonymization
-
-YouTube can suppress or aggregate dimension values when a row does not meet privacy thresholds.
-
-Examples include:
-
-- country/province details becoming `ZZ` or `US-ZZ`;
-- demographic values becoming `NULL`;
-- traffic-source detail becoming `NULL`.
-
-> **Do not interpret:** `NULL`, `ZZ`, or missing detailed rows as zero activity.
+You should rarely diagnose a video from one stage alone.
 
 ---
 
-## Dimensions: The Structural Axes of a Report
+## Start With the Question, Not the Metric
 
-A **dimension** describes how metrics are grouped.
+A common analytics mistake is choosing a number first.
 
-In a bulk report, each row represents a unique combination of the report’s dimensions. In a query report, the selected dimensions determine the grouping grain.
+Instead, start with the creator question.
 
-### Core Structural Mapping
+### “Why did this video get more views?”
 
-| Concept | Analytics API v2 | Reporting API v1 | Notes |
-|---|---|---|---|
-| Day | `day` | `date` | Reporting dates use Pacific-time day boundaries |
-| Month | `month` | Report-type dependent | Analytics month values use `YYYY-MM` |
-| Video | `video` | `video_id` | Video resource ID |
-| Channel | `channel` | `channel_id` | Analytics `channel` is primarily a content-owner dimension |
-| Playlist | `playlist` | `playlist_id` | Availability depends on report |
-| Asset | Content-owner reports | `asset_id` | Content ID asset, not ordinary creator video ID |
-| Uploader type | `uploaderType` | `uploader_type` | Content-owner reporting |
-| Claimed status | `claimedStatus` | `claimed_status` | Content-owner reporting |
+Inspect:
 
-### A Critical Mapping Difference: Content Type
+- views over time;
+- traffic sources;
+- impressions;
+- CTR;
+- audience type;
+- publication timing.
 
-The Analytics API documents `creatorContentType` with values such as:
+### “Why did this video stop growing?”
 
-- `LIVE_STREAM`
-- `SHORTS`
-- `VIDEO_ON_DEMAND`
-- `STORY`
-- `UNSPECIFIED`
+Inspect:
 
-Do **not** assume that every Analytics API dimension has a Reporting API field with the same concept converted to snake_case. The current Reporting API dimension reference does not document a general `creator_content_type` dimension.
+- impressions over time;
+- dominant traffic source;
+- CTR by source;
+- topic interest;
+- retention;
+- audience expansion;
+- competition/seasonality where relevant.
+
+### “Did my new thumbnail help?”
+
+Inspect:
+
+- thumbnail change time;
+- impressions before/after;
+- CTR before/after;
+- traffic-source mix;
+- views;
+- watch behavior.
+
+Do not conclude from CTR alone if the audience changed at the same time.
+
+### “Which videos create loyal viewers?”
+
+Inspect:
+
+- returning-viewer behavior;
+- repeat audience;
+- subscriber conversion;
+- catalog pathways;
+- Suggested traffic;
+- series performance.
+
+### “Which traffic source is best?”
+
+There is no universal answer.
+
+One source might bring:
+
+- more views;
+- deeper watch time;
+- more subscribers;
+- more revenue;
+- stronger repeat viewing.
+
+Decide what “best” means before ranking sources.
 
 ---
 
-## Geographic Dimensions
+## Views, Reach and Exposure
 
-| Analytics API | Reporting API | Meaning | Constraint |
-|---|---|---|---|
-| `country` | `country_code` | Two-letter ISO 3166-1 country code | `ZZ` can represent unresolved/anonymized geography |
-| `province` | `province_code` | U.S. state / DC ISO 3166-2 code | Analytics queries require `country==US` |
-| `dma` | Report-type dependent | Nielsen U.S. Designated Market Area | U.S.-specific |
-| `city` | No universal 1:1 bulk field | Estimated city | Analytics data available from 2022-01-01 |
-| `continent` | — | Filter-only UN statistical region | Analytics filter |
-| `subContinent` | — | Filter-only UN subregion | Analytics filter |
+### Views
 
-### Geography Checklist
+Views are the basic count of qualifying viewing activity under YouTube's current definitions.
 
-- [ ] Confirm the report actually supports the geographic dimension.
-- [ ] Apply `country==US` when using `province`.
-- [ ] Treat privacy-suppressed rows as missing detail, not zero.
-- [ ] Keep geographic codes separate from display names.
-- [ ] Do not rename `province` to “state” inside the canonical API schema; translate only at the presentation layer.
+A view tells you **that viewing happened**, not why it happened.
+
+Pair views with:
+
+- traffic source;
+- date;
+- video;
+- format;
+- audience type;
+- watch behavior.
+
+### Impressions
+
+Impressions measure eligible thumbnail displays on supported YouTube surfaces.
+
+They do **not** represent every possible exposure to your content.
+
+For example, some external and other surfaces do not create counted thumbnail impressions in the same way.
+
+Use impressions to ask:
+
+- Is YouTube showing this video?
+- Is exposure growing?
+- Did exposure fall?
+- Did a title/thumbnail change occur while exposure was stable?
+
+### Impressions CTR
+
+CTR answers:
+
+**Of the counted impressions, what percentage became views?**
+
+It is useful for packaging, but it is contextual.
+
+CTR can change because:
+
+- the thumbnail/title changed;
+- the audience changed;
+- the traffic source changed;
+- distribution widened;
+- topic relevance changed;
+- competition changed.
+
+Do not treat CTR as a channel-wide quality score.
+
+### Shorts exposure
+
+For Shorts, creator-facing analytics include different choice signals such as:
+
+- shown in feed;
+- chose to view / viewed;
+- swiped away.
+
+Do not force long-form thumbnail-impression logic onto Shorts Feed behavior.
+
+> **Use this in ViewTube:** When a video is weak, first separate **exposure problems** from **choice problems**. Low views alone does not tell you which one you have.
+
+---
+
+## Watch Time, AVD, APV and Retention
+
+These metrics describe different parts of viewing behavior.
+
+### Watch time
+
+**Watch time** is the total amount of time viewers spent watching.
+
+A large channel or broadly distributed video can generate high watch time even with modest percentage retention.
+
+### Average View Duration
+
+**AVD** tells you the average amount of time watched per view.
+
+Example:
+
+A 20-minute video with 8-minute AVD means the average view contributed about 8 minutes of watch time.
+
+### Average Percentage Viewed
+
+**APV** expresses viewing depth relative to the video's length.
+
+This is useful when comparing videos of different lengths, but it still needs context.
+
+A 50-minute documentary and a 90-second explainer should not be judged by the same expectation.
+
+### Audience retention
+
+The retention curve shows **where viewing behavior changes during the video**.
+
+Look for:
+
+- steep early drops;
+- stable sections;
+- gradual decline;
+- sudden dips;
+- spikes;
+- repeated high-interest moments.
+
+Retention is most useful as a map, not just one score.
+
+### Example
+
+| Video | Length | AVD | APV |
+|---|---:|---:|---:|
+| A | 20 min | 8 min | 40% |
+| B | 3 min | 2 min | 67% |
+
+Video B has higher APV. Video A creates more average watch time.
+
+Neither number alone tells you which video better served its intended audience.
 
 ---
 
 ## Traffic Sources
 
-Traffic source reporting is one of the clearest examples of **same concept, different schema**.
+Traffic sources tell you **how viewers arrived**.
 
-The Analytics API uses the symbolic `insightTrafficSourceType` dimension. The Reporting API uses numeric `traffic_source_type` values.
+This is one of the most useful dimensions in YouTube analytics because different sources represent different viewer situations.
 
-### Reporting API Traffic-Source Reference
+### Browse features
 
-| Reporting value | Meaning | Query-report equivalent / concept |
-|---:|---|---|
-| 0 | Direct or unknown | `NO_LINK_OTHER` / `UNKNOWN_MOBILE_OR_DIRECT` |
-| 1 | YouTube advertising | `ADVERTISING` |
-| 3 | Browse features | Historically represented in query reports as `SUBSCRIBER` for this source family |
-| 4 | YouTube channels | `YT_CHANNEL` |
-| 5 | YouTube Search | `YT_SEARCH` |
-| 7 | Suggested videos | `RELATED_VIDEO` / `YT_RELATED` |
-| 8 | Other YouTube features | `YT_OTHER_PAGE` |
-| 9 | External | `EXT_URL` |
-| 11 | Cards / annotations | `ANNOTATION` |
-| 14 | Playlist playback | `PLAYLIST` |
-| 17 | Notifications | `NOTIFICATION` |
-| 18 | Playlist pages | `YT_PLAYLIST_PAGE` |
-| 19 | Programming from claimed content | `CAMPAIGN_CARD` |
-| 20 | End screens | `END_SCREEN` |
-| 23 | Stories | Stories swipe source |
-| 24 | Shorts | Shorts vertical-swipe source |
-| 25 | Product Pages | Product page referral |
-| 26 | Hashtag Pages | Hashtag referral |
-| 27 | Sound Pages | Shorts sound-page referral |
-| 28 | Live redirect | Live Redirect |
-| 29 | Podcasts | YouTube Podcasts page |
-| 30 | Remixed video | Remix link in Shorts player |
-| 31 | Vertical live feed | Vertical live source |
-| 32 | Related video | Related-video link in Shorts player |
+Often includes Home and related browse experiences.
 
-### Traffic-Source Detail
+Useful creator question:
 
-`traffic_source_detail` can contain different identifiers depending on source:
+**Is YouTube surfacing this video as a discovery option to viewers who were not explicitly searching for it?**
 
-- search term;
-- referring video ID;
-- channel ID;
-- external URL/domain;
-- notification type;
-- hashtag;
-- product ID;
-- other source-specific detail.
+### Suggested videos
 
-> **Privacy warning:** Traffic-source detail is one of the fields that can be anonymized when row thresholds are not met.
+Viewers encounter the video around another watch experience.
 
----
+Useful creator questions:
 
-## Playback Location, Device and Platform Dimensions
+- Which videos send this traffic?
+- Are my own videos feeding each other?
+- Does this video belong in a stronger series?
 
-### Playback Location
+### YouTube Search
 
-Reporting API `playback_location_type` includes numeric categories for:
+Viewers typed or selected a search intent.
 
-- official YouTube watch/app playback;
-- embedded playback;
-- channel-page playback;
-- unclassified;
-- browse features;
-- Search;
-- Shorts Feed.
+Useful creator questions:
 
-Analytics API uses `insightPlaybackLocationType` and report-specific values.
+- Which queries are working?
+- Is the video evergreen?
+- Does the title/topic match an actual need?
+- Is Search driving a different audience than Home?
 
-Do not join the raw enumerations across APIs without a mapping layer.
+### Shorts Feed
 
-### Device Type
+Swipe-based short-form discovery.
 
-Analytics API `deviceType` uses symbolic values such as:
+Useful creator questions:
 
-- `DESKTOP`
-- `TV`
-- `MOBILE`
-- `TABLET`
-- `GAME_CONSOLE`
-- `UNKNOWN`
+- Is the opening stopping the swipe?
+- Does the Short satisfy quickly?
+- Are repeat/return viewers developing?
+- Does it connect to the rest of the catalog?
 
-Reporting API `device_type` uses numeric identifiers such as:
+### Channel pages
 
-| Value | Device |
-|---:|---|
-| 100 | Unknown |
-| 101 | Computer |
-| 102 | TV |
-| 103 | Game console |
-| 104 | Mobile phone |
-| 105 | Tablet |
+Views coming through channel surfaces.
 
-### Operating System
+This can indicate deliberate catalog exploration.
 
-The two APIs also use different operating-system enumerations. Reporting bulk files use numeric codes; Analytics query reports expose symbolic API values.
+### Playlists
 
-> **Data-model recommendation:** Store the raw source code/value and a normalized ViewTube display category. Never discard the raw value.
+Playlist traffic can reveal:
+
+- series behavior;
+- sequential viewing;
+- educational/course usage;
+- deliberate binge pathways.
+
+### Notifications
+
+Notification traffic reflects viewers who receive and act on alerts.
+
+It should not be treated as a measure of the entire subscriber audience.
+
+### External
+
+Traffic from websites, apps, search engines, social platforms and other off-YouTube sources.
+
+External traffic can be valuable, but evaluate the behavior of those viewers.
+
+### End screens
+
+End-screen traffic is especially useful for studying:
+
+- intentional next-video pathways;
+- series continuation;
+- catalog design.
+
+### Direct or unknown
+
+Some visits cannot be attributed to a more specific source.
+
+Do not assume unknown means suspicious or worthless traffic.
 
 ---
 
-## Demographic Dimensions
+## Traffic Source Diagnosis
 
-### Age Group
+| Pattern | Useful interpretation |
+|---|---|
+| Search high, Browse low | Video may be strong for explicit intent but less broad as a Home recommendation |
+| Suggested suddenly rises | A relationship with another video may have strengthened |
+| Browse grows and CTR falls | Audience may be broadening |
+| External spikes | Identify the external event/source before judging the video's organic behavior |
+| Playlist traffic grows | Series or catalog structure may be working |
+| End-screen traffic is weak | The next-video offer or pathway may be poor |
+| Shorts Feed dominates | Analyze with Shorts-specific choice/watch behavior |
 
-Analytics API values include:
-
-- `age13-17`
-- `age18-24`
-- `age25-34`
-- `age35-44`
-- `age45-54`
-- `age55-64`
-- `age65-`
-
-Reporting API uses corresponding uppercase codes such as `AGE_18_24`.
-
-### Gender
-
-Analytics API:
-
-- `female`
-- `male`
-- `user_specified`
-
-Reporting API:
-
-- `FEMALE`
-- `MALE`
-- `GENDER_OTHER`
-
-Demographic reporting can be privacy-limited.
+> **Use this in ViewTube:** Traffic sources should be visible beside performance metrics, not hidden as a secondary report. The source often explains why CTR, retention and audience behavior changed.
 
 ---
 
-## Core Metrics Registry
+## Audience Metrics
 
-A **metric** is a measured value: count, duration, ratio, percentage, or money.
+Analytics can tell you more than how a video performed. It can help explain **who is forming a relationship with the channel**.
 
-### Core Analytics API Metrics
+### Unique viewers
 
-Google currently marks these among the Analytics API’s core metrics:
+Useful for estimating the size of the active audience more directly than subscriber count alone.
 
-- `averageViewDuration`
-- `comments`
-- `dislikes`
-- `engagedViews`
-- `estimatedMinutesWatched`
-- `estimatedRevenue`
-- `likes`
-- `shares`
-- `subscribersGained`
-- `subscribersLost`
-- `viewerPercentage`
-- `views`
+### New viewers
 
-Core status matters because core metrics receive stronger deprecation-policy protection than non-core fields.
+People who are new to your channel in the relevant analytics framework.
+
+Use this to study discovery and audience expansion.
+
+### Returning viewers
+
+People who have watched before and came back.
+
+Use this to study audience loyalty and channel habit.
+
+### Casual and regular viewers
+
+YouTube Studio includes audience segmentation designed to help creators understand different levels of repeat viewing.
+
+These are especially useful for questions like:
+
+- Is the channel attracting people once, or building a repeat audience?
+- Which formats create loyalty?
+- Does one content pillar bring viewers back more consistently?
+
+### Subscribers versus non-subscribers
+
+This dimension can help explain whether a video is:
+
+- mostly serving the existing subscriber base;
+- reaching people outside it;
+- converting new viewers into subscribers.
+
+Do not equate non-subscriber views with low-quality views.
+
+### Geography
+
+Country and regional data can explain:
+
+- language;
+- topic relevance;
+- time-zone patterns;
+- advertiser/revenue differences;
+- local seasonality.
+
+### Device
+
+Device can matter because viewer behavior differs across:
+
+- mobile;
+- desktop;
+- television;
+- tablet;
+- game console and other supported categories.
+
+A long-form video may perform differently on television than on a phone.
 
 ---
 
-## Views, Reach and Impressions
+## Subscribers
 
-| Concept | Analytics API | Reporting API | Unit | Important note |
-|---|---|---|---|---|
-| Views | `views` | `views` | Count | Definition can depend on report/content format |
-| Engaged views | `engagedViews` | `engaged_views` | Count | Core metric |
-| Premium views | `redViews` | `red_views` | Count | “Red” remains in legacy field names although product is YouTube Premium |
-| Thumbnail impressions | Availability depends on supported report | `video_thumbnail_impressions` | Count | Impression requires >1 second and at least 50% thumbnail visibility |
-| Thumbnail CTR | Overview mapping uses `videoThumbnailImpressionsClickRate` | `video_thumbnail_impressions_ctr` | Percentage | Clicks divided by counted impressions |
+Subscriber analytics should answer more than “Did I gain subscribers?”
 
-> **Naming correction:** Do not use `videoThumbnailImpressionsClickThroughRate` as the canonical Analytics API field name. Google’s cross-API mapping documents `videoThumbnailImpressionsClickRate`.
+Useful measurements include:
 
-### Impressions Are Not All Exposures
+- subscribers gained;
+- subscribers lost;
+- net subscriber change;
+- video-level subscriber contribution where available.
 
-Thumbnail impressions are only counted on eligible YouTube surfaces under YouTube’s impression rules. A view can therefore exist without a counted thumbnail impression.
+### Common mistake
 
-That means:
+A creator publishes a video, gains 100 subscribers and assumes the video was therefore superior to another that gained 60.
 
-`views ÷ thumbnail impressions`
+But those videos may have had very different:
 
-is **not** a universal “conversion rate for all traffic.”
+- view counts;
+- audience types;
+- topics;
+- formats;
+- traffic sources.
 
----
+Use rates and context where appropriate.
 
-## Watch Time and Retention Metrics
+### Better questions
 
-| Analytics API | Reporting API | Unit | Meaning |
-|---|---|---|---|
-| `estimatedMinutesWatched` | `watch_time_minutes` | Minutes | Aggregate watch time |
-| `averageViewDuration` | `average_view_duration_seconds` | Seconds | Average playback duration |
-| `averageViewPercentage` | `average_view_duration_percentage` | Percent | Average percentage watched |
-| `estimatedRedMinutesWatched` | `red_watch_time_minutes` | Minutes | Premium-member watch time |
-
-### Granular Audience Retention
-
-The Analytics API supports specialized retention reports using:
-
-- `elapsedVideoTimeRatio`
-- `audienceWatchRatio`
-- `relativeRetentionPerformance`
-- `startedWatching`
-- `stoppedWatching`
-- `totalSegmentImpressions`
-
-These are **specialized query-report metrics**.
-
-> **Schema warning:** Do not invent snake_case Reporting API equivalents such as `started_watching` or `total_segment_impressions` unless the Reporting API explicitly documents them. The current Reporting metric reference does not list those as bulk fields.
-
-### What the Segment Metrics Actually Mean
-
-`startedWatching` is not simply “number of viewers present at this timestamp.” It counts how often a segment was the **first segment seen** in a playback.
-
-`stoppedWatching` counts how often a segment was the **last segment seen**.
-
-`totalSegmentImpressions` counts how often that segment was viewed and can exceed the number of viewers because the same viewer can see a segment more than once.
+- Which videos gain subscribers relative to views?
+- Which videos attract viewers who later return?
+- Which topics create one-time views but little channel relationship?
+- Which series deepen loyalty?
 
 ---
 
 ## Engagement Metrics
 
-| Metric | Meaning |
-|---|---|
-| `likes` | Positive ratings recorded for the content |
-| `dislikes` | Negative ratings available to the authenticated owner/report |
-| `comments` | Comments associated with supported report scope |
-| `shares` | Shares initiated through YouTube’s Share mechanism |
-| `subscribersGained` | Subscription events attributed under report rules |
-| `subscribersLost` | Unsubscription events attributed under report rules |
-| `videosAddedToPlaylists` | Video-added-to-playlist events |
-| `videosRemovedFromPlaylists` | Video-removed-from-playlist events |
+Engagement includes actions such as:
 
-> **Scope trap:** When subscriber metrics are filtered to a particular video, the API attribution rules are narrower than channel-level subscriber totals. Do not assume every subscription event can be assigned to a specific video.
+- likes;
+- dislikes where surfaced to the creator;
+- comments;
+- shares;
+- subscribers gained;
+- playlist additions in relevant reporting contexts.
 
----
+These actions are useful evidence of viewer response, but do not treat them as fixed “algorithm points.”
 
-## Shorts Metrics and the 2025–2026 View Definition Shift
-
-Beginning March 31, 2025, YouTube changed Shorts view counting so a Shorts view counts when the Short starts to play or replay, without a minimum watch-time requirement. The older Shorts methodology remains available as **engaged views**.
-
-By August 2026, YouTube documented the broader view-counting update across Shorts, VOD and live playback in Studio Content Manager documentation.
-
-### Shorts Studio Metrics
-
-Two important Studio concepts are:
-
-**Shown in feed**  
-The number of times a Short was shown in the Shorts Feed.
-
-**How many chose to view**  
-The percentage of those opportunities where viewers viewed rather than swiped away.
-
-These are valuable Studio diagnostics, but do not assume they map to public Analytics/Reporting API fields named `shownInFeed` or `viewedVsSwipedAway`.
-
-### No Universal Shorts Benchmark
-
-The supplied research included values such as:
-
-- 70% chose to view;
-- 90% APV;
-- 130% APV for 15-second loops.
-
-Those may appear in creator-industry advice, but they are **not official universal YouTube thresholds**.
-
-Use them, if at all, as creator-specific historical comparison points—not platform rules.
-
-### Shorts Diagnostic Questions
-
-- [ ] Was the Short actually shown in the Shorts Feed?
-- [ ] How often did viewers choose to view rather than swipe?
-- [ ] What were AVD and APV?
-- [ ] Did loops/rewatches affect APV?
-- [ ] Which traffic sources supplied the views?
-- [ ] Did subscribers or returning viewers behave differently?
-- [ ] Is the comparison against Shorts of similar length and audience?
-- [ ] Did the view-definition change affect the historical comparison window?
+A share may mean something very different from a like. A comment-heavy controversy may not mean the audience is satisfied. Interpret actions with the content context.
 
 ---
 
-## Audience Metrics and Viewer Cohorts
+## Revenue and Monetization
 
-### Studio Audience Segments
+Revenue metrics require another layer of context.
 
-YouTube Studio currently defines:
+### Estimated revenue
 
-**New viewers**  
-Viewers who watched the channel for the first time in the selected period, with additional rules for private browsing, deleted history, and long absence.
+The creator's estimated revenue for the selected scope/window.
 
-**Casual viewers**  
-Viewers who watched at least once per month for one to five months in the past year.
+### RPM
 
-**Regular viewers**  
-Viewers who watched at least once per month for more than six months in the past year.
+Revenue per thousand views from the creator's perspective.
 
-**Returning viewers**  
-Viewers who previously watched the channel and returned during the selected period.
+RPM is useful for comparing monetization efficiency, but format and audience differences matter.
 
-**Monthly audience**  
-A rolling 28-day active-audience view.
+### CPM
 
-### API Availability Warning
+Advertiser-oriented cost per thousand ad impressions, not the same thing as creator revenue per thousand video views.
 
-> **Do not assume:** New, casual and regular viewers are standard public Analytics API metrics merely because they appear in Studio.
+### Monetized playbacks
 
-The public Analytics API metric reference should be treated as the authority for programmatic availability.
+Viewing sessions where at least one ad impression was shown, under the relevant reporting definition.
 
-### Subscribers Are Not Active Audience
+### Revenue comparisons
 
-Subscriber count records subscription state. It does not establish that those people are currently watching.
+Do not compare revenue performance without considering:
 
-For active audience analysis, Studio’s monthly audience and unique-viewer concepts are more appropriate.
+- geography;
+- content format;
+- season;
+- advertiser demand;
+- video length;
+- monetization eligibility;
+- Shorts vs long-form;
+- Premium and other revenue components where relevant.
 
----
-
-## Revenue and Ad Performance Metrics
-
-Monetary fields require the monetary analytics scope and channel eligibility.
-
-### Canonical Mapping
-
-| Studio concept | Analytics API v2 | Reporting API v1 | Meaning |
-|---|---|---|---|
-| Estimated revenue | `estimatedRevenue` | `estimated_partner_revenue` | Estimated net partner revenue across supported sources |
-| Estimated ad revenue | `estimatedAdRevenue` | `estimated_partner_ad_revenue` | Estimated net Google-sold ad revenue |
-| Gross revenue | `grossRevenue` | `estimated_youtube_ad_revenue` | Estimated gross ad revenue before partner share |
-| CPM | `cpm` | `estimated_cpm` | Estimated gross revenue per 1,000 ad impressions |
-| Monetized playbacks | `monetizedPlaybacks` | `estimated_monetized_playbacks` | Playbacks with at least one ad impression |
-| Playback-based CPM | `playbackBasedCpm` | `estimated_playback_based_cpm` | Estimated gross revenue per 1,000 monetized playbacks |
-
-> **Naming correction:** Reporting API financial names are not simple snake_case conversions of the Analytics API names.
-
-### Revenue Caveats
-
-Estimated revenue:
-
-- can be adjusted at month end;
-- does not necessarily include partner-sold/partner-served advertising;
-- can vary by geography, inventory, content format and advertiser demand;
-- should not be inferred directly from CPM alone.
-
-### Revenue Diagnostic Grid
-
-| Pattern | What it can mean | What to inspect next |
-|---|---|---|
-| Views up, revenue flat | More non-monetized or lower-value viewing | Format, geography, monetized playbacks, revenue source |
-| CPM up, revenue down | Higher advertiser price but fewer monetized opportunities | Monetized playbacks, ad impressions, view mix |
-| Revenue up faster than views | Higher monetization density, geography mix or advertiser demand | CPM, playback CPM, monetized playbacks |
-| Shorts views surge, RPM mix changes | Format mix changed | Separate Shorts and long-form revenue analysis |
-
-> **Do not prescribe:** Adding more mid-rolls is not automatically the correct response to a revenue change. Creator experience, retention, eligibility and ad-suitability constraints matter.
+> **Use this in ViewTube:** A video with lower views can still be strategically valuable if it produces unusually strong revenue, subscriptions, repeat viewing or catalog continuation.
 
 ---
 
-## Playlist Metrics
+## Shorts Analytics
 
-Playlist analytics contains two different ideas:
+Shorts has creator-facing metrics and viewer behavior that do not map perfectly to long-form.
 
-1. activity **inside** a playlist context;
-2. interactions with the playlist object itself.
+Useful Shorts evidence includes:
 
-Useful fields include:
+- views under the current Shorts definition;
+- engaged views where available;
+- shown in feed;
+- chose to view / swiped away;
+- watch time;
+- average percentage viewed;
+- likes;
+- subscribers;
+- traffic sources;
+- repeat/return audience behavior.
 
-- `playlistStarts` / `playlist_starts`;
-- playlist views;
-- playlist saves added/removed;
-- average time in playlist where supported;
-- video metrics measured specifically in playlist context.
+### Do not do this
 
-> **Important:** A video’s ordinary channel views and its views while played inside a playlist are not interchangeable scopes.
+Do not compare:
+
+- long-form CTR directly to Shorts Feed choice rate;
+- long-form AVD directly to a 20-second Short;
+- raw Shorts views to long-form views without understanding the view definitions and viewer experience.
+
+### Better comparison
+
+Compare Shorts against:
+
+- your other Shorts;
+- similar durations;
+- similar topics;
+- similar time since publication;
+- similar audience/traffic contexts.
 
 ---
 
-## Live Metrics
+## Live Analytics
 
-YouTube supports live-specific reporting such as:
+Live content introduces additional creator questions.
 
-- average concurrent viewers;
+Useful areas include:
+
+- concurrent viewers;
 - peak concurrent viewers;
-- livestream position;
-- live/on-demand dimensions;
-- watch-time and view metrics filtered to live activity.
+- average watch behavior;
+- chat/activity where available;
+- replay performance after the live event;
+- traffic source;
+- subscribers gained;
+- revenue for eligible streams.
 
-### Live Analysis Checklist
+A live stream can become a VOD asset afterward, so separate:
 
-- [ ] Separate live playback from replay/VOD behavior.
-- [ ] Use concurrent-viewer metrics only in supported live reports.
-- [ ] Keep the stream’s event-time axis distinct from ordinary calendar aggregation.
-- [ ] Compare similar stream lengths and formats.
-- [ ] Do not mix concurrent viewers with total views.
-
----
-
-## Cross-API Naming Map
-
-| Concept | Analytics API | Reporting API |
-|---|---|---|
-| Day | `day` | `date` |
-| Video | `video` | `video_id` |
-| Country | `country` | `country_code` |
-| Province | `province` | `province_code` |
-| Device | `deviceType` | `device_type` |
-| OS | `operatingSystem` | `operating_system` |
-| Traffic source | `insightTrafficSourceType` | `traffic_source_type` |
-| Views | `views` | `views` |
-| Engaged views | `engagedViews` | `engaged_views` |
-| Watch time | `estimatedMinutesWatched` | `watch_time_minutes` |
-| Avg view duration | `averageViewDuration` | `average_view_duration_seconds` |
-| Avg % viewed | `averageViewPercentage` | `average_view_duration_percentage` |
-| Subscribers gained | `subscribersGained` | `subscribers_gained` |
-| Subscribers lost | `subscribersLost` | `subscribers_lost` |
-| Est. revenue | `estimatedRevenue` | `estimated_partner_revenue` |
-| Est. ad revenue | `estimatedAdRevenue` | `estimated_partner_ad_revenue` |
-| Gross revenue | `grossRevenue` | `estimated_youtube_ad_revenue` |
-| CPM | `cpm` | `estimated_cpm` |
-| Monetized playbacks | `monetizedPlaybacks` | `estimated_monetized_playbacks` |
-| Playback CPM | `playbackBasedCpm` | `estimated_playback_based_cpm` |
+**live-event performance** from **post-live archive performance**.
 
 ---
 
-## Format Applicability
+## Dimensions You Will Use Most
 
-Not every metric is meaningful on every format.
+A creator does not need to memorize every available dimension.
 
-| Concept | Long-form VOD | Shorts | Live | Playlist context |
-|---|---|---|---|---|
-| `views` | Yes | Yes; definition changed in 2025 | Yes | Can be scoped to playlist reports |
-| `engagedViews` | Supported in API reports | Especially important after Shorts view change | Supported where report allows | Report-dependent |
-| Thumbnail impressions | Common | Shorts Feed uses different exposure UX | Can apply to eligible surfaces | Not a universal playlist metric |
-| Shown in feed | No | Studio Shorts metric | No | No |
-| How many chose to view | No | Studio Shorts metric | No | No |
-| AVD / APV | Yes | Yes | Yes in supported reports | Supported in some playlist contexts |
-| Concurrent viewers | No | No | Live only | No |
-| Playlist starts | No | No | No | Playlist-specific |
-| CPM / playback CPM | Monetized reports | Monetization model differs | Monetized reports | Not a playlist performance default |
+Start with these:
 
-> **Comparison rule:** “Available” does not mean “directly comparable.”
-
----
-
-## Analytical Compatibility Checklist
-
-Before comparing two values, verify:
-
-- [ ] Same metric definition.
-- [ ] Same API/UI surface.
-- [ ] Same content format.
-- [ ] Same date/lifecycle window.
-- [ ] Same timezone boundary.
-- [ ] Same dimensions and filters.
-- [ ] Same monetary currency.
-- [ ] Same privacy/anonymization conditions.
-- [ ] Same view-definition era.
-- [ ] Same report scope: channel, video, playlist, content owner or live.
-
----
-
-## Developer Pipeline Blueprint
-
-```mermaid
-flowchart LR
-    A[OAuth User Authorization] --> B[Refresh Token Vault]
-    B --> C[Analytics API Query Jobs]
-    B --> D[Reporting API Scheduled Jobs]
-    D --> E[Daily CSV Landing Zone]
-    E --> F[Normalize Raw Schema]
-    C --> F
-    G[YouTube Data API] --> H[Metadata Cache]
-    H --> I[Join on Resource IDs]
-    F --> I
-    I --> J[Canonical Analytics Warehouse]
-    J --> K[ViewTube Tables + Visuals]
-```
-
-### Pipeline Checklist
-
-- [ ] Enable required APIs.
-- [ ] Authorize with the correct user identity.
-- [ ] Store refresh tokens securely.
-- [ ] Preserve raw source field names.
-- [ ] Preserve raw enumeration values.
-- [ ] Add a normalization layer instead of renaming source data in place.
-- [ ] Track report type and version.
-- [ ] Track ingestion timestamp.
-- [ ] Make backfill imports idempotent.
-- [ ] Refresh Data API metadata according to policy.
-- [ ] Store timezone and currency context.
-- [ ] Represent suppressed/missing values separately from zero.
-- [ ] Record the API revision date used by the mapping.
-
----
-
-## Studio vs API Discrepancies
-
-Studio and APIs can differ without either being “wrong.”
-
-Possible reasons include:
-
-- different processing windows;
-- fixed Studio cards vs custom API filters;
-- privacy thresholds;
-- data revisions;
-- timezone boundaries;
-- metric-definition changes;
-- Studio-only metrics;
-- currency handling;
-- different selected scopes;
-- partial current-day data.
-
-### Discrepancy Triage
-
-1. Confirm the exact metric name.
-2. Confirm the date range.
-3. Confirm the timezone boundary.
-4. Confirm content type.
-5. Confirm filters.
-6. Confirm whether Studio is showing a rolling metric.
-7. Confirm whether API data is privacy-limited.
-8. Check the API revision history.
-9. Re-run only after matching scope and definition.
-
----
-
-## Common Myths and Schema Errors
-
-### Myth: “Every Studio metric has an API field”
-
-False. Studio can expose product-level insights that are not part of the public API schema.
-
-### Myth: “Reporting API is Analytics API with snake_case names”
-
-False. Many fields map cleanly, but others have different names, different availability, fixed report schemas, or no direct equivalent.
-
-### Myth: “Missing equals zero”
-
-False. Privacy thresholds, unsupported combinations, processing delays and absent report rows can all produce missingness.
-
-### Myth: “CPM is creator revenue per 1,000 views”
-
-False. CPM is an advertiser-side ad-impression measure. It is not RPM.
-
-### Myth: “A universal Shorts threshold tells you if the algorithm will scale a video”
-
-Unsupported. Studio exposes viewer-response metrics, but YouTube does not publish universal 70%/90%/130% distribution gates.
-
-### Myth: “Service accounts are the cleanest way to read a creator’s YouTube channel”
-
-Not for channel-linked YouTube user data. YouTube’s API authentication guidance requires user-linked OAuth flows.
-
----
-
-## What to Do With This Information
-
-### If You Are a Creator
-
-Use this glossary to understand what a Studio metric actually measures before changing content strategy.
-
-### If You Are an Analyst
-
-Treat metric + dimension + filters + time window + format as one analytical object. A number without those qualifiers is incomplete.
-
-### If You Are a Developer
-
-Build a canonical semantic layer above the source APIs rather than pretending the source schemas are identical.
-
-### If You Are Building ViewTube
-
-The application should:
-
-- preserve canonical API field names;
-- show creator-friendly labels separately;
-- retain source provenance;
-- expose missingness and privacy suppression;
-- prevent invalid metric/dimension combinations;
-- preserve dataset window and timezone identity;
-- distinguish Studio-only metrics;
-- distinguish Shorts, VOD and live definitions;
-- maintain versioned field mappings;
-- keep monetary and non-monetary authorization requirements explicit.
-
----
-
-## Quick Diagnostic Reference
-
-| Question | First thing to verify |
+| Dimension | What it lets you ask |
 |---|---|
-| Studio and API values differ | Same scope, date window, definition and processing state? |
-| State data missing | Did the Analytics query include `country==US` with `province`? |
-| Search terms missing | Could privacy anonymization have suppressed `traffic_source_detail`? |
-| Shorts views jump after 2025 | Are you crossing the March 31, 2025 view-definition change? |
-| Revenue differs after month close | Was estimated revenue adjusted? |
-| API query fails | Is the metric/dimension combination supported by that specific report? |
-| Service account fails | Use channel-linked user OAuth instead |
-| APV unavailable with another dimension | Check the report compatibility table; not all combinations are supported |
-| Reporting field not found | Verify exact documented snake_case name rather than guessing |
-| Studio metric has no API result | It may be Studio-only |
+| Day | When did performance change? |
+| Video | Which content caused the result? |
+| Traffic source | Where did viewers come from? |
+| Country | Where are viewers located? |
+| Device | What are they watching on? |
+| Subscription status | Subscribers or non-subscribers? |
+| Content type / format where available | Shorts, VOD, live or other supported categories |
+| Age / gender where available | Which demographic segments are represented? |
+| Playlist | Which playlist or series contributes? |
+
+### Dimension stacking
+
+Adding more dimensions creates a more detailed question, but can also make the data sparse.
+
+For example:
+
+views by video
+
+is simple.
+
+views by video + country + traffic source + device
+
+is far more detailed and may become difficult to interpret.
+
+Use the minimum detail needed to answer the question.
+
+---
+
+## Filters You Will Use Most
+
+Useful creator filters include:
+
+- video;
+- group of videos;
+- country;
+- traffic source;
+- subscription status;
+- format/content type where available;
+- playlist;
+- date range.
+
+### Filter example
+
+Question:
+
+**How did my Napoleon long-form videos perform from Suggested traffic in the United States during the last 90 days?**
+
+Possible setup:
+
+- content group = Napoleon long-form;
+- traffic source = Suggested;
+- geography = United States;
+- time window = 90 days.
+
+Then choose metrics such as:
+
+- views;
+- watch time;
+- AVD;
+- subscribers;
+- revenue.
+
+That is far more actionable than a channel-wide average.
+
+---
+
+## Comparisons
+
+Comparisons turn isolated numbers into evidence.
+
+Useful comparisons include:
+
+- video vs video;
+- first 24 hours vs first 24 hours;
+- first 7 days vs first 7 days;
+- current 28 days vs previous 28 days;
+- Shorts vs Shorts;
+- long-form vs long-form;
+- topic group vs topic group;
+- new viewers vs returning viewers;
+- Search vs Suggested;
+- before vs after a packaging change.
+
+### Fair-comparison checklist
+
+- [ ] Same or comparable time window.
+- [ ] Similar format.
+- [ ] Similar age since publication.
+- [ ] Similar content purpose.
+- [ ] Traffic-source differences considered.
+- [ ] Major topic/seasonality differences considered.
+- [ ] No missing-data/privacy issue mistaken for zero.
+- [ ] Revenue comparisons account for geography/season where relevant.
+
+---
+
+## Answer Creator Questions by Combining Data
+
+The strongest analysis combines multiple fields to test a hypothesis.
+
+### Why did this video suddenly start growing?
+
+Use:
+
+- Views
+- Day
+- Traffic source
+
+Then inspect the source that changed.
+
+If Suggested rose sharply, find the referring videos.  
+If Search rose, inspect queries/topic demand.  
+If Browse rose, inspect audience expansion and packaging response.
+
+### Did the thumbnail change help?
+
+Use:
+
+- Impressions
+- CTR
+- Views
+- Traffic source
+- Change timestamp
+
+Compare periods around the change, but watch for changes in distribution.
+
+A CTR increase with collapsing impressions is not automatically a win.
+
+### Which videos bring viewers back?
+
+Use:
+
+- Video
+- Audience segments / returning behavior
+- Subscriber outcomes
+- Suggested/catalog pathways
+
+Then group videos by:
+
+- topic;
+- format;
+- series;
+- narrative style.
+
+### Where do my most valuable viewers come from?
+
+Define “valuable” first.
+
+Possible definitions:
+
+- deepest watch time;
+- highest subscriber conversion;
+- strongest return behavior;
+- highest revenue;
+- most catalog continuation.
+
+Then compare traffic sources against that outcome.
+
+### Is a topic worth repeating?
+
+Combine:
+
+- views;
+- traffic source;
+- watch behavior;
+- audience growth;
+- subscribers;
+- revenue;
+- repeat-viewer behavior;
+- performance of related videos.
+
+One viral view count should not be the only signal.
+
+---
+
+## The Scope Problem
+
+Every analytics number has a scope.
+
+Scope includes:
+
+- channel or video;
+- format;
+- audience segment;
+- date range;
+- traffic source;
+- geography;
+- filter set.
+
+Two people can look at “CTR” and be discussing different data.
+
+### Before interpreting a number, say the scope out loud
+
+Example:
+
+> “This is the CTR for one 30-minute long-form video, from Browse impressions, during its first seven days.”
+
+That is a meaningful statement.
+
+> “My CTR is 4%.”
+
+By itself, that is much less useful.
+
+---
+
+## Time Windows
+
+Different windows answer different questions.
+
+### First 24 hours
+
+Good for:
+
+- launch behavior;
+- packaging response;
+- initial audience;
+- early traffic mix.
+
+### First 7 days
+
+Good for:
+
+- early distribution pattern;
+- comparison across uploads;
+- launch-to-expansion behavior.
+
+### 28 / 90 days
+
+Good for:
+
+- channel trends;
+- content-group comparisons;
+- audience development;
+- revenue patterns.
+
+### Lifetime
+
+Good for:
+
+- long-tail discovery;
+- evergreen value;
+- catalog contribution;
+- total revenue and reach.
+
+Do not compare a two-year-old video's lifetime views to a one-week-old upload and call one “better.”
+
+---
+
+## Missing Data Is Not Always Zero
+
+Some analytics are limited by:
+
+- privacy protections;
+- low-volume thresholds;
+- unavailable combinations;
+- processing delays;
+- unsupported dimensions;
+- deleted/private content;
+- different Studio/API availability.
+
+If a row disappears, do not automatically conclude nothing happened.
+
+> **Important limitation:** Missing, suppressed or unavailable data should be represented in ViewTube as missing/unknown—not silently converted to zero.
+
+---
+
+## YouTube Studio and Advanced Mode
+
+YouTube Studio is the creator-facing analytics workspace.
+
+Advanced Mode allows creators to:
+
+- select metrics;
+- break data down by dimensions;
+- apply filters;
+- compare videos/groups/time periods;
+- change date ranges;
+- save views;
+- export data.
+
+YouTube's current help documentation also notes an updated Studio experience rolling out during 2026, so exact interface placement may change while the analytical concepts remain similar.
+
+### The creator mental model for Advanced Mode
+
+Think:
+
+**Scope → Metric → Breakdown → Filter → Compare**
+
+Example:
+
+1. Choose your channel or video.
+2. Choose the date window.
+3. Choose views and watch time.
+4. Break down by traffic source.
+5. Filter to long-form.
+6. Compare this 28-day period with the previous one.
+
+That is analysis—not just browsing charts.
+
+---
+
+## How ViewTube Should Improve on Raw Analytics
+
+ViewTube should help creators move from numbers to decisions.
+
+### ViewTube should preserve
+
+- exact metric meaning;
+- time window;
+- dimension;
+- filter;
+- source;
+- missingness;
+- sync date;
+- format.
+
+### ViewTube should add
+
+- explanations;
+- baselines;
+- comparisons;
+- anomaly detection;
+- related-video context;
+- packaging history;
+- title/thumbnail change history;
+- project context;
+- AI interpretation with evidence;
+- next-step tools.
+
+### Example ViewTube response
+
+Instead of:
+
+> “CTR = 3.8%”
+
+ViewTube should be able to say:
+
+> “Browse impressions expanded 62% this week. CTR fell from 5.1% to 3.8% while views increased, suggesting the video reached a broader audience. Early retention remained above this video's comparable-channel baseline. A thumbnail change is not clearly supported by the current evidence.”
+
+That is the difference between analytics display and creator intelligence.
+
+---
+
+## Use This in ViewTube
+
+### When views are down
+
+Inspect:
+
+- impressions / exposure;
+- traffic-source shifts;
+- topic/seasonality;
+- CTR;
+- watch behavior;
+- audience mix.
+
+### When CTR is down
+
+Inspect:
+
+- traffic source;
+- impressions scale;
+- new vs returning viewers;
+- packaging history;
+- competing topic context.
+
+Open:
+
+- Packaging Intelligence;
+- Thumbnail Studio;
+- change/experiment history.
+
+### When retention is weak
+
+Inspect:
+
+- first drop;
+- major dips;
+- spikes;
+- length/context;
+- similar-video baseline.
+
+Open:
+
+- Content Analysis;
+- retention diagnostics;
+- script/hook tools.
+
+### When subscribers are growing but views are not
+
+Inspect:
+
+- unique viewers;
+- returning viewers;
+- subscriber watch behavior;
+- upload/topic fit;
+- notification/subscription traffic.
+
+### When revenue changes
+
+Inspect:
+
+- geography;
+- format;
+- views;
+- monetized playbacks;
+- RPM;
+- seasonal differences;
+- revenue mix where available.
+
+### Ask the Brain
+
+Useful prompt:
+
+> “Analyze this video using the correct scope, metrics, dimensions and filters. Explain what changed, what evidence supports each conclusion, what is unknown, and which ViewTube tool I should open next.”
+
+---
+
+## Quick Metric Dictionary
+
+| Metric | Plain-English meaning |
+|---|---|
+| Views | Qualifying viewing activity under the current YouTube definition |
+| Watch time | Total time viewers spent watching |
+| AVD | Average time watched per view |
+| APV | Average percentage of the video viewed |
+| Impressions | Eligible thumbnail displays on supported YouTube surfaces |
+| CTR | Percentage of counted impressions that became views |
+| Unique viewers | Estimate of distinct people who watched |
+| Subscribers gained | Subscriptions attributed within the selected analytics scope |
+| Subscribers lost | Unsubscriptions within the selected scope |
+| Likes | Positive like actions |
+| Comments | Comments associated with the content/scope |
+| Shares | Share actions |
+| Estimated revenue | Creator's estimated revenue for the selected scope |
+| RPM | Creator revenue per 1,000 views under YouTube's definition |
+| CPM | Advertiser-oriented cost per 1,000 ad impressions |
+| Peak concurrent viewers | Highest simultaneous live audience where available |
+
+---
+
+## Quick Dimension Dictionary
+
+| Dimension | Plain-English meaning |
+|---|---|
+| Day | Break results apart by date |
+| Month | Break results apart by month |
+| Video | Break results apart by video |
+| Playlist | Break results apart by playlist |
+| Country | Break results apart by viewer country |
+| Traffic source | Break results apart by discovery path |
+| Device | Break results apart by device category |
+| Subscription status | Separate subscriber and non-subscriber activity |
+| Age group | Audience age category where available |
+| Gender | Audience gender category where available |
+| Search term | Query detail where supported |
+| Referring video | Suggested-video detail where supported |
+
+---
+
+## Quick Filter Dictionary
+
+| Filter | Example creator use |
+|---|---|
+| Video | Study one upload |
+| Group | Study a content pillar or series |
+| Country | Study one market |
+| Traffic source | Study Search, Suggested, Browse, etc. |
+| Subscription status | Compare subscribers and non-subscribers |
+| Playlist | Study a series/collection |
+| Format/content type | Compare Shorts, VOD, live where supported |
+
+---
+
+## Advanced Reference: Analytics Systems Behind ViewTube
+
+Creators can use the entire guide without this section.
+
+ViewTube's backend must understand that YouTube data comes from several related systems.
+
+### YouTube Studio
+
+The creator-facing product.
+
+Best for:
+
+- interactive exploration;
+- standard charts;
+- retention;
+- audience views;
+- creator workflows.
+
+### YouTube Analytics API
+
+Supports targeted reports using concepts such as:
+
+- metrics;
+- dimensions;
+- filters;
+- date ranges;
+- sorting.
+
+Official documentation defines metrics as measurements and dimensions as criteria used to aggregate those measurements.
+
+### YouTube Reporting API
+
+Designed for scheduled bulk reporting with predefined report schemas.
+
+Useful for:
+
+- warehouses;
+- daily ingestion;
+- large-scale historical reporting.
+
+### YouTube Data API
+
+Provides video/channel/playlist metadata and management capabilities.
+
+It is not a replacement for performance analytics.
+
+### Why creators should care
+
+Usually, they should not have to.
+
+ViewTube should hide backend schema complexity while preserving:
+
+- provenance;
+- accurate definitions;
+- supported combinations;
+- missingness;
+- freshness;
+- privacy constraints.
+
+The creator should see one coherent analytics system even when several official APIs are involved underneath.
+
+---
+
+## Analytics Myths
+
+### “One metric tells me whether a video is good”
+
+No. Different metrics describe different stages.
+
+### “Higher CTR is always better”
+
+Not necessarily. CTR often changes as reach and audience composition change.
+
+### “Missing equals zero”
+
+No. Data can be suppressed, unavailable or incompatible.
+
+### “Subscribers are my active audience”
+
+Not necessarily. Use unique and returning-viewer evidence too.
+
+### “RPM and CPM are basically the same”
+
+No. They answer different monetization questions.
+
+### “Every Studio number can be retrieved through the same API field”
+
+No. Studio, Analytics API and Reporting systems do not expose every concept identically.
+
+### “Shorts and long-form should use the same benchmarks”
+
+No. Their viewer experiences and measurement contexts differ.
+
+---
+
+## Creator Analytics Checklist
+
+Before making a decision:
+
+- [ ] Write the question you are trying to answer.
+- [ ] Identify the metric.
+- [ ] Identify the dimension.
+- [ ] Apply only the filters needed.
+- [ ] Choose the correct time window.
+- [ ] Confirm the format: Shorts, long-form or live.
+- [ ] Check the traffic source.
+- [ ] Compare against a fair baseline.
+- [ ] Look for missing/suppressed data.
+- [ ] Separate correlation from cause.
+- [ ] Record a hypothesis before making a change.
+- [ ] Measure what happens after the change.
 
 ---
 
 ## Glossary
 
-**Analytics API** — Query-based YouTube performance API using `reports.query`.
+**Metric** — A measurement such as views, watch time or revenue.
 
-**Reporting API** — Bulk-report API that produces scheduled CSV exports.
+**Dimension** — A category used to break a metric into groups, such as video, day or country.
 
-**Data API** — YouTube resource API for videos, channels, playlists, comments and metadata.
+**Filter** — A rule that limits analysis to selected dimension values.
 
-**Metric** — Quantitative measurement such as views, watch time or revenue.
+**Scope** — The full context of a report: content, audience, filters, date range and other boundaries.
 
-**Dimension** — Attribute used to group metrics, such as day, country or traffic source.
+**Time window** — The period included in analysis.
 
-**Filter** — Constraint applied to a report without necessarily grouping by that field.
+**Breakdown** — A creator-facing term for viewing a metric across a dimension.
 
-**Core metric/dimension** — Field explicitly covered by YouTube’s API deprecation policy protections.
+**Traffic source** — The path through which a viewer arrived.
 
-**Non-core field** — Supported field without the same core deprecation guarantees.
+**Impression** — An eligible thumbnail display on supported YouTube surfaces.
 
-**Engaged view** — Core metric counting viewing past the first frame or an explicit click/tap to play under YouTube’s documented definition.
-
-**Thumbnail impression** — Eligible thumbnail display meeting YouTube’s visibility/time criteria.
+**CTR** — Click-through rate for counted impressions.
 
 **AVD** — Average View Duration.
 
-**APV** — Average View Percentage.
+**APV** — Average Percentage Viewed.
 
-**Monetized playback** — Playback in which at least one ad impression is shown.
+**Unique viewers** — YouTube's estimate of distinct viewers.
 
-**CPM** — Estimated gross ad revenue per 1,000 ad impressions.
+**Returning viewer** — A viewer categorized as having watched the channel previously under YouTube's current audience framework.
 
-**Playback-based CPM** — Estimated gross ad revenue per 1,000 monetized playbacks.
+**RPM** — Revenue per thousand views from the creator perspective.
 
-**Privacy threshold** — Minimum reporting condition below which detailed dimension values can be anonymized.
+**CPM** — Advertiser cost per thousand ad impressions.
 
-**Backfill** — Later report data that can replace previously delivered data for the same period.
-
-**Studio-only metric** — Creator-facing measure documented in Studio but not necessarily available as a public API field.
-
-**Raw schema** — Field names and enumeration values exactly as supplied by the source API.
-
-**Canonical semantic layer** — ViewTube’s normalized interpretation above raw API schemas.
+**Missingness** — Data that is absent, suppressed, unavailable or incompatible rather than truly zero.
 
 ---
 
 ## Related ViewTube Resources
 
-| Resource | Connection |
-|---|---|
-| How YouTube Recommendations and Discovery Work | Separates creator-facing analytics signals from internal recommender assumptions |
-| Shorts vs Long-Form | Explains why format-specific metrics should not be compared mechanically |
-| Traffic Sources and Discovery Pathways | Deep reference for traffic-source dimensions and interpretation |
-| Audience Retention and Watch Behavior | Expands the retention metrics defined here |
-| YouTube Revenue and Monetization Fundamentals | Expands monetary metrics and revenue mechanics |
-| Reading Analytics Correctly | Covers windows, scope, missingness, causal errors and statistical traps |
+- How YouTube Finds Viewers for Your Videos
+- Shorts vs Long-Form: Different Systems, Different Signals
+- Traffic Sources and Discovery Pathways
+- Audience Retention and Watch Behavior
+- YouTube Revenue and Monetization Fundamentals
+- Reading Analytics Correctly
 
 ---
 
 ## Sources and Further Reading
 
-### Official Google / YouTube Sources
+### Current official creator guidance
 
-**[S1] YouTube Analytics API — Metrics**  
-https://developers.google.com/youtube/analytics/metrics
+**YouTube Help — Advanced Mode for analytics reports**  
+Creator-facing explanation of metrics, breakdowns, filters, comparisons, groups, date controls and exports.  
+https://support.google.com/youtube/answer/9717005
 
-**[S2] YouTube Analytics API — Dimensions**  
-https://developers.google.com/youtube/analytics/dimensions
+**YouTube Help — Tips for Advanced Mode on Analytics**  
+Creator guidance for groups, filters, saved views and performance comparisons.  
+https://support.google.com/youtube/answer/16766491
 
-**[S3] YouTube Analytics API — Channel Reports**  
-https://developers.google.com/youtube/analytics/channel_reports
-
-**[S4] YouTube Analytics API — reports.query**  
-https://developers.google.com/youtube/analytics/reference/reports/query
-
-**[S5] YouTube Analytics & Reporting APIs — Introduction / cross-API mappings**  
-https://developers.google.com/youtube/reporting
-
-**[S6] YouTube Reporting API — Metrics**  
-https://developers.google.com/youtube/reporting/v1/reports/metrics
-
-**[S7] YouTube Reporting API — Dimensions**  
-https://developers.google.com/youtube/reporting/v1/reports/dimensions
-
-**[S8] YouTube Reporting API — Bulk Reports Guide**  
-https://developers.google.com/youtube/reporting/v1/reports
-
-**[S9] YouTube Analytics & Reporting API — Authorization**  
-https://developers.google.com/youtube/reporting/guides/authorization
-
-**[S10] YouTube Analytics & Reporting APIs — Revision History**  
-https://developers.google.com/youtube/reporting/revision_history
-
-**[S11] YouTube Data API v3 — Reference**  
-https://developers.google.com/youtube/v3/docs
-
-**[S12] YouTube Data API — OAuth 2.0 Authorization**  
-https://developers.google.com/youtube/v3/guides/authentication
-
-**[S13] YouTube Help — New, Casual and Regular Viewers**  
+**YouTube Help — New, casual and regular viewers**  
+Official definitions and creator-facing use of audience segments.  
 https://support.google.com/youtube/answer/13615784
 
-**[S14] YouTube Help — Shorts Analytics Content Tab**  
+**YouTube Help — Shorts Analytics**  
+Official Shorts creator analytics guidance.  
 https://support.google.com/youtube/answer/12942217
 
-**[S15] TeamYouTube — Change to Shorts View Counting, March 31 2025**  
-https://support.google.com/youtube/thread/333869549
+### Official analytics definitions
 
-### Secondary Sources
+**Google Developers — YouTube Analytics API Data Model**  
+Defines metrics, dimensions, filters and report scope.  
+https://developers.google.com/youtube/analytics/data_model
 
-Secondary implementation articles can be useful for architecture examples, but they should not override the Google developer documentation for field names, scopes, report compatibility, or metric definitions.
+**Google Developers — Analytics API Dimensions**  
+Official dimension and filter definitions.  
+https://developers.google.com/youtube/analytics/dimensions
+
+**Google Developers — Analytics API Metrics**  
+Official metric reference.  
+https://developers.google.com/youtube/analytics/metrics
+
+**Google Developers — reports.query**  
+Official reporting query model using metrics, dimensions, filters and dates.  
+https://developers.google.com/youtube/analytics/reference/reports/query
+
+**Google Developers — YouTube Analytics & Reporting APIs**  
+Architecture/reference for query and bulk reporting systems.  
+https://developers.google.com/youtube/reporting
 
 ---
 
@@ -994,22 +1349,20 @@ Secondary implementation articles can be useful for architecture examples, but t
 
 | Attribute | Value |
 |---|---|
-| Document version | 1.0 |
-| Research completed | 2026-09-26 |
-| Official API references checked | 2026-09-26 |
-| Recommended review | Quarterly |
-| High-change areas | Shorts definitions, API revision history, monetization fields, new Studio audience metrics, traffic-source enumerations |
-| Canonical authority | Official Google Developers / YouTube Help documentation |
+| Document version | 2.0 |
+| Resource classification | Creator Education / Analytics |
+| Research checked | 2026-09-26 |
+| Primary audience | Everyday YouTube creators |
+| Technical depth | Creator-first with optional advanced reference |
+| Review cadence | Quarterly |
 
 ### Maintenance Checklist
 
-- [ ] Review the Analytics API metrics page.
-- [ ] Review the Analytics API dimensions page.
-- [ ] Review Reporting API metrics and dimensions.
-- [ ] Read the Reporting/Analytics revision history.
-- [ ] Check for new or deprecated core fields.
-- [ ] Verify Shorts view and engaged-view definitions.
-- [ ] Verify Studio-only audience/Shorts metrics.
-- [ ] Verify traffic-source numeric enumerations.
-- [ ] Verify monetization field mappings.
-- [ ] Record any schema change in the ViewTube analytics canon.
+- [ ] Recheck YouTube Studio Advanced Mode guidance.
+- [ ] Recheck metric and dimension definitions.
+- [ ] Recheck Shorts analytics definitions.
+- [ ] Recheck audience segmentation terminology.
+- [ ] Recheck traffic-source terminology.
+- [ ] Recheck monetization metric definitions.
+- [ ] Keep API/authentication implementation detail out of the primary creator learning path.
+- [ ] Preserve stable resource ID and links.
