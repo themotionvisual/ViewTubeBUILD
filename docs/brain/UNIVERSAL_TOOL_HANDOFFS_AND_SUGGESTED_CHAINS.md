@@ -1,8 +1,8 @@
 # ViewTube Universal Tool Handoffs + Suggested Chains
 
 **Status:** PRODUCTION-LINKED ARCHITECTURE REFERENCE  
-**Current AI authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
-**Last audited main:** `6e5df12c2f0d3d3f8d2d1ca88e6fe2b87ce366dc`  
+**Current AI authority:** docs/domains/BRAIN.md
+**Last audited main:** 3ed2bc91f324338fd110a160d65ddbed93806142
 **Scope:** ViewTubeActionPacket / suggested-chain product rules and creator-controlled cross-tool handoffs. This is a protocol reference, not a second Brain runtime or persistence owner.
 
 ## Decision
@@ -74,6 +74,29 @@ The widget registry should eventually declare `accepts`, `produces`, and `sugges
 ## Compatibility with existing Super Tool code
 
 `superToolActionPackets.ts` remains valid for existing Super Tool callers. New production integrations should use the universal `ViewTubeActionPacket` contract in `src/services/viewTubeToolChains.ts`. Once enough consumers are migrated, `createSuperToolActionPacket()` can become a compatibility wrapper around the universal packet rather than a separate architecture.
+
+## Workflow recipe catalog and Toolbox promotion
+
+The detailed multi-tool recipe catalog now lives in `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`. That specification adds forty creator workflows and a twenty-surface widget/Toolbox promotion audit while preserving this document as the protocol reference for `ViewTubeActionPacket`, suggested destinations and creator-controlled handoffs.
+
+The forty recipes are not forty new backend workflows and must not be allocated as forty tasks. They should reuse a smaller set of shared seams:
+
+1. evidence/opportunity → Project;
+2. Project/script/storyboard → assets/editor;
+3. editor selection → generation → canonical asset → editor;
+4. package/variant → Publisher/Manager;
+5. published snapshot → analytics → evaluation;
+6. comments/audience → Brain/Projects/Community;
+7. package slot → Vault reuse or conditional generation.
+
+The first cross-system pilot set is:
+- Thumbnail Refresh Experiment;
+- Comment → New Video;
+- Editor Missing-Shot Recovery;
+- 72-Hour Launch Review;
+- Missing Asset Finder.
+
+Widget participation should stay compact: status, evidence, selection, quick action and resumable handoff. Multi-stage authoring, generation, comparison, provenance and history belong in Toolbox-scale workstations.
 
 ## Safety and creator control
 
