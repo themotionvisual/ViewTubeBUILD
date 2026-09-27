@@ -537,22 +537,35 @@ This specification adds:
 - a rule that recipes map to shared capabilities and candidate work families instead of becoming one task each;
 - an end-to-end optimization doctrine centered on identity continuity, provenance, evaluation and bounded side effects.
 
+## Current-main handoff foundations already present
+
+The current-main audit prevents this specification from reopening work that already exists:
+
+- `src/services/viewTubeToolChains.ts` already defines `ViewTubeToolCapability`, `ViewTubeActionPacket`, `accepts`, `produces`, compatible-target resolution and eight suggested chain templates.
+- persisting an ActionPacket already creates a GenerationRecord, stores a JSON artifact through the Vault adapter, links the generated asset to ContentBuild when scoped, appends a ContentBuild handoff event and enqueues Brain handoffs;
+- `src/components/SendToMenu.tsx` already ranks compatible destinations, persists packets, records internal handoff audit events and routes packet identity to destinations;
+- `src/components/ThumbnailHandoffBar.tsx` is already a concrete universal packet producer;
+- `src/services/viewTubeWorkflowLearning.ts` already records accepted selections and skipped-higher-ranked negative signals only when creator learning is enabled;
+- `src/views/WorkflowChainBuilder.tsx` + `src/services/workflowEngine.ts` already provide a separate local workflow-chain foundation with steps, status, artifacts and provenance.
+
+The remaining program is therefore primarily **convergence, richer identity, missing producer/receiver wiring, Toolbox promotion and certification**, not construction of these foundations from zero.
+
 ## Candidate work families
 
 The recipes collapse into a much smaller implementation set:
 
-1. **Promotion framework** — reusable compact-widget → Toolbox launcher/resume contract.
-2. **Handoff metadata** — accepts / produces / suggestedHandoffs / requiredContext in the tool/widget registries.
-3. **Universal operation envelope** — converge packet/receipt/generation IDs toward a shared operation identity.
-4. **Workflow recipe registry** — structured recipe definitions, compatibility validation and creator-visible explanation.
-5. **Workflow chain viewer** — source → transformations → destinations → artifacts → evidence → outcomes.
-6. **Brain destination ranking** — rank compatible next steps using bounded context/evidence and user controls.
-7. **Creator preference learning** — record accepted/rejected handoff suggestions only when creator learning is enabled.
-8. **Core Toolbox promotions** — Director, Publisher, Manager, Autopsy, Oracle, Brain Hub, Comment Operations, Optimization, Asset Engine and Thumbnail Studio.
-9. **Domain-workbench consolidation** — Metadata/SEO, Retention, Keyword, Calendar, Audience, Discovery and Monetization.
-10. **Project/asset identity continuity certification** — prove handoffs retain Project/ContentBuild/video/asset/package/evidence identity.
-11. **Outcome/evaluation closure** — consequential recipes declare outcome target/checkpoint and can later bind measurements.
-12. **Responsive/accessibility certification** — compact widget and full Toolbox both pass desktop/narrow/mobile portrait/mobile landscape and relevant state matrices.
+1. **Promotion framework — OPEN.** Reusable compact-widget → Toolbox launcher/resume contract.
+2. **Handoff metadata convergence — PARTIAL.** `accepts` / `produces` already exist in `VIEWTUBE_TOOL_CAPABILITIES`; add required-context, mutation/resume semantics, explicit suggested-handoff metadata where useful, and bridge tool metadata with WidgetRegistry rather than recreating it.
+3. **Universal operation envelope — PARTIAL.** ActionPacket already fans into GenerationRecord, Vault and ContentBuild events; converge these IDs/receipts/BrainTrace/render-generation records toward shared operation identity.
+4. **Workflow recipe registry — PARTIAL.** Eight hard-coded suggested chain templates already exist; generalize them into structured validated recipe definitions and add the remaining catalog without creating another execution owner.
+5. **Workflow chain viewer convergence — PARTIAL.** WorkflowChainBuilder/workflowEngine already exist; connect them to universal packet receipts, evidence, canonical IDs and outcomes instead of building a parallel viewer.
+6. **Brain-compatible destination ranking — PARTIAL.** Preference-based ranking already exists; extend ranking with bounded Project/evidence/required-context compatibility and User Controls.
+7. **Creator preference learning — IMPLEMENTED FOUNDATION / CERTIFY + CONNECT.** Accepted/rejected suggestion signals are already creator-learning gated; remaining work is governed outcome/evaluation integration, freshness/decay policy if required, and certification.
+8. **Core Toolbox promotions — OPEN / PER-SURFACE AUDIT.** Director, Publisher, Manager, Autopsy, Oracle, Brain Hub, Comment Operations, Optimization, Asset Engine and Thumbnail Studio.
+9. **Domain-workbench consolidation — OPEN / EXISTING PLAN CONTINUATION.** Metadata/SEO, Retention, Keyword, Calendar, Audience, Discovery and Monetization.
+10. **Project/asset identity continuity certification — PARTIAL FOUNDATION.** ActionPacket already carries Project/ContentBuild/video/evidence fields and persists scoped events; prove package/asset/version identity through real destination consumers.
+11. **Outcome/evaluation closure — OPEN / SHARED PROGRAM CONTINUATION.** Consequential recipes declare outcome target/checkpoint and bind later measurements.
+12. **Responsive/accessibility certification — OPEN.** Compact widget and full Toolbox pairs pass desktop/narrow/mobile portrait/mobile landscape and relevant state matrices.
 
 These are candidate work families. Permanent VT task IDs must not be allocated until Task Authority VNext identity is resolved and duplicate/current-main reconciliation is complete.
 
