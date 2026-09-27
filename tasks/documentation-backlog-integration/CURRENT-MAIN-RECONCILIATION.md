@@ -2,9 +2,24 @@
 
 **Production Date:** 2026-09-27  
 **Class:** AUDIT / task-workspace evidence  
-**Status:** PLANNING INPUT  
-**Audited Main SHA:** `76519e3d81f33df4a3084f49a369f5edbb1ee937`  
+**Status:** ACTIVE RECONCILIATION EVIDENCE  
+**Audited Main SHA:** `4c18a8de6c97c4d172df6528ff483fa6a08c4e5c`  
 **Purpose:** eliminate work already completed or superseded before integrating unfinished work into governed artifacts.
+
+## Execution refresh — 2026-09-27
+
+Current main advanced **122 commits** beyond the original `76519e3d…` planning baseline before this execution wave.
+
+Newly proven changes that shrink the unfinished interpretation:
+
+- **VT-001 MetricComparabilityPolicy is DONE.** Canonical policy now lives in analytics-canon with compatibility routing.
+- **VT-023 evaluation integration is DONE.** PR #511 routes Algorithm evaluation through canonical metric comparability and fails incompatible evidence closed as `insufficient_data`.
+- **VT-024 remains open.** Visual/experiment consumer integration is now the remaining comparability follow-on.
+- **Conversation Handoff + Work Reconciliation is on current main.** Long conversations now have governed `handoff.md`, `worklog.json`, and `review.md` intake packages; do not create another conversation backlog store.
+- **Evidence/intelligence convergence advanced.** Current main contains `EvidenceRecord`, derived-signal convergence work, Evidence Intelligence auditing and additional Brain evidence-quality integration tests. Older Brain/evidence backlog claims must be rechecked before leaf task promotion.
+- **Task Index VNext writer/storage remains unresolved on current main.** Canonical task mutation therefore stays proposal-only.
+
+This refresh does not erase the original baseline; it supersedes its current-state claims for execution.
 
 ## Evidence policy
 
@@ -125,10 +140,11 @@ These should be removed from “build Resource Library / write first guides” t
 
 These foundations exist, but current evidence does not justify deleting all related work:
 
-- VT-001 Metric comparability → **VERIFYING**; consumer integration remains VT-023/024.
-- VT-002 ApprovedPublishSnapshot → **VERIFYING**; durable binding/recovery remains VT-014/015/016.
+- VT-001 Metric comparability → **DONE** on current main; do not retain as unfinished.
+- VT-002 ApprovedPublishSnapshot → **VERIFYING**; durable persistence/recovery remains VT-014/015/016.
 - VT-003 Brain Project context → **VERIFYING**; uniform runtime integration remains.
 - VT-004 Opportunity evidence → **VERIFYING**; canonical production evidence feed remains.
+- VT-023 evaluation integration → **DONE**; VT-024 visual/experiment consumer integration remains.
 - VT-029 canonical final render asset → **VERIFYING** per current One-Goal ledger.
 - Settings responsive/visual certification → implementation is complete; only missing screenshot/runtime certification should remain if not already evidenced.
 - Toolbox/Studio primitives → substantial migration is complete; keep only specifically reproduced/certification gaps.
@@ -153,7 +169,7 @@ Current main and active program authorities still support these unfinished progr
 ### Program B — Outcome / Evaluation / Learning
 - production outcome writers across Publisher, Projects, Editor, Community, experiments, packaging and Brain.
 - evaluation-target coverage.
-- comparability-policy integration into evaluation and visual/experiment consumers.
+- comparability-policy integration into visual/experiment consumers; evaluation integration is DONE (VT-023).
 - Comment/Audience governed learning loop.
 - Analytics/Data Visual full safety + responsive/state certification.
 - AI generation observability/evals.
