@@ -570,7 +570,7 @@
 @container vt-widget (max-width:430px){
  .brain-hub-header-toggle{
   width:100%!important;
-  min-width:124px!important;
+  min-width:136px!important;
   max-width:148px!important;
   height:auto!important;
   min-height:30px!important;
