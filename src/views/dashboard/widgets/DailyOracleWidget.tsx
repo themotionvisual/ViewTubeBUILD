@@ -681,7 +681,7 @@ export const DailyOracleWidget = ({
         </WidgetScrollArea>
       </WidgetWorkflowMain>
 
-      <WidgetFooter className="daily-oracle-v2__footer">
+      <WidgetFooter className="daily-oracle-v2__footer vt-widget-zone-full">
         <WidgetSizedButton height={24} textFit="adaptive" tone="default" onClick={refresh}>
           <RefreshCw aria-hidden="true" />
           REFRESH RANKING
