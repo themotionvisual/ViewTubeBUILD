@@ -112,7 +112,7 @@
   }
 
   .vt-widget-paint-clip {
-    overflow:hidden;
+    overflow:visible;
   }
 
   .vt-widget-body--flush { --vt-widget-body-inset:0px; }
