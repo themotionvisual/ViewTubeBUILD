@@ -609,6 +609,39 @@
   padding-block: 12px;
 }
 
+/* The header extra is intentionally hidden in portrait. Keep every library
+   section reachable from a persistent body control at every widget width. */
+:where(.dashboard-barrier) .vt-widget-body:has(> .widget-reference-navigation) {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+}
+
+.widget-reference-navigation {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-block: 5px;
+  min-width: 0;
+}
+
+.widget-reference-navigation > .widget-select-trigger {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.widget-reference-navigation-count {
+  flex: 0 0 auto;
+  color: var(--vt-ink, var(--widget-border));
+  font-size: 10px;
+  font-weight: 1000;
+  white-space: nowrap;
+}
+
+.widget-reference-navigation > .vt-button {
+  flex: 0 0 24px;
+  padding: 0;
+}
+
 .widget-reference-full-width-region {
   display: grid;
   gap: 8px;
@@ -746,15 +779,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* On phone widths the section stepper is the required navigation control.
-     Palette stepping is secondary and yields its header space so the canonical
-     title can remain full-size and wrap to at most two lines. */
-  .widget-reference-header-controls > .widget-header-toggle:first-child {
-    display: flex;
-  }
-  .widget-reference-header-controls > .widget-header-toggle:last-child {
-    display: none;
-  }
+  .widget-reference-navigation-count { font-size: 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1157,5 +1182,3 @@
   position:relative;
   z-index:2;
 }
-
-

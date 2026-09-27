@@ -4,7 +4,6 @@ import { AlertTriangle, Activity, ArrowRight, Award, BadgeDollarSign, BarChart3,
 import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue, type WidgetBadgeSpectrumName, type WidgetBadgeStatus, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06, VT_VISUAL_METRIC_ORDER } from "../../styles/toolboxPalette"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone as PrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
-import "./widgetVideoSelectButtonScroll.css"
 
 export type WidgetControlHeight = WidgetPrimitiveSize
 export type WidgetPrimitiveTone = PrimitiveTone
@@ -80,7 +79,7 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
    const top=placement==="up"?Math.max(8,rect.top-maxHeight-4):Math.min(window.innerHeight-maxHeight-8,rect.bottom+4)
    const styles=window.getComputedStyle(trigger)
    const theme:Record<string,string>={}
-   for(const name of ["--widget-color","--widget-border","--widget-ink","--vt-tone-bg","--vt-tone-ink","--vt-tone-stroke","--vt-tone-fill"]){
+   for(const name of ["--widget-color","--widget-border","--widget-ink","--vt-ink","--vt-tone-bg","--vt-tone-ink","--vt-tone-stroke","--vt-tone-fill","--widget-field-rest-stroke","--widget-field-focus-border","--widget-field-focus-ring","--widget-field-focus-glow","--bg-input"]){
     const value=styles.getPropertyValue(name).trim()
     if(value)theme[name]=value
    }
