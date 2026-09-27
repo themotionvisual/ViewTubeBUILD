@@ -13,8 +13,8 @@ This folder contains the canonical Markdown source documents that populate the c
 
 | ID | Resource | Category | Status | Source |
 |---|---|---|---|---|
-| `youtube-recommendations-discovery` | How YouTube Recommendations and Discovery Work | YouTube Strategy | Published | `library/how-youtube-recommendations-and-discovery-work.md` |
-| `youtube-metrics-dimensions-glossary` | YouTube Metrics and Dimensions Master Glossary | Analytics | Published | `library/youtube-metrics-and-dimensions-master-glossary.md` |
+| `youtube-recommendations-discovery` | How YouTube Finds Viewers for Your Videos | YouTube Strategy | Published | `library/how-youtube-recommendations-and-discovery-work.md` |
+| `youtube-metrics-dimensions-glossary` | How to Read YouTube Analytics | Analytics | Published | `library/youtube-metrics-and-dimensions-master-glossary.md` |
 
 **Initial creator-reference series:** 2 of 15 documents now authored and registered.
 
@@ -30,7 +30,7 @@ Use:
 
 `templates/VIEWTUBE_RESOURCE_DOCUMENT_TEMPLATE.md`
 
-The template is intentionally semantic rather than visual. It structures material into sections, tables, checklists, Mermaid flows, evidence blocks, worked examples, quick-reference material, related resources and maintenance metadata. The production renderer converts those structures into the ViewTube Toolbox/SubToolbox UI.
+The template is intentionally semantic and creator-first rather than visually branded or developer-first. Every resource should explain the subject in plain creator language, show why it matters, teach how to diagnose or act on it in ViewTube, and move technical/API detail into optional advanced reference sections. The production renderer converts those structures into the ViewTube Toolbox/SubToolbox UI.
 
 ## Add a Resource
 
@@ -46,8 +46,8 @@ The template is intentionally semantic rather than visual. It structures materia
 
 ## Planned First 15
 
-1. How YouTube Recommendations and Discovery Work
-2. YouTube Metrics and Dimensions Master Glossary
+1. How YouTube Finds Viewers for Your Videos
+2. How to Read YouTube Analytics
 3. Shorts vs Long-Form: Different Systems, Different Signals
 4. Publishing Best Practices and Preflight Checklist
 5. Thumbnail and Title Packaging Handbook
