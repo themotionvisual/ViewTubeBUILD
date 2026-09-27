@@ -1,7 +1,7 @@
 # ViewTube Documentation Governance
 
 **Production Date:** 2026-09-26  
-**Last Edited:** 2026-09-26  
+**Last Edited:** 2026-09-27  
 **Class:** CONSTITUTION  
 **Status:** ACTIVE  
 **Concern:** documentation authority, lifecycle, consolidation, archive, and knowledge governance  
@@ -127,3 +127,18 @@ Rules:
 - Current code/runtime, Product Architecture, Domain Authorities, Task Index state, and verified provider/API evidence still govern current claims.
 - Valuable material should be promoted into capabilities, authorities, specifications, decisions, opportunities, risks, or Task Index records rather than repeatedly copied.
 - Master Sources must remain preserved, registry-addressable, and included in consolidation lineage.
+
+
+## Conversation-derived work intake
+
+Long conversations are evidence/provenance sources that can contain valuable plans, completed work, unfinished work, bugs, decisions and ideas, but they are not permanent work authorities.
+
+Use `docs/governance/CONVERSATION_HANDOFFS.md` and `tasks/conversation-intake/` to:
+- preserve long-thread context;
+- inventory all meaningful conversation work;
+- review completed and unfinished work;
+- compare it with current code, Task Index, Integrated Application Program, Product Architecture, Domain Authorities and existing plans;
+- merge overlapping plans/tasks before creating new ones;
+- route surviving material into the correct canonical destination.
+
+A conversation intake package is not closed while any captured work item lacks a disposition.
