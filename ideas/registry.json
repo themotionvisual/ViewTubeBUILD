@@ -1876,7 +1876,7 @@
       "category": "Creator Reference Library",
       "subcategory": "Creator Education",
       "capabilityIds": [],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-1",
       "similarityKeys": [
         "how youtube recommendations and discovery work",
@@ -1899,7 +1899,7 @@
       "capabilityIds": [
         "CAP-ANALYTICS-CANON"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-2",
       "similarityKeys": [
         "youtube metrics and dimensions master glossary",
@@ -1922,7 +1922,7 @@
       "category": "Creator Reference Library",
       "subcategory": "Creator Education",
       "capabilityIds": [],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-3",
       "similarityKeys": [
         "shorts vs long-form: different systems, different signals",
@@ -1945,7 +1945,7 @@
       "capabilityIds": [
         "CAP-PUBLISH"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-4",
       "similarityKeys": [
         "publishing best practices and preflight checklist",
@@ -1970,7 +1970,7 @@
       "capabilityIds": [
         "CAP-PUBLISH"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-5",
       "similarityKeys": [
         "thumbnail and title packaging handbook",
@@ -1995,7 +1995,7 @@
       "capabilityIds": [
         "CAP-ANALYTICS-CANON"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-6",
       "similarityKeys": [
         "audience retention and watch behavior guide",
@@ -2020,7 +2020,7 @@
       "capabilityIds": [
         "CAP-ANALYTICS-CANON"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-7",
       "similarityKeys": [
         "traffic sources and discovery pathways",
@@ -2045,7 +2045,7 @@
       "capabilityIds": [
         "CAP-ANALYTICS-CANON"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-8",
       "similarityKeys": [
         "audience, subscribers and returning viewers",
@@ -2070,7 +2070,7 @@
       "capabilityIds": [
         "CAP-ANALYTICS-CANON"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-9",
       "similarityKeys": [
         "youtube revenue and monetization fundamentals",
@@ -2093,7 +2093,7 @@
       "category": "Creator Reference Library",
       "subcategory": "Creator Education",
       "capabilityIds": [],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-10",
       "similarityKeys": [
         "live streaming operations handbook",
@@ -2114,7 +2114,7 @@
       "category": "Creator Reference Library",
       "subcategory": "Creator Education",
       "capabilityIds": [],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-11",
       "similarityKeys": [
         "playlist, series and channel architecture guide",
@@ -2137,7 +2137,7 @@
       "capabilityIds": [
         "CAP-ANALYTICS-CANON"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-12",
       "similarityKeys": [
         "comments, community and audience feedback playbook",
@@ -2163,7 +2163,7 @@
         "CAP-PROJECT-CONTENT-IDENTITY",
         "CAP-OUTCOME-LEARNING"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-13",
       "similarityKeys": [
         "content planning, experiments and learning loops",
@@ -2187,7 +2187,7 @@
       "category": "Creator Reference Library",
       "subcategory": "Creator Education",
       "capabilityIds": [],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-14",
       "similarityKeys": [
         "copyright, rights, reuse and ai-generated media reference",
@@ -2210,7 +2210,7 @@
       "capabilityIds": [
         "CAP-ANALYTICS-CANON"
       ],
-      "targetType": "RESOURCE",
+      "targetType": "FEATURE",
       "targetId": "LIB-15",
       "similarityKeys": [
         "reading analytics correctly: scope, windows, missingness and statistical traps",
