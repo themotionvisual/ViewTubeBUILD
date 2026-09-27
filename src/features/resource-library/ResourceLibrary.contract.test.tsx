@@ -43,4 +43,24 @@ describe("Resource Library production reader", () => {
     expect(html).toContain("vt-resource-checklist")
     expect(html).toContain("vt-resource-flow")
   })
+  it("renders the creator-first Shorts vs long-form guide", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter
+        initialEntries={[
+          "/resources?resource=shorts-vs-long-form-signals",
+        ]}
+      >
+        <ResourceLibrary />
+      </MemoryRouter>,
+    )
+
+    expect(html).toContain("Shorts vs Long-Form: Different Systems, Different Signals")
+    expect(html).toContain("Same Goal, Different Viewing Experience")
+    expect(html).toContain("What Counts as a View in 2026")
+    expect(html).toContain("Diagnose Shorts vs Long-Form in ViewTube")
+    expect(html).toContain("vt-resource-table")
+    expect(html).toContain("vt-resource-checklist")
+    expect(html).toContain("vt-resource-flow")
+  })
+
 })

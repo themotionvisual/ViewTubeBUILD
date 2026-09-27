@@ -1,5 +1,6 @@
 import recommendationsMarkdown from "../../../docs/resources/library/how-youtube-recommendations-and-discovery-work.md?raw"
 import metricsGlossaryMarkdown from "../../../docs/resources/library/youtube-metrics-and-dimensions-master-glossary.md?raw"
+import shortsVsLongFormMarkdown from "../../../docs/resources/library/shorts-vs-long-form-different-systems-signals.md?raw"
 
 export type ResourceStatus = "draft" | "published" | "archived"
 export type ResourceFormat = "markdown"
@@ -182,6 +183,36 @@ export const RESOURCE_LIBRARY_ENTRIES: readonly ResourceLibraryEntry[] = [
       "docs/resources/library/youtube-metrics-and-dimensions-master-glossary.md",
     accentPaletteIndex: 6,
     markdown: metricsGlossaryMarkdown,
+  },
+  {
+    id: "shorts-vs-long-form-signals",
+    title: "Shorts vs Long-Form: Different Systems, Different Signals",
+    shortTitle: "Shorts vs Long-Form",
+    description:
+      "A creator-first guide to how Shorts and long-form differ in discovery, choice, retention, analytics, audience behavior and channel strategy.",
+    category: "YouTube Strategy",
+    secondaryCategories: ["Shorts", "Long-Form", "Analytics", "Audience"],
+    format: "markdown",
+    status: "published",
+    tags: [
+      "shorts",
+      "long-form",
+      "format-strategy",
+      "discovery",
+      "recommendations",
+      "retention",
+      "views",
+      "engaged-views",
+      "audience",
+      "packaging",
+    ],
+    difficulty: "Beginner–Intermediate",
+    readTime: "24–32 min",
+    updatedAt: "2026-09-27",
+    sourcePath:
+      "docs/resources/library/shorts-vs-long-form-different-systems-signals.md",
+    accentPaletteIndex: 3,
+    markdown: shortsVsLongFormMarkdown,
   }
 ] as const
 

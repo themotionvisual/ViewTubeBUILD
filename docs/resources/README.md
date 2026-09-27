@@ -15,8 +15,9 @@ This folder contains the canonical Markdown source documents that populate the c
 |---|---|---|---|---|
 | `youtube-recommendations-discovery` | How YouTube Finds Viewers for Your Videos | YouTube Strategy | Published | `library/how-youtube-recommendations-and-discovery-work.md` |
 | `youtube-metrics-dimensions-glossary` | How to Read YouTube Analytics | Analytics | Published | `library/youtube-metrics-and-dimensions-master-glossary.md` |
+| `shorts-vs-long-form-signals` | Shorts vs Long-Form: Different Systems, Different Signals | YouTube Strategy | Published | `library/shorts-vs-long-form-different-systems-signals.md` |
 
-**Initial creator-reference series:** 2 of 15 documents now authored and registered.
+**Initial creator-reference series:** 3 of 15 documents now authored and registered.
 
 ## Handoff
 
