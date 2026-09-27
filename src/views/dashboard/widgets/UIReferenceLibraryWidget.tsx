@@ -250,12 +250,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const headerContent = (
     <div className="widget-reference-header-controls">
       <WidgetHeaderStepper
-        label="Reference section"
-        value={REFERENCE_CATEGORIES[activeCategoryIndex]?.label ?? "CONTROLS"}
-        onPrevious={() => stepReferenceCategory(-1)}
-        onNext={() => stepReferenceCategory(1)}
-      />
-      <WidgetHeaderStepper
         label="Widget color palette"
         value={`${REFERENCE_PALETTE_NAMES[paletteIndex]} ${paletteIndex + 1}/12`}
         onPrevious={() => setPaletteIndex((current) => (current + 11) % 12)}
@@ -302,6 +296,18 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
 
   return (
     <WidgetShell widget={previewWidget} headerContent={headerContent} icon={<Layers size={22} />} {...common}>
+      <nav className="widget-reference-navigation" aria-label="UI Reference Library sections">
+        <WidgetSizedButton height={24} aria-label="Previous reference section" onClick={() => stepReferenceCategory(-1)}>←</WidgetSizedButton>
+        <WidgetSizedSelect
+          height={32}
+          label="Reference section"
+          value={activeCategory}
+          onChange={(value) => setActiveCategory(value as ReferenceCategory)}
+          options={REFERENCE_CATEGORIES.map((entry, index) => ({ value: entry.id, label: `${index + 1}. ${entry.label}` }))}
+        />
+        <span className="widget-reference-navigation-count">{activeCategoryIndex + 1}/{REFERENCE_CATEGORIES.length}</span>
+        <WidgetSizedButton height={24} aria-label="Next reference section" onClick={() => stepReferenceCategory(1)}>→</WidgetSizedButton>
+      </nav>
       <WidgetScrollArea
         key={activeCategory}
         ariaLabel="ViewTube Widget Component Reference Library"

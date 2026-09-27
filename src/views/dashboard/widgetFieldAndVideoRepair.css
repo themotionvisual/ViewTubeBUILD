@@ -1,0 +1,77 @@
+/* Shared field states and portalled video menu. Imported last through
+   widget-entry.css so lazy widget loading cannot change these primitives. */
+:where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area),
+:where(.dashboard-barrier) .widget-search-input {
+  --widget-field-rest-stroke: color-mix(in srgb, var(--widget-color) 52%, white);
+  --widget-field-focus-border: var(--widget-color);
+  --widget-field-focus-ring: color-mix(in srgb, var(--widget-color) 58%, transparent);
+  --widget-field-focus-glow: color-mix(in srgb, var(--widget-color) 46%, transparent);
+  border: 2px solid var(--widget-field-rest-stroke) !important;
+  background: color-mix(in srgb, var(--widget-color) 8%, white) !important;
+  color: var(--vt-ink, #243247) !important;
+}
+
+:where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area):focus,
+:where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area):focus-visible,
+:where(.dashboard-barrier) .widget-search-input:focus-within {
+  border-color: var(--widget-field-focus-border) !important;
+  background: #fff !important;
+  outline: none !important;
+  box-shadow:
+    0 0 0 3px var(--widget-field-focus-ring),
+    0 0 16px 2px var(--widget-field-focus-glow) !important;
+}
+
+:where(.dashboard-barrier) .widget-search-input > .widget-search-input-icon {
+  border-inline-end-color: var(--widget-field-rest-stroke);
+}
+:where(.dashboard-barrier) .widget-search-input:focus-within > .widget-search-input-icon {
+  border-inline-end-color: var(--widget-field-focus-border);
+}
+
+/* The selector bay has two stacked rows; the generic primitive icon rule
+   otherwise forces a full-size glyph into its half-height chevron row. */
+.widget-video-select-trigger .widget-video-select-trigger-selector svg {
+  width: min(14px, calc(var(--vt-primitive-height) * .36)) !important;
+  height: min(14px, calc(var(--vt-primitive-height) * .36)) !important;
+}
+.widget-video-select-trigger-copy > span {
+  line-height: 1.05;
+}
+
+/* The menu is portalled to document.body and must receive widget theme tokens
+   from WidgetVideoSelect, then use the same field contract as the trigger. */
+.widget-video-select-menu.is-portalled {
+  border-color: var(--vt-tone-stroke, var(--widget-border, var(--vt-ink, #243247)));
+  color: var(--vt-ink, #243247);
+  background: #fff;
+}
+.widget-video-select-menu.is-portalled .widget-video-select-option {
+  color: var(--vt-ink, #243247);
+  border-block-end: 1px solid color-mix(in srgb, var(--widget-color) 38%, white);
+}
+.widget-video-select-menu.is-portalled .widget-video-select-search {
+  padding: 5px;
+  background: #fff;
+}
+.widget-video-select-menu.is-portalled .widget-video-select-search > .widget-search-input {
+  box-sizing: border-box;
+  border: 2px solid var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color) 52%, white));
+  border-radius: var(--vt-primitive-radius, 6px);
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+  color: var(--vt-ink, #243247);
+  box-shadow: none;
+}
+.widget-video-select-menu.is-portalled .widget-video-select-search > .widget-search-input:focus-within {
+  border-color: var(--widget-field-focus-border, var(--widget-color));
+  background: #fff;
+  box-shadow:
+    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color) 58%, transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color) 46%, transparent));
+}
+.widget-video-select-menu.is-portalled .widget-video-select-search .widget-search-input-icon {
+  border-inline-end-color: var(--widget-field-rest-stroke, var(--widget-color));
+}
+.widget-video-select-menu.is-portalled .widget-video-select-search .widget-search-input:focus-within .widget-search-input-icon {
+  border-inline-end-color: var(--widget-field-focus-border, var(--widget-color));
+}

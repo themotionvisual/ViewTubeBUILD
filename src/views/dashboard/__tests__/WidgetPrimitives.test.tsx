@@ -129,7 +129,7 @@ describe("shared widget layout primitives", () => {
     expect(markup).toContain('aria-label="Recommendations"')
     expect(markup).toContain("widget-section is-inset is-transparent")
     expect(markup).toContain("widget-divider is-full")
-    expect(markup).toContain("widget-footer is-subtle")
+    expect(markup).toContain("widget-footer vt-widget-zone-full is-subtle")
   })
 
   it("renders a non-scrolling layout without scrollbar chrome when scrolling is disabled", () => {
@@ -792,11 +792,14 @@ describe("video selector overlay geometry", () => {
     expect(variantsCss).not.toContain(".vt-widget:has(.widget-video-select.is-open)")
   })
 
-  it("keeps the UI Reference title room by hiding only secondary palette navigation on phones", () => {
-    expect(exactHeightsCss).not.toContain(".widget-reference-header-controls > .widget-header-toggle:first-child { display:none; }")
-    expect(variantsCss).toContain(".widget-reference-header-controls > .widget-header-toggle:first-child")
-    expect(variantsCss).toContain(".widget-reference-header-controls > .widget-header-toggle:last-child")
-    expect(variantsCss).toContain("display: none;")
+  it("keeps every UI Reference section reachable when the header extra is hidden", () => {
+    expect(referenceSource).toContain('className="widget-reference-navigation"')
+    expect(referenceSource).toContain('label="Reference section"')
+    expect(referenceSource).toContain('options={REFERENCE_CATEGORIES.map(')
+    expect(referenceSource).toContain('aria-label="Previous reference section"')
+    expect(referenceSource).toContain('aria-label="Next reference section"')
+    expect(variantsCss).toContain(".vt-widget-body:has(> .widget-reference-navigation)")
+    expect(variantsCss).toContain(".widget-reference-navigation > .widget-select-trigger")
   })
 
   it("gives video labels and chevrons enough room at the standard heights", () => {
