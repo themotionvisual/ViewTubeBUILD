@@ -235,7 +235,7 @@
   color: #fff !important;
 }
 .widget-split-button.vt-sized-control.is-tone-secondary .widget-split-button-icon {
-  border-inline-end-color: color-mix(in srgb, #fff 30%, transparent) !important;
+  border-inline-end-color: var(--widget-color, #34cdea) !important;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 86%, white) !important;
   color: #fff !important;
 }
@@ -310,7 +310,7 @@
   color: #fff !important;
 }
 .widget-video-select-trigger.vt-sized-control.is-tone-secondary .widget-video-select-trigger-selector {
-  border-inline-end-color: color-mix(in srgb, #fff 30%, transparent) !important;
+  border-inline-end-color: var(--widget-color, #34cdea) !important;
   background: var(--widget-color, #34cdea) !important;
   color: #fff !important;
 }
