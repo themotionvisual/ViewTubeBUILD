@@ -258,7 +258,7 @@
 }
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus,
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus-visible {
-  background: var(--widget-field-focus-fill) !important;
+  background: #fff !important;
   border-color: var(--widget-field-focus-border) !important;
   color: var(--widget-ink, var(--widget-border, #243247)) !important;
   caret-color: var(--widget-color, #34cdea) !important;
