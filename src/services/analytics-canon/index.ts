@@ -36,3 +36,5 @@ export {
 } from "./intelligenceEvidence"
 
 export { getCurrentCanonicalIntelligenceEvidence } from "./currentEvidence"
+
+export * from "./metricComparability"

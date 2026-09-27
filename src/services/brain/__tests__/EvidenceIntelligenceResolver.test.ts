@@ -44,15 +44,35 @@ const opportunities = [{
  evidenceIds: ["evidence-1"],
 }] as any
 
+const evidenceRecords = [{
+ id: "analytics:snapshot-1:channel_summary:views",
+ owner: "analytics-canon",
+ sourceRef: "channel_summary",
+ sourceSnapshotId: "snapshot-1",
+ channelId: "channel-1",
+ metric: "views",
+ value: 100,
+ unit: "count",
+ aggregation: "sum",
+ freshness: "fresh",
+ epistemicState: "observed",
+ provenance: { evidenceIds: ["evidence-1"] },
+}] as any
+
+const makeDeps = (
+ quality = evidenceQuality,
+): EvidenceIntelligenceResolverDependencies => ({
+ getCanonicalEvidence: vi.fn(() => canonicalEvidence),
+ buildQuality: vi.fn(() => quality),
+ buildStatistics: vi.fn(() => statisticsIntelligence),
+ buildAudience: vi.fn(() => audienceIntelligence),
+ buildOpportunities: vi.fn(() => opportunities),
+ projectEvidence: vi.fn(() => evidenceRecords),
+})
+
 describe("EvidenceIntelligenceResolver", () => {
  it("builds one runtime evidence envelope from one canonical analytics snapshot", () => {
-  const deps: EvidenceIntelligenceResolverDependencies = {
-   getCanonicalEvidence: vi.fn(() => canonicalEvidence),
-   buildQuality: vi.fn(() => evidenceQuality),
-   buildStatistics: vi.fn(() => statisticsIntelligence),
-   buildAudience: vi.fn(() => audienceIntelligence),
-   buildOpportunities: vi.fn(() => opportunities),
-  }
+  const deps = makeDeps()
 
   const result = resolveEvidenceIntelligence({
    channelId: "channel-1",
@@ -63,22 +83,19 @@ describe("EvidenceIntelligenceResolver", () => {
 
   expect(result.version).toBe("vt-evidence-intelligence-v1")
   expect(result.canonicalEvidence).toBe(canonicalEvidence)
+  expect(result.evidenceRecords).toBe(evidenceRecords)
   expect(result.evidenceQuality).toBe(evidenceQuality)
   expect(result.statisticsIntelligence).toBe(statisticsIntelligence)
   expect(result.audienceIntelligence).toBe(audienceIntelligence)
   expect(result.opportunityEvidence).toBe(opportunities)
   expect(result.scopeUsable).toBe(true)
   expect(deps.getCanonicalEvidence).toHaveBeenCalledTimes(1)
+  expect(deps.projectEvidence).toHaveBeenCalledTimes(1)
+  expect(deps.projectEvidence).toHaveBeenCalledWith(canonicalEvidence)
  })
 
- it("blocks canonical analytics-derived specialists when evidence belongs to another channel", () => {
-  const deps: EvidenceIntelligenceResolverDependencies = {
-   getCanonicalEvidence: vi.fn(() => canonicalEvidence),
-   buildQuality: vi.fn(() => ({ ...evidenceQuality, scopeMatch: "mismatch", confidence: "insufficient" }) as any),
-   buildStatistics: vi.fn(() => statisticsIntelligence),
-   buildAudience: vi.fn(() => audienceIntelligence),
-   buildOpportunities: vi.fn(() => opportunities),
-  }
+ it("blocks canonical analytics-derived evidence and specialists when evidence belongs to another channel", () => {
+  const deps = makeDeps({ ...evidenceQuality, scopeMatch: "mismatch", confidence: "insufficient" } as any)
 
   const result = resolveEvidenceIntelligence({
    channelId: "channel-2",
@@ -88,19 +105,15 @@ describe("EvidenceIntelligenceResolver", () => {
   }, deps)
 
   expect(result.scopeUsable).toBe(false)
+  expect(result.evidenceRecords).toEqual([])
   expect(result.statisticsIntelligence).toBeNull()
   expect(result.audienceIntelligence).toBeNull()
   expect(result.opportunityEvidence).toBe(opportunities)
+  expect(deps.projectEvidence).not.toHaveBeenCalled()
  })
 
  it("does not build optional audience or opportunity projections when the task does not request them", () => {
-  const deps: EvidenceIntelligenceResolverDependencies = {
-   getCanonicalEvidence: vi.fn(() => canonicalEvidence),
-   buildQuality: vi.fn(() => evidenceQuality),
-   buildStatistics: vi.fn(() => statisticsIntelligence),
-   buildAudience: vi.fn(() => audienceIntelligence),
-   buildOpportunities: vi.fn(() => opportunities),
-  }
+  const deps = makeDeps()
 
   const result = resolveEvidenceIntelligence({
    channelId: "channel-1",
@@ -108,6 +121,7 @@ describe("EvidenceIntelligenceResolver", () => {
    includeOpportunities: false,
   }, deps)
 
+  expect(result.evidenceRecords).toBe(evidenceRecords)
   expect(result.audienceIntelligence).toBeNull()
   expect(result.opportunityEvidence).toEqual([])
   expect(deps.buildAudience).not.toHaveBeenCalled()

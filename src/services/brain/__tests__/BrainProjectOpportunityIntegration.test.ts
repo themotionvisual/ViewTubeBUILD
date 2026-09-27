@@ -10,7 +10,7 @@ describe("Brain Project + Opportunity integration seam", () => {
   expect(orchestrator).toContain("resolveCreatorContext")
   expect(orchestrator).toContain("creatorContext.project")
   expect(orchestrator).toContain("resolveEvidenceIntelligence")
-  expect(orchestrator).toContain("evidenceIntelligence.opportunityEvidence")
+  expect(orchestrator).toContain("evidenceIntelligence?.opportunityEvidence")
   expect(orchestrator).toContain("opportunities:")
   expect(orchestrator).toContain("includeAnomalies:")
   expect(orchestrator).not.toContain("buildAlgorithmProjectContext")

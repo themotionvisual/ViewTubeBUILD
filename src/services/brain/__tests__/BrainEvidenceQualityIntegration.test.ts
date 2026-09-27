@@ -17,9 +17,9 @@ describe("Brain evidence quality integration", () => {
  it("builds one Evidence Intelligence envelope for statistics, quality and audience reasoning", () => {
   const orchestrator = read("src/services/brain/BrainOrchestrator.ts")
   expect(orchestrator).toContain("resolveEvidenceIntelligence")
-  expect(orchestrator).toContain("evidenceIntelligence.evidenceQuality")
-  expect(orchestrator).toContain("evidenceIntelligence.statisticsIntelligence")
-  expect(orchestrator).toContain("evidenceIntelligence.audienceIntelligence")
+  expect(orchestrator).toContain("evidenceIntelligence?.evidenceQuality")
+  expect(orchestrator).toContain("evidenceIntelligence?.statisticsIntelligence")
+  expect(orchestrator).toContain("evidenceIntelligence?.audienceIntelligence")
   expect(orchestrator).not.toContain("buildBrainEvidenceIntelligence")
   expect(orchestrator).not.toContain("buildBrainAudienceIntelligence")
  })

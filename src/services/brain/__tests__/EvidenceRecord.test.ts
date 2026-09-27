@@ -167,7 +167,7 @@ describe("EvidenceRecord", () => {
 
   expect(compareEvidenceRecords(base, { ...base, id: "metric", metric: "watchTime" }).level).toBe("invalid")
   expect(compareEvidenceRecords(base, { ...base, id: "channel", channelId: "channel-2" }).level).toBe("invalid")
-  expect(compareEvidenceRecords(base, { ...base, id: "unit", unit: "minutes" }).level).toBe("invalid")
+  expect(compareEvidenceRecords(base, { ...base, id: "unit", unit: "hours" }).level).toBe("invalid")
   expect(compareEvidenceRecords(base, { ...base, id: "population", population: "viewers" }).level).toBe("invalid")
  })
 

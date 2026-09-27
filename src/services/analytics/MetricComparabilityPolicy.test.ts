@@ -26,6 +26,12 @@ describe("compareMetricContexts", () => {
   })
  })
 
+ it("rejects different metric keys", () => {
+  const result = compareMetricContexts(metric(), metric({ metricKey: "watchHours" }))
+  expect(result.comparable).toBe(false)
+  expect(result.reasons).toContainEqual(expect.objectContaining({ code: "metric_key_mismatch" }))
+ })
+
  it("rejects different units", () => {
   const result = compareMetricContexts(metric(), metric({ unit: "percent" }))
   expect(result.comparable).toBe(false)
