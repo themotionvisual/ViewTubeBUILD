@@ -1,7 +1,7 @@
 # ViewTube Integrated Application Program
 
 **Production Date:** 2026-09-26  
-**Last Edited:** 2026-09-26  
+**Last Edited:** 2026-09-27  
 **Class:** PROGRAM  
 **Status:** ACTIVE  
 **Concern:** permanent cross-system convergence, integration seams, dependencies, and critical-path completion  
@@ -96,3 +96,21 @@ The dated Finish Program, its backlog registry, the 100-item audit, and system-c
 `docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md` is a MASTER_SOURCE for discovering missing capabilities, stronger master-tool consolidation, external API/research workstreams, creator-workflow improvements, AI/video-generation opportunities, analytics/visualization ideas, infrastructure/economics considerations, and product-roadmap candidates.
 
 Program work should reconcile its proposals against current code, Product Architecture, Domain Authorities, current API/provider reality, and Task Index state. Accepted work becomes CAP/VT/decision/program records; unaccepted ideas remain source material rather than hidden backlog commitments.
+
+
+## Page-surface opportunity integration workstream
+
+The canonical 80-item page opportunity catalog now lives in \`docs/architecture/PRODUCT_ARCHITECTURE.md#page-surface-feature-opportunity-registry\` under stable \`IDEA-*\` IDs for Dashboard, Studio, Projects, Analytics, Editor, Vault, Settings and User Guide.
+
+This program treats those ideas as an **integration intake**, not a second task ledger. When one is activated:
+
+- identify the existing CAP ID(s) and canonical owner(s);
+- link the scoped Domain Authority and live code/registry anchor;
+- prefer extension/projection/composition over a new backend store;
+- preserve Project/ContentBuild/asset/operation/publication/outcome identity across handoffs;
+- add exact implementation state to Task Authority rather than this document;
+- require evidence → logic → UI → action/outcome where the feature claims intelligence or recommendations;
+- update Guide teaching/projection when creator-visible behavior ships;
+- record \`IDEA-*\` IDs in plans/PRs until promoted, merged, deferred, retired or shipped.
+
+Cross-page ideas should be implemented as shared capability extensions whenever possible. In particular, Command Center/Briefing/Intelligence features should reuse BrainRuntime and Evidence & Intelligence; pipeline/project features should reuse Project/ContentBuild; asset features should reuse Asset Engine/Vault; analytics features should reuse VT-SYNC/analytics-canon; and activity/learning features should project existing operations/outcomes rather than create another ledger.

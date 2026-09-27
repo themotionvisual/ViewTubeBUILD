@@ -1788,3 +1788,26 @@ The next phase is not “more modules.” It is:
 - media-first assets;
 - obvious internal-vs-external tool boundaries;
 - preserving all the power already built while making that power feel natural.
+
+
+---
+
+## 33. Vault feature opportunity intake — 2026-09-27
+
+**Canonical catalog:** \`docs/architecture/PRODUCT_ARCHITECTURE.md#vault-opportunities\`  
+**Status:** OPPORTUNITY / FUTURE DEVELOPMENT INPUT. Existing compact UX priorities remain ahead of adding new persistent UI surfaces.
+
+1. **IDEA-VAULT-001 — Universal Asset Library:** one browse/manage experience over canonical asset identity for media, documents, generated assets, references, templates, prompts, renders and project materials.
+2. **IDEA-VAULT-002 — Semantic Asset Search:** meaning-based retrieval over approved metadata/embeddings.
+3. **IDEA-VAULT-003 — Asset Intelligence Enrichment:** descriptions/tags/entities/dates/colors/ratios/technical properties/provenance/project links with factual vs inferred status.
+4. **IDEA-VAULT-004 — Asset Relationship Graph:** source → edit → derivative → generation → Project → Publication → performance lineage.
+5. **IDEA-VAULT-005 — Duplicate & Near-Duplicate Detector:** exact/near duplicate detection without destructive auto-merge.
+6. **IDEA-VAULT-006 — Smart Collections:** dynamic rule-based collections over canonical metadata/relationships.
+7. **IDEA-VAULT-007 — Asset Usage History:** known usage across projects, edits, thumbnails, generations, videos and publications.
+8. **IDEA-VAULT-008 — Asset Version Families:** original/crop/retouch/upscale/animation/alternate-generation/audio-edit/derivative lineage families.
+9. **IDEA-VAULT-009 — Vault Inbox / Import Station:** batch intake with real processing state, classification, tags, duplicate checks, metadata and project assignment.
+10. **IDEA-VAULT-010 — Missing Asset Finder:** compare Project/ContentBuild asset requirements against canonical current assets and expose gaps.
+
+### Vault integration rule
+
+These ideas extend the existing Vault + Asset Engine + Project/ContentBuild ownership. They do not justify more permanent control walls on the page. Prefer contextual actions, drawers, inspectors, derived search/indexes and relationship projections. The current compact mobile UX lane remains a prerequisite for introducing additional visible complexity.

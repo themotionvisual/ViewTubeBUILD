@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "productionDate": "2026-09-26",
-  "lastEdited": "2026-09-26",
+  "lastEdited": "2026-09-27",
   "migrationState": "phase-d-brain-prompt-authority-consolidation",
   "authorityRule": "One primary authority per bounded concern. Current executable evidence verifies implementation; registry metadata determines documentation role.",
   "entries": [
@@ -78,7 +78,7 @@
       "concern": "product-capability-topology",
       "owner": "Product Architecture",
       "productionDate": "2026-09-26",
-      "lastEdited": "2026-09-26",
+      "lastEdited": "2026-09-27",
       "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
       "supersedes": [
         "docs/architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md"
@@ -95,7 +95,7 @@
       "concern": "application-integration-program",
       "owner": "Integrated Application Program",
       "productionDate": "2026-09-26",
-      "lastEdited": "2026-09-26",
+      "lastEdited": "2026-09-27",
       "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
       "supersedes": [
         "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
@@ -132,7 +132,7 @@
       "concern": "analytics-vt-sync",
       "owner": "VT-SYNC + analytics-canon",
       "productionDate": "2026-09-24",
-      "lastEdited": "2026-09-24",
+      "lastEdited": "2026-09-27",
       "lastAuditedMainSha": "0c4610629bfba98ffc0703a42e422352d5f31514",
       "supersedes": [],
       "relatedAuthorities": []
@@ -145,7 +145,7 @@
       "concern": "projects-contentbuild",
       "owner": "Projects + ContentBuild",
       "productionDate": "2026-09-22",
-      "lastEdited": "2026-09-24",
+      "lastEdited": "2026-09-27",
       "lastAuditedMainSha": "c7d9f55268af61569fdba9c2afab256a5cfbf6ff",
       "supersedes": [],
       "relatedAuthorities": [
@@ -188,7 +188,7 @@
       "concern": "widgets-dashboard",
       "owner": "Dashboard Widget System",
       "productionDate": "2026-09-25",
-      "lastEdited": "2026-09-26",
+      "lastEdited": "2026-09-27",
       "lastAuditedMainSha": "cf67573c2ce8eee58f5a63f7d2ae547e165ff3c8",
       "supersedes": [],
       "relatedAuthorities": []
@@ -201,7 +201,7 @@
       "concern": "editor",
       "owner": "Editor",
       "productionDate": "2026-09-24",
-      "lastEdited": "2026-09-24",
+      "lastEdited": "2026-09-27",
       "lastAuditedMainSha": "56e2c0c03f83a168bf385dd2f71d32bc87166d08",
       "supersedes": [],
       "relatedAuthorities": []
