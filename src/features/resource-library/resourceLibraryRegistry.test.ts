@@ -62,6 +62,24 @@ describe("resource library registry", () => {
     expect(entry?.tags).toContain("filters")
   })
 
+  it("registers the Shorts vs long-form creator guide", () => {
+    const entry = RESOURCE_LIBRARY_ENTRIES.find(
+      (resource) => resource.id === "shorts-vs-long-form-signals",
+    )
+
+    expect(entry).toMatchObject({
+      title: "Shorts vs Long-Form: Different Systems, Different Signals",
+      shortTitle: "Shorts vs Long-Form",
+      category: "YouTube Strategy",
+      difficulty: "Beginner–Intermediate",
+      format: "markdown",
+      status: "published",
+    })
+    expect(entry?.tags).toContain("shorts")
+    expect(entry?.tags).toContain("long-form")
+    expect(entry?.tags).toContain("format-strategy")
+  })
+
   it("parses canonical Markdown into metadata and SubToolbox-sized sections", () => {
     const parsed = parseResourceDocument(SAMPLE_DOCUMENT)
 
