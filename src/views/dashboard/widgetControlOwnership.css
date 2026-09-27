@@ -24,12 +24,12 @@
     justify-content:center;
     gap:4px;
     cursor:pointer;
-    box-shadow:var(--vt-control-shadow-x,2px) var(--vt-control-shadow-y,2px) 0 color-mix(in srgb,var(--widget-color,#000) 50%,transparent);
+    box-shadow:var(--vt-control-shadow-x,2px) var(--vt-control-shadow-y,2px) 0 color-mix(in srgb,var(--widget-color,#34cdea) 50%,transparent);
   }
 
   :is(.vt-button,.widget-action,.vt-dropdown-trigger,.widget-select-trigger,.widget-video-select-trigger):hover {
     transform:translate(1px,1px);
-    box-shadow:1px 1px 0 color-mix(in srgb,var(--widget-color,#000) 50%,transparent);
+    box-shadow:1px 1px 0 color-mix(in srgb,var(--widget-color,#34cdea) 50%,transparent);
   }
 
   :is(.vt-button,.widget-action,.vt-dropdown-trigger,.widget-select-trigger,.widget-video-select-trigger):active {
@@ -40,7 +40,7 @@
   :is(.vt-input,.vt-select,.vt-textarea) {
     width:100%;
     background:var(--bg-input,#fff);
-    color:var(--text-main,#000);
+    color:var(--text-main,var(--vt-ink,#243247));
     outline:none;
   }
 
@@ -53,6 +53,6 @@
   }
 
   .vt-button.primary { background:var(--widget-color,#4fff5b); }
-  .vt-button.secondary { background:color-mix(in srgb,var(--widget-color,#000) 30%,white); }
+  .vt-button.secondary { background:color-mix(in srgb,var(--widget-color,#34cdea) 30%,white); }
   :is(.vt-button,.widget-action):disabled { cursor:not-allowed; opacity:.5; transform:none; box-shadow:none; }
 }

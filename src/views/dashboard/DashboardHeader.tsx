@@ -51,33 +51,33 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
   <div className="relative">
    <button 
     onClick={() => setIsControlsOpen(!isControlsOpen)}
-    className="flex items-center gap-2 bg-white border-[2px] border-black rounded-[6px] px-3 py-2 shadow-[2px_2px_0_0_#000] hover:-translate-y-[1px] hover:shadow-[3px_3px_0_0_#000] active:translate-y-[1px] active:shadow-[1px_1px_0_0_#000] transition-all">
-    <Settings size={14} className="text-black" />
+    className="flex items-center gap-2 bg-white border-[2px] border-[var(--vt-ink)] rounded-[6px] px-3 py-2 shadow-[2px_2px_0_0_var(--vt-ink)] hover:-translate-y-[1px] hover:shadow-[3px_3px_0_0_var(--vt-ink)] active:translate-y-[1px] active:shadow-[1px_1px_0_0_var(--vt-ink)] transition-all">
+    <Settings size={14} className="text-[var(--vt-ink)]" />
     <span className="font-black text-[10px] tracking-widest uppercase">Layout Options</span>
     <ChevronDown size={14} strokeWidth={3} className="ml-0.5 opacity-50" />
    </button>
    
    {isControlsOpen && (
-    <div className="absolute left-0 top-[calc(100%+8px)] w-[200px] bg-white border-[3px] border-black shadow-[4px_4px_0_0_#000] rounded-[8px] z-50 flex flex-col overflow-hidden">
+    <div className="absolute left-0 top-[calc(100%+8px)] w-[200px] bg-white border-[3px] border-[var(--vt-ink)] shadow-[4px_4px_0_0_var(--vt-ink)] rounded-[8px] z-50 flex flex-col overflow-hidden">
      <div className="flex flex-col p-2 gap-1 bg-white">
-      <button onClick={() => { setIsControlsOpen(false); dashboardControls.setEditMode((prev) => !prev); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+      <button onClick={() => { setIsControlsOpen(false); dashboardControls.setEditMode((prev) => !prev); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        <Edit3 size={14} /> {dashboardControls.editMode ? "Exit Edit Mode" : "Rearrange Widgets"}
       </button>
-      <button onClick={() => { setIsControlsOpen(false); dashboardControls.toggleLock(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+      <button onClick={() => { setIsControlsOpen(false); dashboardControls.toggleLock(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        {dashboardControls.locked ? <Lock size={14} /> : <LockOpen size={14} />} {dashboardControls.locked ? "Unlock Layout" : "Lock Layout"}
       </button>
-      <button onClick={() => { setIsControlsOpen(false); dashboardControls.openPicker(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+      <button onClick={() => { setIsControlsOpen(false); dashboardControls.openPicker(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        <Layers size={14} /> Add Widgets
       </button>
-      <button onClick={() => { setIsControlsOpen(false); dashboardControls.handleExport(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+      <button onClick={() => { setIsControlsOpen(false); dashboardControls.handleExport(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        <Download size={14} /> Export Layout
       </button>
-      <button onClick={() => { setIsControlsOpen(false); dashboardControls.handleImportClick(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+      <button onClick={() => { setIsControlsOpen(false); dashboardControls.handleImportClick(); }} className="flex items-center gap-2 text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        <Upload size={14} /> Import Layout
       </button>
      </div>
-     <div className="border-t-[2px] border-black p-2 bg-[#eee]">
-      <button onClick={() => { setIsControlsOpen(false); dashboardControls.resetLayout(); }} className="flex items-center justify-center gap-2 w-full px-3 py-2 font-black text-[11px] uppercase tracking-wider bg-white border-[2px] border-black shadow-[2px_2px_0_0_#000] rounded hover:bg-[#FF1744] hover:text-white transition-colors">
+     <div className="border-t-[2px] border-[var(--vt-ink)] p-2 bg-[color-mix(in_srgb,var(--vt-ink)_7%,white)]">
+      <button onClick={() => { setIsControlsOpen(false); dashboardControls.resetLayout(); }} className="flex items-center justify-center gap-2 w-full px-3 py-2 font-black text-[11px] uppercase tracking-wider bg-white border-[2px] border-[var(--vt-ink)] shadow-[2px_2px_0_0_var(--vt-ink)] rounded hover:bg-[#FF1744] hover:text-white transition-colors">
        <RotateCcw size={14} /> Reset Layout
       </button>
      </div>
@@ -119,19 +119,19 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
      }
     }
     return (
-     <div key={idx} className="flex flex-col bg-white border-[2px] border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] overflow-hidden w-[110px] h-[64px] flex-shrink-0">
-      <div style={{ background: stat.color }} className="border-b-[2px] border-black h-[14px] flex items-center justify-center">
-       <span className="text-[7.5px] font-black uppercase tracking-widest text-black leading-none">{stat.label}</span>
+     <div key={idx} className="flex flex-col bg-white border-[2px] border-[var(--vt-ink)] rounded shadow-[2px_2px_0_0_var(--vt-ink)] overflow-hidden w-[110px] h-[64px] flex-shrink-0">
+      <div style={{ background: stat.color }} className="border-b-[2px] border-[var(--vt-ink)] h-[14px] flex items-center justify-center">
+       <span className="text-[7.5px] font-black uppercase tracking-widest text-[var(--vt-ink)] leading-none">{stat.label}</span>
       </div>
       <div className="flex items-baseline justify-center gap-1.5 px-1 pt-0.5">
-       <div className="text-[14px] font-black tracking-tighter text-black leading-none">
+       <div className="text-[14px] font-black tracking-tighter text-[var(--vt-ink)] leading-none">
         {displayValue.endsWith("K") ? <>{displayValue.slice(0, -1)}<span className="text-[0.65em]">K</span></> : displayValue.endsWith("M") ? <>{displayValue.slice(0, -1)}<span className="text-[0.65em]">M</span></> : displayValue}
        </div>
        {trendText && <span style={{ color: trendText.includes("▲") ? "#008B00" : "#D32F2F" }} className="text-[8.5px] font-black leading-none">{cleanTrend}</span>}
       </div>
       <div className="flex items-end gap-[1.5px] px-1 h-[14px] mt-auto">
        {bars.map((h, i) => (
-        <div key={i} style={{ flex: 1, height: `${Math.min(100, h * 1.5)}%`, background: stat.color, opacity: 0.3 + (h / 100) * 0.7, borderRadius: "1px 1px 0 0", border: "1px solid rgba(0,0,0,0.15)", borderBottom: "none" }} />
+        <div key={i} style={{ flex: 1, height: `${Math.min(100, h * 1.5)}%`, background: stat.color, opacity: 0.3 + (h / 100) * 0.7, borderRadius: "1px 1px 0 0", border: "1px solid color-mix(in srgb, var(--vt-ink) 18%, transparent)", borderBottom: "none" }} />
        ))}
       </div>
      </div>
@@ -144,14 +144,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
   <div className="relative">
    <button
     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-    className="flex items-center gap-2 bg-white border-[2px] border-black rounded-[6px] px-3 py-1 shadow-[2px_2px_0_0_#000] hover:-translate-y-[1px] hover:shadow-[3px_3px_0_0_#000] active:translate-y-[1px] active:shadow-[1px_1px_0_0_#000] transition-all ml-2">
-    <Sparkles size={12} className="text-black" />
+    className="flex items-center gap-2 bg-white border-[2px] border-[var(--vt-ink)] rounded-[6px] px-3 py-1 shadow-[2px_2px_0_0_var(--vt-ink)] hover:-translate-y-[1px] hover:shadow-[3px_3px_0_0_var(--vt-ink)] active:translate-y-[1px] active:shadow-[1px_1px_0_0_var(--vt-ink)] transition-all ml-2">
+    <Sparkles size={12} className="text-[var(--vt-ink)]" />
     <div className="flex flex-col gap-1">
      <span className="font-black text-[9px] tracking-widest uppercase">
       {entitlement.subscriptionPlanId.replace(/_/g, " ")} |{" "}
       {entitlement.tier === "large" ? "UNLIMITED" : `${creditsLeft.toLocaleString()} CREDITS`}
      </span>
-     <div className="w-[132px] h-[7px] border border-black rounded-full bg-white overflow-hidden">
+     <div className="w-[132px] h-[7px] border border-[var(--vt-ink)] rounded-full bg-white overflow-hidden">
       <div
        style={{
         width: `${meterPct}%`,
@@ -163,22 +163,22 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
      </div>
     </div>
     {entitlement.tier !== "large" ? (
-     <div className="bg-[#FF1744] text-white font-black text-[8px] px-2 py-0.5 rounded border border-black tracking-widest leading-none">UPGRADE</div>
+     <div className="bg-[#FF1744] text-white font-black text-[8px] px-2 py-0.5 rounded border border-[var(--vt-ink)] tracking-widest leading-none">UPGRADE</div>
     ) : null}
     <ChevronDown size={12} strokeWidth={3} className="ml-0.5 opacity-50" />
    </button>
    
    {isDropdownOpen && (
-    <div className="absolute right-0 top-[calc(100%+8px)] w-[240px] bg-white border-[3px] border-black shadow-[4px_4px_0_0_#000] rounded-[8px] z-50 flex flex-col overflow-hidden">
-     <div className="p-4 border-b-[2px] border-black bg-[#eee] flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full border-[2.5px] border-black bg-white overflow-hidden shadow-[2px_2px_0_0_#000] flex items-center justify-center">
+    <div className="absolute right-0 top-[calc(100%+8px)] w-[240px] bg-white border-[3px] border-[var(--vt-ink)] shadow-[4px_4px_0_0_var(--vt-ink)] rounded-[8px] z-50 flex flex-col overflow-hidden">
+     <div className="p-4 border-b-[2px] border-[var(--vt-ink)] bg-[color-mix(in_srgb,var(--vt-ink)_7%,white)] flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full border-[2.5px] border-[var(--vt-ink)] bg-white overflow-hidden shadow-[2px_2px_0_0_var(--vt-ink)] flex items-center justify-center">
        {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <span className="px-1 text-[8px] font-black uppercase leading-none text-center">{accountActionLabel}</span>}
       </div>
      <div className="flex flex-col">
        <span className="font-black text-[12px] uppercase leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis w-[140px]">{channelName}</span>
        <span className="font-black text-[9px] opacity-60 uppercase leading-tight">{accountAuthenticated ? (handleText || "Connected") : "Popup login"}</span>
        <div className="mt-1 flex items-center gap-2">
-        <div className="w-[86px] h-[6px] border border-black rounded-full bg-white overflow-hidden">
+        <div className="w-[86px] h-[6px] border border-[var(--vt-ink)] rounded-full bg-white overflow-hidden">
          <div
           style={{
            width: `${meterPct}%`,
@@ -204,7 +204,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
         }
         navigate("/account#workspace-data")
        }}
-       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        {account.label}
       </button>
       <button
@@ -216,16 +216,16 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
         }
         await globalSyncData({ batchMode: "initial" })
        }}
-       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        Run Sync
       </button>
-      <div className="h-[2px] bg-black/10 my-1 mx-2"></div>
+      <div className="h-[2px] bg-[color-mix(in_srgb,var(--vt-ink)_10%,transparent)] my-1 mx-2"></div>
       <button
        onClick={() => {
         setIsDropdownOpen(false)
         navigate("/account#account-profile")
        }}
-       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        Account Settings
       </button>
       <button
@@ -233,7 +233,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
         setIsDropdownOpen(false)
         navigate("/account#billing-meter")
        }}
-       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#FF83EA] border-2 border-transparent hover:border-black rounded transition-colors">
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#FF83EA] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        Billing & Meter
       </button>
       <button
@@ -241,17 +241,17 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
         setIsDropdownOpen(false)
         navigate("/account#api-keys")
        }}
-       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#24D3FF] border-2 border-transparent hover:border-black rounded transition-colors">
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#24D3FF] border-2 border-transparent hover:border-[var(--vt-ink)] rounded transition-colors">
        API Keys
       </button>
      </div>
-     <div className="border-t-[2px] border-black p-2 bg-[#eee]">
+     <div className="border-t-[2px] border-[var(--vt-ink)] p-2 bg-[color-mix(in_srgb,var(--vt-ink)_7%,white)]">
       <button
        onClick={() => {
         setIsDropdownOpen(false)
         void account.signOut().finally(logout)
        }}
-       className="w-full text-center px-3 py-2 font-black text-[11px] uppercase tracking-wider bg-white border-[2px] border-black shadow-[2px_2px_0_0_#000] rounded hover:bg-[#FF1744] hover:text-white transition-colors">
+       className="w-full text-center px-3 py-2 font-black text-[11px] uppercase tracking-wider bg-white border-[2px] border-[var(--vt-ink)] shadow-[2px_2px_0_0_var(--vt-ink)] rounded hover:bg-[#FF1744] hover:text-white transition-colors">
        Sign Out
       </button>
      </div>
@@ -266,7 +266,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
     {/* Controls Zone */}
     <div className="flex items-center gap-2">
      {renderControls()}
-     <div className="h-6 w-[2px] bg-black/10 mx-1"></div>
+     <div className="h-6 w-[2px] bg-[color-mix(in_srgb,var(--vt-ink)_10%,transparent)] mx-1"></div>
      <AIModelSelector compact />
     </div>
 
@@ -287,7 +287,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
       )}
       <div className="font-black text-[10px] opacity-60 leading-none mt-1">{accountAuthenticated ? (handleText || "Connected") : "Popup login"}</div>
      </div>
-     <div className="w-10 h-10 rounded-full border-[2.5px] border-black bg-white overflow-hidden flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+     <div className="w-10 h-10 rounded-full border-[2.5px] border-[var(--vt-ink)] bg-white overflow-hidden flex items-center justify-center shadow-[2px_2px_0_0_var(--vt-ink)]">
       {avatar ? (
        <img src={avatar} className="w-full h-full object-cover" />
       ) : (
@@ -297,28 +297,28 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
       )}
      </div>
      
-     <div className="w-[2px] h-6 bg-black/20 mx-1"></div>
+     <div className="w-[2px] h-6 bg-[var(--vt-ink)]/20 mx-1"></div>
      
      {renderTokenSettings()}
     </div>
    </div>
 
     {/* Ticker Strip */}
-    <div className="dashboard-header-ticker relative mt-4 h-10 border-t-2 border-black bg-white">
-     <div className="bg-black text-[#C9F830] font-black text-[10px] uppercase tracking-[0.1em] px-3 h-full flex items-center flex-shrink-0 z-10 shadow-[2px_0_0_0_#000] absolute left-0 top-0">
+    <div className="dashboard-header-ticker relative mt-4 h-10 border-t-2 border-[var(--vt-ink)] bg-white">
+     <div className="bg-[var(--vt-ink)] text-[#C9F830] font-black text-[10px] uppercase tracking-[0.1em] px-3 h-full flex items-center flex-shrink-0 z-10 shadow-[2px_0_0_0_var(--vt-ink)] absolute left-0 top-0">
       LIVE
      </div>
      <div className="flex-1 overflow-hidden relative h-full flex justify-center items-center w-full">
       <div className="flex items-center justify-center gap-8 px-4 w-full">
        <span className="text-[#FFE357] font-black text-[11px] tracking-wide uppercase">📈 TRENDING</span>
-       <span className="text-black font-black text-[11px]">YouTube rolls out AI-powered auto-dubbing</span>
+       <span className="text-[var(--vt-ink)] font-black text-[11px]">YouTube rolls out AI-powered auto-dubbing</span>
        <span className="text-[#FF83EA] font-black text-[11px] tracking-wide uppercase ml-4">🎯 MILESTONE</span>
-       <span className="text-black font-black text-[11px]">Passed 25,000 subscribers!</span>
+       <span className="text-[var(--vt-ink)] font-black text-[11px]">Passed 25,000 subscribers!</span>
        <span className="text-[#C9F830] font-black text-[11px] tracking-wide uppercase ml-4">💬 COMMENT</span>
-       <span className="text-black font-black text-[11px]">"This tutorial saved my life!"</span>
+       <span className="text-[var(--vt-ink)] font-black text-[11px]">"This tutorial saved my life!"</span>
       </div>
      </div>
-    <button className="bg-black text-white px-3 h-full border-l-[3px] border-black flex items-center hover:bg-gray-900 transition-colors flex-shrink-0 z-10 absolute right-0 top-0" title="Configure Ticker">
+    <button className="bg-[var(--vt-ink)] text-white px-3 h-full border-l-[3px] border-[var(--vt-ink)] flex items-center hover:opacity-90 transition-colors flex-shrink-0 z-10 absolute right-0 top-0" title="Configure Ticker">
      <Settings size={12} />
     </button>
    </div>
