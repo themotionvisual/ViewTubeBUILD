@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "executionId": "VT-EXEC-current-main-backlog-reconciliation-03",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "ab303861b3eb1c0c2f5b977b918a35a32d4b58b3",
+  "headRef": "docs/backlog-donor-consolidation-wave1-2026-09-27",
+  "writers": [
+    {
+      "role": "viewtube-document-consolidation",
+      "paths": [
+        "tasks/documentation-backlog-integration/**",
+        "archive/removed/**",
+        "docs/registry.json"
+      ]
+    },
+    {
+      "role": "viewtube-ideas-curator",
+      "paths": [
+        "ideas/**"
+      ]
+    },
+    {
+      "role": "viewtube-convergence-governance",
+      "paths": [
+        "governance/convergence/**"
+      ]
+    },
+    {
+      "role": "viewtube-document-system",
+      "paths": [
+        "agent/registry/references.md",
+        "tasks/viewtube-finish-program/**"
+      ]
+    }
+  ],
+  "reviewers": [
+    "viewtube-archivist",
+    "viewtube-verification-chancellor"
+  ],
+  "orderedSteps": [
+    "Preserve the 100-item audit expansion idea banks in the governed Ideas system before donor retirement.",
+    "Create no-loss accounting across the September 11 unfinished master, September 25 100-item audit and dated Finish Program sources.",
+    "Discover/classify inbound references and rewire active authority links.",
+    "Register plan-merge and plan-family donor lineage.",
+    "Do not move donors until active/historical references are resolvable through archive paths/manifests.",
+    "Validate ideas/convergence/consolidation records and leave a reconciliation receipt."
+  ],
+  "testsRequired": [
+    "ideas registry convergence-schema check",
+    "generated Master Ideas parity check",
+    "consolidation manifest schema check",
+    "convergence governance audit",
+    "documentation/source governance"
+  ],
+  "releaseRequired": false,
+  "status": "in_progress"
+}
