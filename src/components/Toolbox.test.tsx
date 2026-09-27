@@ -160,6 +160,8 @@ describe("Toolbox header controls", () => {
   )
 
   expect(toggle).toContain('role="group"')
+  expect(toggle).toContain('data-vt-header-toggle-primitive="v38-95"')
+  expect(toggle).not.toContain("--vt-header-toggle-count")
   expect(toggle).toContain('aria-label="Video format"')
   expect(toggle).toContain('aria-pressed="true"')
   expect(toggle).toContain('aria-pressed="false"')
