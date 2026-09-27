@@ -66,6 +66,7 @@ When beginning work:
 ## Current handoff maps
 
 - [Toolbox UI + CSS Master Handoff](./handoffs/VIEWTUBE_TOOLBOX_UI_CSS_MASTER_HANDOFF.md) — complete continuation map for Toolbox/SubToolbox geometry, CSS ownership, palette, responsive behavior, primitives, certification, governance and current visual-verification priorities. Subordinate to current code/tests and the Toolbox UI Master Resource.
+- [Toolbox UI + CSS Conversation Continuation Handoff](./handoffs/VIEWTUBE_TOOLBOX_UI_CSS_CONVERSATION_HANDOFF.md) — conversation-derived continuation map preserving the September 26–27 responsive audit, 3 P1 + 4 P2 findings, PR #468/#470/#474 implementation receipts, header-allocation law, intrinsic-height contract and next certification/migration work.
 
 ## Current consolidation status
 
