@@ -663,3 +663,30 @@ Before ending an editor-related turn, add an Update Log row containing:
 - Next exact action:
 
 If this document was not updated, the editor work is not fully handed off.
+
+
+## 19. Editor page feature opportunity intake — 2026-09-27
+
+**Canonical catalog:** \`docs/architecture/PRODUCT_ARCHITECTURE.md#editor-opportunities\`  
+**Status:** OPPORTUNITY / FUTURE DEVELOPMENT INPUT.
+
+1. **IDEA-EDIT-001 — AI Rough Cut:** propose an initial assembly from script/narration/media/scenes with creator approval.
+2. **IDEA-EDIT-002 — Script-Synchronized Timeline:** bind timeline ranges to script/narration/scenes/evidence/source assets.
+3. **IDEA-EDIT-003 — Smart B-Roll Manager:** identify coverage gaps and route to Vault or governed generation with provenance.
+4. **IDEA-EDIT-004 — Scene Inspector:** one scene-level view for script, assets, prompts, camera, audio, captions, effects, sources and alternatives.
+5. **IDEA-EDIT-005 — Timeline Intelligence:** detect pacing/dead-space/missing-media/static-section/audio-gap/duplicate-footage/placeholder issues.
+6. **IDEA-EDIT-006 — Version Branching:** alternate cuts/versions sharing canonical project/assets rather than cloned project universes.
+7. **IDEA-EDIT-007 — Visual Style System:** reusable project-level typography, color, motion, captions, transitions, overlays, grain and framing.
+8. **IDEA-EDIT-008 — Remotion Component Browser:** governed reusable animated components/charts/maps/lower-thirds/timelines/backgrounds/diagrams.
+9. **IDEA-EDIT-009 — AI Edit Assistant:** BrainRuntime edit proposals with preview/diff/approval before mutation.
+10. **IDEA-EDIT-010 — Automated Quality Control:** pre-render validation for assets, clipping, blank frames, silence, caption overflow, safe crops, transitions, ratios and render config.
+
+### Editor integration rule
+
+All proposals preserve the existing project bridge, one editor project model, ContentBuild/asset identity, deterministic render parity, undo/redo and explicit AI approval boundaries. AI UI must not call providers directly. Generated/recommended artifacts enter canonical provenance/asset flows.
+
+### Update Log addition — 2026-09-27
+
+| Date / time | Agent / conversation | Branch / PR | Status | Work completed / begun / planned | Changed or created paths | Verification / evidence | New references / sources | Next action |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-27 | ChatGPT page-feature opportunity integration | docs/page-feature-opportunity-registry-2026-09-27 | planned/cataloged | Added ten Editor feature opportunities and tied them to current editor/Brain/asset/render ownership; no runtime implementation claimed. | editor master + Product Architecture | documentation/code-owner reconciliation only | canonical 80-item page opportunity registry | promote selected \`IDEA-EDIT-*\` items through scoped plans/tasks before implementation |
