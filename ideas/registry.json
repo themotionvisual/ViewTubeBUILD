@@ -10,6 +10,13 @@
       "title": "Documentation Governance Improvement Ideas",
       "sourceType": "conversation",
       "itemCount": 50
+    },
+    {
+      "id": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "path": "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+      "title": "Current-Main Audit Expansion Opportunities",
+      "sourceType": "historical-audit",
+      "itemCount": 55
     }
   ],
   "ideas": [
@@ -1217,6 +1224,1398 @@
       "status": "IMPLEMENTATION_WAVE",
       "relatedPlanFamilyIds": [
         "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-YT-001",
+      "title": "Unified YouTube Studio Control Center",
+      "summary": "A single ViewTube workspace that merges supported channel, video, playlist, comment, subscription, membership, live, analytics and revenue controls behind one account-scoped command surface. It should show whether each control is **directly writable**, **read-only**, **requires YouTube Studio**, or **blocked by permissions**, so the product never implies unsupported authority.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-1",
+      "similarityKeys": [
+        "unified youtube studio control center",
+        "yt 1"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-YT-002",
+      "title": "Publish, Schedule and Post-Publish Operations Console",
+      "summary": "Extend the Publisher into a full YouTube operations console for upload, title/description/tags, thumbnail, captions where supported, visibility, audience settings, scheduling, premiere/live handoff, playlist placement, remote verification, retry/recovery and post-publish metadata updates. The ApprovedPublishSnapshot should remain the immutable approval boundary.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-2",
+      "similarityKeys": [
+        "publish, schedule and post-publish operations console",
+        "yt 2"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-YT-003",
+      "title": "Channel Customization and Homepage Architect",
+      "summary": "Manage supported channel branding and channel sections/shelves from ViewTube, with a visual preview of how playlists, popular uploads, featured groups and channel sections will appear. Where YouTube exposes only partial customization control, ViewTube should guide the creator to the exact remaining Studio action.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-3",
+      "similarityKeys": [
+        "channel customization and homepage architect",
+        "yt 3"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-YT-004",
+      "title": "Comment and Community Operations Inbox",
+      "summary": "Combine comment threads, replies, moderation state, spam/report actions where supported, creator notes, saved reply styles, suggested-video routing and audience intelligence into one triage workspace. High-volume channels should get batch filters, sentiment/theme clustering and “needs creator attention” prioritization without auto-posting unless explicitly allowed.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-4",
+      "similarityKeys": [
+        "comment and community operations inbox",
+        "yt 4"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-YT-005",
+      "title": "Playlist, Series and Content Architecture Manager",
+      "summary": "Create, edit, reorder and organize playlists and playlist items; connect each playlist to Projects, series strategy, end-screen routing and channel sections. Add playlist health metrics, missing-video alerts, duplicate placement detection and sequence recommendations based on actual viewer flows.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-5",
+      "similarityKeys": [
+        "playlist, series and content architecture manager",
+        "yt 5"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-YT-006",
+      "title": "Live Control Room",
+      "summary": "Create and schedule broadcasts, bind streams, monitor stream health, manage eligible live settings, operate live chat moderation, moderators/bans and supported monetization/cuepoint controls, and preserve the resulting livestream as a normal ContentBuild/video after the event.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-6",
+      "similarityKeys": [
+        "live control room",
+        "yt 6"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-YT-007",
+      "title": "Analytics, Revenue and Membership Intelligence Center",
+      "summary": "Unify YouTube Analytics/Reporting metrics and dimensions for views, watch time, retention, traffic, devices, geography, subscribers, playlists, livestreams, estimated revenue, ad performance, Premium revenue and available membership signals. Every number should retain unit, scope, window, format and provenance so comparisons pass the canonical metric-compatibility guard.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-7",
+      "similarityKeys": [
+        "analytics, revenue and membership intelligence center",
+        "yt 7"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-YT-008",
+      "title": "Subscriber, Subscription and Member Relationship Center",
+      "summary": "Separate three commonly confused concepts: channel subscriber performance, the authenticated account's own subscriptions, and channel membership data available to eligible channels. Build cohort views, churn/cancellation-reason analysis where data exists, member-perk tracking, subscriber conversion paths and relationship history without pretending that private subscriber identities are universally available.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-8",
+      "similarityKeys": [
+        "subscriber, subscription and member relationship center",
+        "yt 8"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-YT-009",
+      "title": "Monetization, Shopping and Commerce Operations Hub",
+      "summary": "Combine revenue analytics, ad-performance signals, Premium revenue, Super Chat/Super Thanks-style event data where available, memberships and YouTube Shopping/merchant readiness into one commerce workspace. Shopping controls that are not exposed by a supported API should appear as synchronized status, checklist and deep-link handoffs rather than fake in-app controls.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-9",
+      "similarityKeys": [
+        "monetization, shopping and commerce operations hub",
+        "yt 9"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-YT-010",
+      "title": "Content Planning Calendar with YouTube State Synchronization",
+      "summary": "One calendar for Projects, drafts, scheduled uploads, premieres, livestreams, campaign moments, community tasks and post-publish checkpoints. It should reconcile planned ViewTube dates with actual YouTube publish/live state and flag drift, missed deadlines, competing releases, missing assets and under-supported launch windows.",
+      "category": "YouTube Platform Integration",
+      "subcategory": "YouTube API & Studio",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "YT-10",
+      "similarityKeys": [
+        "content planning calendar with youtube state synchronization",
+        "yt 10"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-001",
+      "title": "Flow / Veo Scene Director inside Video Director",
+      "summary": "Turn a storyboard shot, reference frame, Asset Slot or selected Vault media into Veo scene generations, including portrait 9:16 outputs, first/last-frame continuity, ingredients/reference guidance and native audio when available. Generated clips should return as versioned assets with prompt/model/provenance metadata.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-1",
+      "similarityKeys": [
+        "flow / veo scene director inside video director",
+        "gai 1"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-002",
+      "title": "Nano Banana Thumbnail and Key-Art Lab",
+      "summary": "Use Nano Banana 2/Pro for thumbnail ideation, controlled image editing, subject consistency, text-aware compositions, background replacement, visual cleanup and variant generation. It should operate on existing thumbnail assets rather than create a parallel image store.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-2",
+      "similarityKeys": [
+        "nano banana thumbnail and key-art lab",
+        "gai 2"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-003",
+      "title": "Gemini Omni Multimodal Remix Workbench",
+      "summary": "Let creators drop text, images, audio and video references into one workspace and ask for a cohesive remix plan or generated output. Use cases include transforming an existing Short into a new visual concept, creating alternate hooks from footage, or adapting long-form material into several platform-ready variants.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-3",
+      "similarityKeys": [
+        "gemini omni multimodal remix workbench",
+        "gai 3"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-004",
+      "title": "Flow Agent Batch Creative Director",
+      "summary": "Map Flow Agent-style multi-step planning into ViewTube Projects: generate several scene variants, batch-edit a recurring visual choice, organize generated assets into collections and propose the next creative action while preserving explicit creator approval gates.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-4",
+      "similarityKeys": [
+        "flow agent batch creative director",
+        "gai 4"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-005",
+      "title": "Flow Tools / Creator Workflow Recipe Builder",
+      "summary": "Create reusable visual workflow recipes such as “historical map → cinematic establishing shot → 9:16 crop → title card → music cue” or “product image → three ad concepts → six hook variants.” Where Flow Tools are not directly callable, export structured recipes/prompts and re-import resulting assets.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-5",
+      "similarityKeys": [
+        "flow tools / creator workflow recipe builder",
+        "gai 5"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-006",
+      "title": "Flow Music / Lyria Soundtrack Studio",
+      "summary": "Generate project-scoped music beds, stingers, transitions and theme variations using Lyria-powered workflows, with duration, mood, tempo, intensity and edit-marker controls. Track usage rights/provenance and route approved audio directly into Editor/Vault.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-6",
+      "similarityKeys": [
+        "flow music / lyria soundtrack studio",
+        "gai 6"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-007",
+      "title": "Gemini Notebook Creator Research Room",
+      "summary": "Create one source-grounded notebook per Project, series or channel topic containing research documents, transcripts, links, notes and prior videos. Use it to produce cited research answers, briefs, FAQs, timelines, Audio/Video Overviews and reusable evidence packets for the Brain.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-7",
+      "similarityKeys": [
+        "gemini notebook creator research room",
+        "gai 7"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-008",
+      "title": "Gemini Deep Research Topic Intelligence",
+      "summary": "Run structured research for upcoming videos, competitors/topics, historical claims, product comparisons or audience questions, then convert the result into a ViewTube Evidence Pack with sources, confidence, freshness and explicit claims requiring human verification.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-8",
+      "similarityKeys": [
+        "gemini deep research topic intelligence",
+        "gai 8"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-009",
+      "title": "Gemini Live Studio Copilot",
+      "summary": "Add an optional voice-first copilot for brainstorming, script rehearsal, live editing decisions, shot review and hands-free navigation in the Studio Hub. The copilot should control ViewTube tools through typed actions rather than directly manipulating state outside canonical owners.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-9",
+      "similarityKeys": [
+        "gemini live studio copilot",
+        "gai 9"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-010",
+      "title": "Google Photos / Personal Intelligence Reference Picker",
+      "summary": "With explicit opt-in, allow creators to discover relevant personal photos or visual references from connected Google context for autobiographical content, thumbnails or B-roll planning. Nothing should be imported into Vault until the creator selects it.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-10",
+      "similarityKeys": [
+        "google photos / personal intelligence reference picker",
+        "gai 10"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-011",
+      "title": "Gemini API Model Router and Experiment Bench",
+      "summary": "Build a controlled model-testing surface that compares Gemini model/prompt/context combinations against the versioned AI regression corpus. Capture latency, cost, schema validity, groundedness, usefulness and evidence quality before promoting a model configuration into production.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-11",
+      "similarityKeys": [
+        "gemini api model router and experiment bench",
+        "gai 11"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-012",
+      "title": "AI Studio Prompt-to-Tool Prototyping Bridge",
+      "summary": "Use Google AI Studio as an experimentation donor for structured-output prompts, multimodal inputs, function/tool calling and model behavior. ViewTube should import proven prompt contracts and tests—not create a permanent second prompt authority.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-12",
+      "similarityKeys": [
+        "ai studio prompt-to-tool prototyping bridge",
+        "gai 12"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-013",
+      "title": "Gemini Notebook Auto-Learning Library Builder",
+      "summary": "Turn completed Projects, postmortems, high-performing videos and verified reference docs into source-grounded creator notebooks. The system could generate a “what we learned” brief, glossary, study guide, infographic or video overview and then publish approved versions into the ViewTube Library page.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-13",
+      "similarityKeys": [
+        "gemini notebook auto-learning library builder",
+        "gai 13"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-014",
+      "title": "Cross-Modal Brand Consistency Engine",
+      "summary": "Use Gemini reasoning plus Nano Banana/Veo/Flow references to compare thumbnails, frames, generated video and audio against the creator’s Style Fingerprint. Instead of a single vague style score, show concrete mismatches in palette, typography, subject treatment, pacing, camera language and recurring motifs.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-14",
+      "similarityKeys": [
+        "cross-modal brand consistency engine",
+        "gai 14"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI",
+        "PLAN-FAMILY-ASSET-VAULT"
+      ]
+    },
+    {
+      "id": "IDEA-GAI-015",
+      "title": "Multimodal Adaptation Factory",
+      "summary": "Take one approved long-form ContentBuild and generate a governed adaptation plan for Shorts, teaser clips, thumbnail/key-art variants, localized versions, alternate intros, social cutdowns and music treatments. Each derivative remains linked to the source ContentBuild and records which Google model/tool created it.",
+      "category": "Google AI & Creative Providers",
+      "subcategory": "Google AI Experiments",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "GAI-15",
+      "similarityKeys": [
+        "multimodal adaptation factory",
+        "gai 15"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-001",
+      "title": "How YouTube Recommendations and Discovery Work",
+      "summary": "A plain-language but evidence-grounded guide to Home/Browse, Suggested/Related, Search, Shorts Feed, subscriptions, notifications and other discovery surfaces—and what creators can and cannot infer about “the algorithm.”",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [],
+      "targetType": "FEATURE",
+      "targetId": "LIB-1",
+      "similarityKeys": [
+        "how youtube recommendations and discovery work",
+        "lib 1"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "PROMOTED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-LIB-002",
+      "title": "YouTube Metrics and Dimensions Master Glossary",
+      "summary": "Definitions for views, engaged views, watch time, average view duration, average percentage viewed, impressions, CTR, unique viewers, subscribers gained/lost, revenue, RPM/CPM-style measures, traffic dimensions, geography, device, content type and other analytics fields.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-2",
+      "similarityKeys": [
+        "youtube metrics and dimensions master glossary",
+        "lib 2"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "PROMOTED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-003",
+      "title": "Shorts vs Long-Form: Different Systems, Different Signals",
+      "summary": "Explain format differences in viewer behavior, distribution, retention interpretation, packaging, session behavior, monetization, cadence, creative structure and the danger of comparing unlike metrics directly.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [],
+      "targetType": "FEATURE",
+      "targetId": "LIB-3",
+      "similarityKeys": [
+        "shorts vs long-form: different systems, different signals",
+        "lib 3"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "PROMOTED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-LIB-004",
+      "title": "Publishing Best Practices and Preflight Checklist",
+      "summary": "A step-by-step reference covering metadata, title, description, tags where useful, thumbnail, captions, audience settings, visibility, schedule, playlists, chapters, end screens/cards where applicable, rights checks, quality control and post-publish verification.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-4",
+      "similarityKeys": [
+        "publishing best practices and preflight checklist",
+        "lib 4"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-005",
+      "title": "Thumbnail and Title Packaging Handbook",
+      "summary": "A practical guide to promise, clarity, curiosity, subject hierarchy, text restraint, contrast, mobile readability, title-thumbnail complementarity, variant testing and diagnosing high-retention/low-CTR versus high-CTR/low-satisfaction patterns.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-5",
+      "similarityKeys": [
+        "thumbnail and title packaging handbook",
+        "lib 5"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-006",
+      "title": "Audience Retention and Watch Behavior Guide",
+      "summary": "Explain retention curves, intros, dips, spikes, average percentage viewed, duration effects, chapter/segment analysis, Shorts looping behavior and how not to overreact to small samples.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-6",
+      "similarityKeys": [
+        "audience retention and watch behavior guide",
+        "lib 6"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-007",
+      "title": "Traffic Sources and Discovery Pathways",
+      "summary": "Explain Browse, Suggested/Related, Search, External, Channel pages, Shorts Feed, playlists, notifications, end screens, hashtags, sound pages, remixes and other traffic sources, including how the same video can behave differently across them.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-7",
+      "similarityKeys": [
+        "traffic sources and discovery pathways",
+        "lib 7"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-008",
+      "title": "Audience, Subscribers and Returning Viewers",
+      "summary": "Explain subscriber gains/losses, new vs returning viewers, viewer loyalty, audience overlap, cohort thinking, why subscriber count is not the same as active audience, and how to interpret subscriber conversion without chasing vanity metrics.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-8",
+      "similarityKeys": [
+        "audience, subscribers and returning viewers",
+        "lib 8"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-009",
+      "title": "YouTube Revenue and Monetization Fundamentals",
+      "summary": "Explain estimated revenue, ad revenue, Premium revenue, monetized playbacks, CPM/RPM concepts, memberships, fan funding, shopping/commerce considerations and why revenue reports can change after initial estimates.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-9",
+      "similarityKeys": [
+        "youtube revenue and monetization fundamentals",
+        "lib 9"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-010",
+      "title": "Live Streaming Operations Handbook",
+      "summary": "Cover scheduling, stream setup, encoder/health checks, chat moderation, DVR/latency choices, live analytics, monetization considerations, failure recovery and how to repurpose the archive afterward.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [],
+      "targetType": "FEATURE",
+      "targetId": "LIB-10",
+      "similarityKeys": [
+        "live streaming operations handbook",
+        "lib 10"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-LIB-011",
+      "title": "Playlist, Series and Channel Architecture Guide",
+      "summary": "Explain playlists as viewer journeys, series structure, channel homepage sections, sequencing, evergreen versus campaign playlists, internal routing and how playlists differ from simple folders.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [],
+      "targetType": "FEATURE",
+      "targetId": "LIB-11",
+      "similarityKeys": [
+        "playlist, series and channel architecture guide",
+        "lib 11"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-LIB-012",
+      "title": "Comments, Community and Audience Feedback Playbook",
+      "summary": "Cover moderation, response prioritization, recurring-question mining, suggested-video replies, handling criticism, identifying content opportunities and separating anecdotal comments from statistically meaningful audience evidence.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-12",
+      "similarityKeys": [
+        "comments, community and audience feedback playbook",
+        "lib 12"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-013",
+      "title": "Content Planning, Experiments and Learning Loops",
+      "summary": "Teach creators how to move from idea → hypothesis → package → publish → measurement → outcome → learning, including test design, avoiding simultaneous uncontrolled changes and recording what actually changed.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-13",
+      "similarityKeys": [
+        "content planning, experiments and learning loops",
+        "lib 13"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI",
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-LIB-014",
+      "title": "Copyright, Rights, Reuse and AI-Generated Media Reference",
+      "summary": "A creator-oriented reference for music, footage, images, remixes, licensing, claims/strikes, attribution, AI-generated assets, provenance and when to seek official/legal guidance rather than relying on assumptions.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [],
+      "targetType": "FEATURE",
+      "targetId": "LIB-14",
+      "similarityKeys": [
+        "copyright, rights, reuse and ai-generated media reference",
+        "lib 14"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-LIB-015",
+      "title": "Reading Analytics Correctly: Scope, Windows, Missingness and Statistical Traps",
+      "summary": "Explain time-window mismatches, lifecycle windows, percentages versus counts, sparse data, delayed metrics, geography/sample limitations, invalid cross-format comparisons, correlation versus causation and why “up” or “down” does not automatically explain why.",
+      "category": "Creator Reference Library",
+      "subcategory": "Creator Education",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "LIB-15",
+      "similarityKeys": [
+        "reading analytics correctly: scope, windows, missingness and statistical traps",
+        "lib 15"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-001",
+      "title": "Creator Mission Control",
+      "summary": "A Studio Hub command surface that shows the active Project, current ContentBuild, blockers, next action, pending approvals, publishing readiness, recent anomalies and the most important evidence-backed recommendation without becoming another Brain.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-1",
+      "similarityKeys": [
+        "creator mission control",
+        "spa 1"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI",
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-002",
+      "title": "Research-to-Project Builder",
+      "summary": "Turn a research brief, Gemini Notebook, URL set, transcript bundle or Brain conversation into a real Project with goals, evidence, tasks, script outline, asset slots and a ContentBuild identity in one guided flow.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-2",
+      "similarityKeys": [
+        "research-to-project builder",
+        "spa 2"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-003",
+      "title": "Packaging Laboratory",
+      "summary": "A dedicated title-thumbnail-description experimentation workspace with variant sets, evidence, rubric comparison, creator selection, historical performance context and later outcome attribution to the exact package used.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-PUBLISH",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-3",
+      "similarityKeys": [
+        "packaging laboratory",
+        "spa 3"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT",
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-004",
+      "title": "Publish Flight Deck",
+      "summary": "A dense but visual final readiness tool showing VIDEO → PACKAGE → RIGHTS → METADATA → AUDIENCE → SCHEDULE → APPROVAL → PUBLISH → VERIFY. It should absorb duplicate preflight/checklist surfaces rather than add another parallel publisher.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-PUBLISH",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-4",
+      "similarityKeys": [
+        "publish flight deck",
+        "spa 4"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ASSET-VAULT",
+        "PLAN-FAMILY-PUBLISHING"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-005",
+      "title": "Video Lifecycle Timeline",
+      "summary": "A single chronological view of idea, research, project creation, script, generated assets, edits, render, package approval, publish, analytics checkpoints, experiments, comments, outcomes and learned corrections for one video.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-5",
+      "similarityKeys": [
+        "video lifecycle timeline",
+        "spa 5"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-006",
+      "title": "Project Dependency and Blocker Radar",
+      "summary": "Visualize tasks and assets that are actually preventing completion: missing thumbnail choice, unresolved research claim, render failure, auth problem, unapproved package, absent captions or incomplete rights review. Rank blockers by downstream impact.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-6",
+      "similarityKeys": [
+        "project dependency and blocker radar",
+        "spa 6"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-007",
+      "title": "Content Experiment Manager",
+      "summary": "Create experiments around packaging, intro structure, publishing time, format or follow-up strategy; lock the hypothesis and changed variables; then join measured results back to the exact variant and ContentBuild.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-7",
+      "similarityKeys": [
+        "content experiment manager",
+        "spa 7"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-008",
+      "title": "Retention Scene and Chapter Diagnostics",
+      "summary": "Overlay retention behavior on chapters, transcript sections, edit markers and scene boundaries so creators can see where viewer behavior changes relative to actual content structure rather than only a generic line chart.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-8",
+      "similarityKeys": [
+        "retention scene and chapter diagnostics",
+        "spa 8"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS",
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-009",
+      "title": "Traffic Pathway Explorer",
+      "summary": "A flow/network visualization showing how viewers arrive through Search, Browse, Suggested, playlists, external sources, Shorts Feed, channel pages and internal routing, then where they go next when evidence is available.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-9",
+      "similarityKeys": [
+        "traffic pathway explorer",
+        "spa 9"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS",
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-010",
+      "title": "Audience Cohort Workbench",
+      "summary": "Compare new viewers, returning viewers, subscriber conversion, geography, device, format, traffic-source and lifecycle cohorts with strict metric-compatibility rules. Save useful cohorts as reusable analytics lenses rather than permanent duplicate datasets.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-10",
+      "similarityKeys": [
+        "audience cohort workbench",
+        "spa 10"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS",
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-011",
+      "title": "Revenue Opportunity Analyzer",
+      "summary": "Join content type, traffic, geography, watch behavior, ad/Premium revenue, memberships and publishing cadence to identify where revenue changes came from—while separating observed data from inferred opportunity.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-11",
+      "similarityKeys": [
+        "revenue opportunity analyzer",
+        "spa 11"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-ANALYTICS",
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-012",
+      "title": "Series and Playlist Architect",
+      "summary": "Plan a multi-video series visually, assign Projects/ContentBuilds to episodes, define playlist order, internal routing, follow-up candidates, recurring assets and publication cadence, then sync the supported playlist structure to YouTube.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-12",
+      "similarityKeys": [
+        "series and playlist architect",
+        "spa 12"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-PROJECTS"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-013",
+      "title": "Comment-to-Content Opportunity Miner",
+      "summary": "Cluster repeated viewer questions, requests and pain points across comments; connect clusters to existing videos/projects; estimate evidence strength; and create a Project or follow-up idea only after creator approval.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-13",
+      "similarityKeys": [
+        "comment-to-content opportunity miner",
+        "spa 13"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-014",
+      "title": "Channel Change Journal and Outcome Map",
+      "summary": "Automatically log significant creator actions—new thumbnail, title change, publish, playlist move, live event, experiment, major editor revision—and overlay later analytics so creators can inspect correlations without pretending they prove causation.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-14",
+      "similarityKeys": [
+        "channel change journal and outcome map",
+        "spa 14"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI"
+      ]
+    },
+    {
+      "id": "IDEA-SPA-015",
+      "title": "Scenario Planner",
+      "summary": "Let creators model “what if” plans such as more Shorts, fewer but larger long-form uploads, a weekly live stream, a sequel series or different publishing cadence. Use historical channel evidence to show assumptions and ranges, not fake forecasts or guaranteed outcomes.",
+      "category": "Studio / Projects / Analytics Tools",
+      "subcategory": "Creator Workflow Tools",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "SPA-15",
+      "similarityKeys": [
+        "scenario planner",
+        "spa 15"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
+      ],
+      "sourceListId": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-BRAIN-AI",
+        "PLAN-FAMILY-PROJECTS"
       ]
     }
   ]

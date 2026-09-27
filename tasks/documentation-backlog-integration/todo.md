@@ -66,6 +66,18 @@ Source:
 - [ ] Active projections contain only unfinished/verification work.
 - [ ] No broad historical task duplicates narrower current work.
 
+## Donor consolidation wave 1 — backlog / Finish Program family
+
+- [x] Preserve and normalize all 55 expansion ideas from the 100-item audit.
+- [x] Mark the first three Resource Library ideas implemented from current-main evidence.
+- [x] Create `CONSOL-BACKLOG-FINISH-PROGRAMS` no-loss accounting manifest.
+- [x] Discover and classify inbound references to the four principal donor sources.
+- [x] Register `PLAN-MERGE-0005` and attach donor lineage to current plan families.
+- [x] Rewire stale agent Task/Crown/Brain authority references.
+- [x] Rewire the Finish Program todo to Integrated Application / Task Authority and record landed A06/B11 foundations.
+- [ ] Rewire remaining active/historical links to archive/manifest destinations.
+- [ ] Copy source bytes to Removed Archive and update archive index/registry only after the link gate is clean.
+
 ## Phase 4 — Donor consolidation
 - [ ] Consolidate 2026-09-11 unfinished master.
 - [ ] Consolidate 2026-09-25 100-item audit.

@@ -1,7 +1,9 @@
 # ViewTube Finish Program — Master To-Do
 
+> **TRANSITION PROJECTION — 2026-09-27:** Cross-system program authority is `docs/programs/INTEGRATED_APPLICATION.md`; exact lifecycle authority is `docs/governance/TASK_AUTHORITY.md`. This file preserves A/B/C/D/P/S aliases and acceptance detail while Task Index VNext migration is completed. The dated Finish Program document is donor/provenance, not current architecture.
+
 Source registry: `tasks/viewtube-finish-program/BACKLOG-REGISTRY.md`
-Architecture: `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
+Program authority: `docs/programs/INTEGRATED_APPLICATION.md`
 
 ## Program A — Project / Asset / Publish
 
@@ -10,7 +12,7 @@ Architecture: `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
 - [ ] A03 Implement Asset Slot Registry.
 - [ ] A04 Assemble complete Project Workspace facade + readiness/Continue routing.
 - [ ] A05 Migrate destination-specific Context Resolver recipes.
-- [ ] A06 Implement immutable ApprovedPublishSnapshot.
+- [x] A06 Implement immutable ApprovedPublishSnapshot. — Foundation exists on current main; durable authority/recovery remains A07/A27 and VT-014–016.
 - [ ] A07 Certify PublishTransaction retry/recovery/idempotency.
 - [ ] A08 Complete post-publish ContentBuild identity + checkpoint chain.
 - [ ] A15 Close Editor → derived asset → Publishing Package → outcome loop.
@@ -20,7 +22,7 @@ Architecture: `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
 
 - [ ] B09 Complete production outcome writers across Publisher, Project, Editor, Community, experiments, packaging and Brain.
 - [ ] B10 Add evaluation targets/checkpoints to all consequential actions.
-- [ ] B11 Implement canonical metric-comparability guard.
+- [x] B11 Implement canonical metric-comparability guard. — VT-001 is DONE; evaluation integration VT-023 is also DONE, while visual/experiment consumers remain VT-024.
 - [ ] B14 Complete Comment/Audience outcome → theme → governed learning loop.
 - [ ] B18 Complete Analytics/Data Visual safety + responsive/state certification.
 - [ ] B22 Complete AI generation observability/eval coverage.

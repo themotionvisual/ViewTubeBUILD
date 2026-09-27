@@ -15,7 +15,7 @@ Re-audited 2026-09-24 against current main `c494d96aad9cbcf073e7d157685cb8b0269f
 | `docs/domains/BRAIN.md` | Canonical creator-facing Brain/AI runtime architecture and owner boundaries. |
 | `docs/specifications/PROMPTS.md` | Current prompt-system architecture, precedence, personalization and migration authority. |
 | `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json` | Historical 2026-09-03 system-owner registry; useful migration evidence, **not current status authority**. |
-| `docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md` | the constitution: KING/EMPEROR, 5 record types, lifecycle, conflict levels |
+| `docs/governance/CROWN.md` | current multi-agent Mission / Work Order / Receipt / Decision coordination authority; dated Crown integration files are donor/history |
 | `docs/architecture/viewtube-crown-protocols.schema.json` | schema for the five Crown records |
 | `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` | toolbox/subtoolbox UI contracts |
 | `docs/architecture/SUBTOOLBOX_PRIMITIVE_SYSTEM_V1.md` | primitive system |
@@ -23,13 +23,12 @@ Re-audited 2026-09-24 against current main `c494d96aad9cbcf073e7d157685cb8b0269f
 | `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` | **canonical living Editor System integration authority**: desktop/mobile parity, Remotion, Editor Brain, generative media, skill/resource/branch registry and append-only update log. |
 | `docs/architecture/dashboard-baseline.json` · `dashboard-style-snapshot.json` | dashboard regression baselines |
 | `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` · `MOBILE_VISUAL_QA_MATRIX.md` | mobile geometry contract + QA matrix |
-| `docs/domains/BRAIN.md` · `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | AI systems management/orientation + creator-facing Brain runtime architecture |
+| `docs/domains/BRAIN.md` · `docs/specifications/PROMPTS.md` | current Brain runtime/evidence/context authority + current Prompt System specification; dated AI consolidation contracts are donor/history |
 | `docs/architecture/SIMPLE_AUTH_V1.md` · `VIEWTUBE_AUTH_API_STABILIZATION_REFERENCE.md` | auth boundaries |
 | `.viewtube/exchange/README.md` | Royal Exchange record contract |
 | `CLAUDE.md` | deployment topology, golden rules, known lint debt |
 
-**External canonical** — `ViewTube-Task-Index.html` (schema 15, 1,598 tasks) is the sole
-task/status authority. It lives outside this repo and is not yet committed.
+**Task authority** — `docs/governance/TASK_AUTHORITY.md` is the canonical lifecycle/identity authority. Task Index VNext repo-native writer/storage is still being integrated; historical external HTML task indexes are donor/import sources and their old statuses are claims, not current truth.
 
 ## Folder sets — name the folder and its entry point, not the files
 
@@ -91,7 +90,7 @@ Integrity is gated by `npm run check:quarantine`.
 
 | Path | Superseded by |
 |---|---|
-| `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | the Task Index (1,598 tasks) |
+| `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | `docs/programs/INTEGRATED_APPLICATION.md` + current plan-family survivors + Task Authority; donor consolidation tracked by `CONSOL-BACKLOG-FINISH-PROGRAMS` |
 | `docs/migration/reference/VIEWTUBE_UNDEPLOYED_SYSTEMS_INDEX_2026-08-27.json` | **empty** — 0 entries; do not rely on it |
 | The uploaded condensed memory reference | its `viewtubeX` and `docs/skills/` paths are stale — see plan O12. Its **FAILURE → FIX INDEX** remains valuable |
 
@@ -111,7 +110,7 @@ entries below marked *external, unverified* stay unverified.
 
 ## Known gaps
 
-- The Task Index is not committed anywhere in this repo (plan O10).
+- Task Index VNext canonical repo-native writer/storage is not yet established on current main; historical external indexes remain donor/import sources until the Task Authority migration is verified.
 - No index exists for the 21 standalone HTML files in-repo, nor the local corpus; this
   registry is the first, and plan §15 is the mechanism.
 - `docs/*` is gitignored except `docs/migration/**`. Most docs here were force-added, so
