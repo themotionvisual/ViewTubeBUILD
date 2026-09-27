@@ -15,6 +15,9 @@ import {
 } from "../services/simpleYouTubeApi"
 import { useSimpleAuth } from "../auth/AuthProvider"
 import { useNavigate } from "react-router-dom"
+import { ViewTubeHandoffReceiver } from "../components/ViewTubeHandoffReceiver"
+import type { ViewTubeActionPacket } from "../services/viewTubeToolChains"
+import type { LongformOptimizationHandoffPayload } from "../services/longformOptimization"
 import {
  generateTagSuggestions,
  analyzeExistingTags,
@@ -184,6 +187,23 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const hasTriggeredInitialLoadRef = useRef(false)
 
  const showHeaderLoadAssetsButton = connected && videos.length === 0
+
+ const handleLongformOptimizerHandoff = useCallback((packet: ViewTubeActionPacket) => {
+  if (packet.sourceToolId !== "longform-optimizer") return
+  const payload = packet.payload as LongformOptimizationHandoffPayload
+  const metadata = payload.currentMetadata
+  setSelectedVideoId(payload.videoId || null)
+  setEditTitle(metadata?.title || "")
+  setEditDescription(metadata?.description || "")
+  setEditTags((metadata?.tags || []).join(", "))
+  if (metadata?.categoryId) setEditCategoryId(metadata.categoryId)
+  setSelectedPlaylistIds(metadata?.playlistIds || [])
+  setThumbnailPreview(payload.thumbnail?.url || null)
+  setVideoSearchQuery(metadata?.title || "")
+  setSaveSuccess(false)
+  setError(null)
+  setIsOpen(true)
+ }, [])
 
  const formatVideoLoadError = (err: any) => {
   const raw = err?.message || "Failed to load channel assets."
