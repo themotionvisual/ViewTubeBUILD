@@ -25,6 +25,19 @@ import { useBrain } from "../context/useBrain"
 import { resolveWorkspaceContentBuildToolContext } from "../services/asset-engine/ToolContext"
 import { createSuperToolActionPacket } from "../services/superToolActionPackets"
 import {
+ addAssetVariant,
+ createAssetVariantGroup,
+ createVersionedAsset,
+} from "../services/assetEngine"
+import {
+ prepareGenerationRequest,
+ recordToolReceipt,
+} from "../services/asset-engine/GenerationWorkflow"
+import {
+ generateConceptDirections,
+ generateScenePlan,
+} from "../services/brain/conceptSceneAssets"
+import {
  buildProductionHandoff,
  createConceptCandidates,
  createScenesFromConcept,
@@ -59,6 +72,7 @@ type StoredDraft = {
  concepts: ConceptDirection[]
  selectedConceptId: string | null
  scenes: ProductionScene[]
+ scriptBeatsText: string
 }
 
 const readDraft = (): StoredDraft | null => {
@@ -73,6 +87,7 @@ const readDraft = (): StoredDraft | null => {
    concepts: parsed.concepts,
    selectedConceptId: typeof parsed.selectedConceptId === "string" ? parsed.selectedConceptId : null,
    scenes: parsed.scenes,
+   scriptBeatsText: typeof parsed.scriptBeatsText === "string" ? parsed.scriptBeatsText : "",
   }
  } catch {
   return null
@@ -88,7 +103,7 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
  isOpenInitial = false,
  paletteIndex = 11,
 }) => {
- const { brain, setStoryboardState } = useBrain()
+ const { brain, setStoryboardState, authState } = useBrain()
  const initial = useMemo(() => readDraft(), [])
  const [brief, setBrief] = useState<ConceptBrief>(initial?.brief || {
   ...defaultBrief,
@@ -98,6 +113,9 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
  const [selectedConceptId, setSelectedConceptId] = useState<string | null>(initial?.selectedConceptId || null)
  const [scenes, setScenes] = useState<ProductionScene[]>(initial?.scenes || [])
  const [sceneCount, setSceneCount] = useState(Math.max(3, initial?.scenes.length || 6))
+ const [scriptBeatsText, setScriptBeatsText] = useState(initial?.scriptBeatsText || "")
+ const [conceptGenerating, setConceptGenerating] = useState(false)
+ const [sceneGenerating, setSceneGenerating] = useState(false)
  const [isOpen, setIsOpen] = useState(isOpenInitial)
  const [handoffStatus, setHandoffStatus] = useState("No production handoff sent yet.")
 
@@ -111,13 +129,13 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
   if (typeof window === "undefined") return
   const timer = window.setTimeout(() => {
    try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ brief, concepts, selectedConceptId, scenes }))
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ brief, concepts, selectedConceptId, scenes, scriptBeatsText }))
    } catch {
     // Draft persistence must never interrupt editing.
    }
   }, 180)
   return () => window.clearTimeout(timer)
- }, [brief, concepts, selectedConceptId, scenes])
+ }, [brief, concepts, selectedConceptId, scenes, scriptBeatsText])
 
  const updateBrief = <K extends keyof ConceptBrief>(key: K, value: ConceptBrief[K]) =>
   setBrief(current => ({ ...current, [key]: value }))
