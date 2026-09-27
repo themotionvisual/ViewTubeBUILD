@@ -1,0 +1,1223 @@
+{
+  "schemaVersion": "viewtube.ideas-registry.v1",
+  "productionDate": "2026-09-27",
+  "lastEdited": "2026-09-27",
+  "authority": "docs/governance/CONVERGENCE.md",
+  "sourceLists": [
+    {
+      "id": "IDEA-LIST-GOVERNANCE-001",
+      "path": "ideas/lists/governance/document-governance-improvements.md",
+      "title": "Documentation Governance Improvement Ideas",
+      "sourceType": "conversation",
+      "itemCount": 50
+    }
+  ],
+  "ideas": [
+    {
+      "id": "IDEA-GOV-001",
+      "title": "Capability Home Pages",
+      "summary": "Give every major capability one permanent routing home across tools/pages.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Capability Routing",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "CAPABILITY",
+      "targetId": "CAP-DOCUMENT-GOVERNANCE",
+      "similarityKeys": [
+        "capability home pages",
+        "capability routing"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-002",
+      "title": "Plan Families",
+      "summary": "Group related plans under stable family IDs with one survivor.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Plan Families",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "plan families",
+        "plan families"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-003",
+      "title": "Automatic Similar-Plan Detection",
+      "summary": "Detect likely overlapping plans before creating another one.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Similarity Detection",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "automatic similar-plan detection",
+        "similarity detection"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-004",
+      "title": "Mandatory Existing Work Checked Section",
+      "summary": "Require prior-art search before new plans/systems are created.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Prior Art",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "mandatory existing work checked section",
+        "prior art"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-005",
+      "title": "Universal Work Packet",
+      "summary": "Standardize agent/conversation/plan-to-code handoff payloads.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Work Handoffs",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "VT-WORK-PACKET",
+      "similarityKeys": [
+        "universal work packet",
+        "work handoffs"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-006",
+      "title": "Capability IDs Everywhere",
+      "summary": "Attach durable work records to CAP IDs for automatic clustering.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Identifiers",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CAPABILITY-ROUTING",
+      "similarityKeys": [
+        "capability ids everywhere",
+        "identifiers"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-007",
+      "title": "Plan Merge Records",
+      "summary": "Record source plans, survivor and harvested material for every merge.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Plan Merges",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PLAN-MERGES",
+      "similarityKeys": [
+        "plan merge records",
+        "plan merges"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-008",
+      "title": "Feature Idea Registry",
+      "summary": "Keep ideas separate from committed tasks while preserving provenance.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Ideas",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "IDEAS",
+      "similarityKeys": [
+        "feature idea registry",
+        "ideas"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-009",
+      "title": "Idea-to-Capability Routing",
+      "summary": "Route each idea to an existing capability before considering a new one.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Ideas",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "IDEAS",
+      "similarityKeys": [
+        "idea-to-capability routing",
+        "ideas"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-010",
+      "title": "Code Ownership Map",
+      "summary": "Map capabilities to source paths, tests, routes/services and confidence.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Code Ownership",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CODE-OWNERSHIP",
+      "similarityKeys": [
+        "code ownership map",
+        "code ownership"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-011",
+      "title": "Conversation Work Harvester",
+      "summary": "Extract durable completed/unfinished work from substantial conversations.",
+      "category": "Conversation & Intake",
+      "subcategory": "Conversation Harvest",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "CONVERSATION-INTAKE",
+      "similarityKeys": [
+        "conversation work harvester",
+        "conversation harvest"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-012",
+      "title": "Cross-Conversation Similarity Review",
+      "summary": "Detect overlapping work across conversation intake packages.",
+      "category": "Conversation & Intake",
+      "subcategory": "Similarity",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "cross-conversation similarity review",
+        "similarity"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-013",
+      "title": "Plan-to-Task Compiler",
+      "summary": "Turn accepted plan sections into Task Authority mutation proposals.",
+      "category": "Conversation & Intake",
+      "subcategory": "Task Promotion",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "TASK-AUTHORITY",
+      "similarityKeys": [
+        "plan-to-task compiler",
+        "task promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-014",
+      "title": "Task-to-Plan Backlinks",
+      "summary": "Link tasks back to their originating plan/program/specification.",
+      "category": "Conversation & Intake",
+      "subcategory": "Backlinks",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "TASK-AUTHORITY",
+      "similarityKeys": [
+        "task-to-plan backlinks",
+        "backlinks"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-015",
+      "title": "Task Completion Feedback Into Plans",
+      "summary": "Project verified task completion back into plan maturity automatically.",
+      "category": "Conversation & Intake",
+      "subcategory": "Progress Projection",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "TASK-AUTHORITY",
+      "similarityKeys": [
+        "task completion feedback into plans",
+        "progress projection"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-016",
+      "title": "Plan Maturity Model",
+      "summary": "Track architecture/backend/frontend/integration/tests/runtime/responsive/docs/release maturity.",
+      "category": "Conversation & Intake",
+      "subcategory": "Maturity",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PLAN-MATURITY",
+      "similarityKeys": [
+        "plan maturity model",
+        "maturity"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-017",
+      "title": "Feature Cluster Documents",
+      "summary": "Use one living cluster document for many related improvements.",
+      "category": "Conversation & Intake",
+      "subcategory": "Plan Consolidation",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PLAN-FAMILIES",
+      "similarityKeys": [
+        "feature cluster documents",
+        "plan consolidation"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-018",
+      "title": "Convergence Inbox",
+      "summary": "Route ideas/bugs/audits/research/prototypes into one review queue.",
+      "category": "Conversation & Intake",
+      "subcategory": "Intake",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE-INBOX",
+      "similarityKeys": [
+        "convergence inbox",
+        "intake"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-019",
+      "title": "Task Completion Feedback Into Capability Health",
+      "summary": "Reflect verified work in capability health rather than raw task percentages.",
+      "category": "Task & Plan State",
+      "subcategory": "Capability Health",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CAPABILITY-COVERAGE",
+      "similarityKeys": [
+        "task completion feedback into capability health",
+        "capability health"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-020",
+      "title": "Plan Health Audit",
+      "summary": "Flag plans with no owner/tasks/acceptance/code links or heavy overlap.",
+      "category": "Task & Plan State",
+      "subcategory": "Plan Health",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PLAN-FAMILIES",
+      "similarityKeys": [
+        "plan health audit",
+        "plan health"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-021",
+      "title": "Feature Cluster Status Projection",
+      "summary": "Generate cluster-level status from canonical tasks/evidence.",
+      "category": "Task & Plan State",
+      "subcategory": "Status Projection",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PLAN-FAMILIES",
+      "similarityKeys": [
+        "feature cluster status projection",
+        "status projection"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-022",
+      "title": "Debugging Family Records",
+      "summary": "Group related bugs under stable debug/root-cause families.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Debug Families",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "DEBUG-FAMILIES",
+      "similarityKeys": [
+        "debugging family records",
+        "debug families"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-023",
+      "title": "Root-Cause Promotion",
+      "summary": "Promote shared root causes above repeated symptom fixes.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Root Cause",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "DEBUG-FAMILIES",
+      "similarityKeys": [
+        "root-cause promotion",
+        "root cause"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-024",
+      "title": "Fix Once / Prevent Everywhere Rule",
+      "summary": "Prefer shared primitive/service/schema fixes over repeated local patches.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Shared Fixes",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "fix once / prevent everywhere rule",
+        "shared fixes"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-025",
+      "title": "Duplicate-Code Detection Reports",
+      "summary": "Find repeated stores/services/hooks/schemas/CSS/provider clients.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Duplicate Code",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CODE-OWNERSHIP",
+      "similarityKeys": [
+        "duplicate-code detection reports",
+        "duplicate code"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-026",
+      "title": "Simplification Proposals",
+      "summary": "Use a formal simplification work type for collapsing overlapping implementations.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Simplification",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "simplification proposals",
+        "simplification"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-027",
+      "title": "Removal Governance",
+      "summary": "Require reachability/replacement/donor/rollback evidence before deletion.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Removal",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "DOCUMENTATION",
+      "similarityKeys": [
+        "removal governance",
+        "removal"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-028",
+      "title": "Quarantine Registry",
+      "summary": "Track uncertain legacy code/docs/prototypes with removal gates.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Quarantine",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "DOCUMENTATION",
+      "similarityKeys": [
+        "quarantine registry",
+        "quarantine"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-029",
+      "title": "Implementation Family Graphs",
+      "summary": "Classify parallel implementations as canonical/adapter/compatibility/migration/donor/remove.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Implementation Families",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CODE-OWNERSHIP",
+      "similarityKeys": [
+        "implementation family graphs",
+        "implementation families"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-030",
+      "title": "Architecture Simplification Scoreboard",
+      "summary": "Track reductions in duplicate stores/routes/schemas/state owners/bridges.",
+      "category": "Debugging & Simplification",
+      "subcategory": "Simplification Metrics",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONTROL-ROOM",
+      "similarityKeys": [
+        "architecture simplification scoreboard",
+        "simplification metrics"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-031",
+      "title": "Integration Seam Registry",
+      "summary": "Record important system-to-system contracts and failure states.",
+      "category": "Integration & Decisions",
+      "subcategory": "Integration Seams",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "INTEGRATION-SEAMS",
+      "similarityKeys": [
+        "integration seam registry",
+        "integration seams"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-032",
+      "title": "Handoff Contract Library",
+      "summary": "Define reusable Project/Asset/Evidence/Generation/Publishing/Outcome handoffs.",
+      "category": "Integration & Decisions",
+      "subcategory": "Handoff Contracts",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "HANDOFF-CONTRACTS",
+      "similarityKeys": [
+        "handoff contract library",
+        "handoff contracts"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-033",
+      "title": "Universal Provenance Envelope",
+      "summary": "Use shared provenance fields for AI/assets/actions/renders/publish/outcomes.",
+      "category": "Integration & Decisions",
+      "subcategory": "Provenance",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PROVENANCE",
+      "similarityKeys": [
+        "universal provenance envelope",
+        "provenance"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-034",
+      "title": "Shared Decision Registry",
+      "summary": "Assign stable IDs to durable product/architecture decisions.",
+      "category": "Integration & Decisions",
+      "subcategory": "Decisions",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "DECISIONS",
+      "similarityKeys": [
+        "shared decision registry",
+        "decisions"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-035",
+      "title": "Decision Conflict Detection",
+      "summary": "Flag new plans that contradict existing decisions/authorities.",
+      "category": "Integration & Decisions",
+      "subcategory": "Decision Conflicts",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "decision conflict detection",
+        "decision conflicts"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-036",
+      "title": "Assumption Registry",
+      "summary": "Track unverified assumptions separately from facts/decisions.",
+      "category": "Integration & Decisions",
+      "subcategory": "Assumptions",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "ASSUMPTIONS",
+      "similarityKeys": [
+        "assumption registry",
+        "assumptions"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-037",
+      "title": "Open Questions Queue",
+      "summary": "Track unresolved research/creator/architecture questions separately from tasks.",
+      "category": "Integration & Decisions",
+      "subcategory": "Open Questions",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "OPEN-QUESTIONS",
+      "similarityKeys": [
+        "open questions queue",
+        "open questions"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-038",
+      "title": "Verification Debt Registry",
+      "summary": "Track implementation that lacks required runtime/visual/auth/deploy verification.",
+      "category": "Verification & Health",
+      "subcategory": "Verification Debt",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "CAPABILITY",
+      "targetId": "CAP-VERIFICATION",
+      "similarityKeys": [
+        "verification debt registry",
+        "verification debt"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-039",
+      "title": "Evidence Bundles",
+      "summary": "Collect tests/screenshots/logs/runtime/PR/deployment evidence under receipt IDs.",
+      "category": "Verification & Health",
+      "subcategory": "Evidence",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "CAPABILITY",
+      "targetId": "CAP-VERIFICATION",
+      "similarityKeys": [
+        "evidence bundles",
+        "evidence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-040",
+      "title": "Screenshot Certification Records",
+      "summary": "Standardize desktop/mobile/orientation screenshot evidence records.",
+      "category": "Verification & Health",
+      "subcategory": "Visual Certification",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "CAPABILITY",
+      "targetId": "CAP-VERIFICATION",
+      "similarityKeys": [
+        "screenshot certification records",
+        "visual certification"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-041",
+      "title": "Document Health Audit",
+      "summary": "Detect stale SHA metadata, duplicate authorities, broken supersession and orphan docs.",
+      "category": "Verification & Health",
+      "subcategory": "Document Health",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "CAPABILITY",
+      "targetId": "CAP-DOCUMENT-GOVERNANCE",
+      "similarityKeys": [
+        "document health audit",
+        "document health"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-042",
+      "title": "Plan Health Audit Automation",
+      "summary": "Automatically detect stale/unowned/unlinked/duplicate plans.",
+      "category": "Verification & Health",
+      "subcategory": "Plan Health",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "PLAN-FAMILIES",
+      "similarityKeys": [
+        "plan health audit automation",
+        "plan health"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-043",
+      "title": "Capability Coverage Audit",
+      "summary": "Show authority/code/tasks/tests/UI/Guide/verification coverage per capability.",
+      "category": "Verification & Health",
+      "subcategory": "Capability Coverage",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CAPABILITY-COVERAGE",
+      "similarityKeys": [
+        "capability coverage audit",
+        "capability coverage"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-044",
+      "title": "Agent Context Builder",
+      "summary": "Assemble the smallest correct task context package on demand.",
+      "category": "Agent Context & Workflows",
+      "subcategory": "Context",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "AGENT-CONTEXT",
+      "similarityKeys": [
+        "agent context builder",
+        "context"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-045",
+      "title": "Just-in-Time Documentation Retrieval",
+      "summary": "Retrieve only relevant authority sections and references for the task.",
+      "category": "Agent Context & Workflows",
+      "subcategory": "Context Retrieval",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "AGENT-CONTEXT",
+      "similarityKeys": [
+        "just-in-time documentation retrieval",
+        "context retrieval"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-046",
+      "title": "Reusable Workflow Registry",
+      "summary": "Make repeatable development workflows first-class governed objects.",
+      "category": "Agent Context & Workflows",
+      "subcategory": "Workflows",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "WORKFLOWS",
+      "similarityKeys": [
+        "reusable workflow registry",
+        "workflows"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-047",
+      "title": "Skill-to-Workflow Mapping",
+      "summary": "Map workflows to the skills used at each stage.",
+      "category": "Agent Context & Workflows",
+      "subcategory": "Skill Routing",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "WORKFLOWS",
+      "similarityKeys": [
+        "skill-to-workflow mapping",
+        "skill routing"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-048",
+      "title": "Improvement Recommendation Log",
+      "summary": "Persist deduped architecture/performance/UX/AI/tooling recommendations before task promotion.",
+      "category": "Continuous Improvement",
+      "subcategory": "Recommendations",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "IMPROVEMENTS",
+      "similarityKeys": [
+        "improvement recommendation log",
+        "recommendations"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-049",
+      "title": "Unified Development Control Room",
+      "summary": "Generate one projection of capabilities/plans/tasks/missions/risks/evidence/ideas/questions/verification debt.",
+      "category": "Continuous Improvement",
+      "subcategory": "Control Room",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONTROL-ROOM",
+      "similarityKeys": [
+        "unified development control room",
+        "control room"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-050",
+      "title": "Convergence-First Governance Rule",
+      "summary": "Require reuse/merge/generalize/adapt attempts before new parallel systems.",
+      "category": "Continuous Improvement",
+      "subcategory": "Convergence Rule",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "CONVERGENCE",
+      "similarityKeys": [
+        "convergence-first governance rule",
+        "convergence rule"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "IMPLEMENTATION_WAVE",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    }
+  ]
+}
