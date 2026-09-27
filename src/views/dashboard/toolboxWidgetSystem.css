@@ -768,14 +768,14 @@
 
 :where(.dashboard-barrier) .widget-divider.is-full {
   width: auto;
-  margin-inline: calc(-1 * var(--widget-content-inset));
+  margin-inline: 0;
 }
 
 :where(.dashboard-barrier) .widget-footer {
   box-sizing: border-box;
   flex: 0 0 auto;
-  margin-inline: calc(-1 * var(--widget-content-inset));
-  margin-bottom: calc(-1 * var(--widget-content-inset));
+  margin-inline: 0;
+  margin-bottom: 0;
   padding: var(--widget-content-inset);
   border-top: 0;
 }
