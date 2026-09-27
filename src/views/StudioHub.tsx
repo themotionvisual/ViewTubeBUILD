@@ -49,9 +49,7 @@ const StudioHub: React.FC = () => {
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
     <ConceptSceneStudio collapsible isOpenInitial={false} paletteIndex={11} />
     <React.Suspense fallback={null}>
-     <div id="video-director" className="scroll-mt-24">
-      <VideoDirector collapsible isOpenInitial={false} paletteIndex={0} />
-     </div>
+     <VideoDirector collapsible isOpenInitial={false} paletteIndex={11} />
     </React.Suspense>
     <StudioPublishingCockpit />
     <VideoPublisher collapsible isOpenInitial={false} paletteIndex={1} />
