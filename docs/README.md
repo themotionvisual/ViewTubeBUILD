@@ -22,6 +22,7 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Documentation governance | [Documentation Governance](./governance/DOCUMENTATION.md) + [Machine Registry](./registry.json) |
 | Verification / completion evidence | [Verification](./governance/VERIFICATION.md) |
 | Conversation & Improvement OS | [Conversation OS](./governance/CONVERSATION_OS.md) |
+| Conversation handoff / work intake | [Conversation Handoffs](./governance/CONVERSATION_HANDOFFS.md) |
 | Crown mission coordination | [Crown](./governance/CROWN.md) |
 | Canonical task mutation | [Task Authority](./governance/TASK_AUTHORITY.md) |
 | Brain / creator AI | [Brain](./domains/BRAIN.md) |
