@@ -11,10 +11,12 @@ describe("Publishing Command compact package-focused controls", () => {
     expect(source).toContain("projectId")
   })
 
-  it("uses canonical checkboxes and supports adding manual tasks", () => {
+  it("uses canonical checkboxes and supports adding package-scoped manual tasks", () => {
     expect(source).toContain("WidgetCheckbox")
     expect(source).toContain("WidgetTextInput")
     expect(source).toContain("ADD TASK")
+    expect(source).toContain("taskStorageKey")
+    expect(source).toContain("selectedPackageId")
     expect(source).not.toContain('{item.done ? "✓" : "×"}')
   })
 
