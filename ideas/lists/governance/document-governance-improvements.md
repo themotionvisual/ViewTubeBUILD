@@ -15,17 +15,17 @@
 8. **Feature Idea Registry** — Keep ideas separate from committed tasks while preserving provenance. **[BUILD WAVE]**
 9. **Idea-to-Capability Routing** — Route each idea to an existing capability before considering a new one. **[BUILD WAVE]**
 10. **Code Ownership Map** — Map capabilities to source paths, tests, routes/services and confidence. **[BUILD WAVE]**
-11. **Conversation Work Harvester** — Extract durable completed/unfinished work from substantial conversations.
-12. **Cross-Conversation Similarity Review** — Detect overlapping work across conversation intake packages.
-13. **Plan-to-Task Compiler** — Turn accepted plan sections into Task Authority mutation proposals.
-14. **Task-to-Plan Backlinks** — Link tasks back to their originating plan/program/specification.
-15. **Task Completion Feedback Into Plans** — Project verified task completion back into plan maturity automatically.
-16. **Plan Maturity Model** — Track architecture/backend/frontend/integration/tests/runtime/responsive/docs/release maturity.
-17. **Feature Cluster Documents** — Use one living cluster document for many related improvements.
-18. **Convergence Inbox** — Route ideas/bugs/audits/research/prototypes into one review queue.
-19. **Task Completion Feedback Into Capability Health** — Reflect verified work in capability health rather than raw task percentages.
-20. **Plan Health Audit** — Flag plans with no owner/tasks/acceptance/code links or heavy overlap.
-21. **Feature Cluster Status Projection** — Generate cluster-level status from canonical tasks/evidence.
+11. **Bidirectional Code ↔ Document Links** — Documents point to code owners, and important code modules link back to their governing capability/specification.
+12. **Change Impact Graph** — Given a changed file, identify affected capabilities, plans, tasks, docs, tests, UI surfaces and integrations.
+13. **Unified Before Building Gate** — Before implementation begins, resolve capability owner, prior art, current code, existing tasks, active PRs and related prototypes.
+14. **Convergence Inbox** — Route new ideas from conversations, audits, research, bugs, prototypes and agents into one review queue instead of immediately creating documents/tasks.
+15. **Conversation Work Harvester** — At the end of substantial conversations, extract completed work, incomplete work, decisions, bugs, opportunities, rejected directions and ideas into governed intake.
+16. **Cross-Conversation Similarity Review** — Compare new conversation work against prior conversation-intake packages to detect duplicate plans/tasks.
+17. **Plan-to-Task Compiler** — Convert accepted plan sections into Task Authority mutation proposals while preserving plan/capability/acceptance/dependency links.
+18. **Task-to-Plan Backlinks** — Every task should know which plan/program/specification created or justifies it.
+19. **Task Completion Feedback Into Plans** — When tasks become verified DONE, update owning plan maturity/progress projections instead of copying status prose.
+20. **Plan Maturity Model** — Track Architecture, Backend, Frontend, Integration, Tests, Runtime, Responsive, Documentation and Release maturity instead of vague almost-finished states.
+21. **Feature Cluster Documents** — For systems with many related improvements, maintain one compact living feature-cluster document instead of many micro-plans.
 22. **Debugging Family Records** — Group related bugs under stable debug/root-cause families.
 23. **Root-Cause Promotion** — Promote shared root causes above repeated symptom fixes.
 24. **Fix Once / Prevent Everywhere Rule** — Prefer shared primitive/service/schema fixes over repeated local patches.
@@ -46,7 +46,7 @@
 39. **Evidence Bundles** — Collect tests/screenshots/logs/runtime/PR/deployment evidence under receipt IDs.
 40. **Screenshot Certification Records** — Standardize desktop/mobile/orientation screenshot evidence records.
 41. **Document Health Audit** — Detect stale SHA metadata, duplicate authorities, broken supersession and orphan docs.
-42. **Plan Health Audit Automation** — Automatically detect stale/unowned/unlinked/duplicate plans.
+42. **Plan Health Audit** — Flag plans with no active tasks, no owner, no acceptance criteria, no code links, staleness or substantial overlap with another plan.
 43. **Capability Coverage Audit** — Show authority/code/tasks/tests/UI/Guide/verification coverage per capability. **[BUILD WAVE]**
 44. **Agent Context Builder** — Assemble the smallest correct task context package on demand.
 45. **Just-in-Time Documentation Retrieval** — Retrieve only relevant authority sections and references for the task.
@@ -58,6 +58,6 @@
 
 ## Governance
 
-This source list is preserved intact as provenance.
+This source list preserves the original 50-item governance idea sequence as the intake source for this wave.
 
-New reviews should update the normalized Idea Registry rather than rewriting this source list.
+New reviews should update the normalized Idea Registry rather than rewriting source provenance.
