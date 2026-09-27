@@ -15,7 +15,7 @@
 
 Extend the existing `ideas/` library and `viewtube-ideas-curator`; do not create another ideas store or another conversation task ledger. The Conversation OS is already installed through `AGENTS.md`, `CLAUDE.md`, `docs/governance/CONVERSATION_OS.md`, `agent/contracts/conversation-os.md`, and its skill. Conversation handoffs live in `tasks/conversation-intake/`.
 
-Current main already has category source folders, `ideas/registry.json`, generated `ideas/MASTER_IDEAS.md`, `generate:ideas-master`, similarity helpers, and a structural audit. It contains two registered source lists. The CLI groups likely matches, but its group retains a representative title and summary plus unioned source IDs/refs; it does not produce a reviewed composite of each source's distinct requirements. The master generator renders registry entries as written and does not perform its own consolidation. The audit checks IDs, categories, targets and provenance, but not source item coverage or requirement retention.
+Current main already has category source folders, `ideas/registry.json`, generated `ideas/MASTER_IDEAS.md`, `generate:ideas-master`, similarity helpers, and a structural audit. This intake branch registers a third source list, `IDEA-LIST-PAGE-FEATURES-001`, preserving 80 page-surface feature ideas plus five consolidation-layer ideas; the registry now contains 190 normalized idea records on this branch. The CLI groups likely matches, but its group retains a representative title and summary plus unioned source IDs/refs; it does not produce a reviewed composite of each source's distinct requirements. The master generator renders registry entries as written and does not perform its own consolidation. The audit checks IDs, categories, targets and provenance, but not source item coverage or requirement retention.
 
 ## Existing work checked
 
@@ -74,3 +74,17 @@ Start with one small pair of overlapping governance ideas and one pair of genuin
 ## Next action
 
 Implement Wave 1 inventory and a source-item coverage report on a feature branch. Use its measured gaps to finalize the versioned schema before any bulk migration.
+
+
+## Intake updates
+
+### 2026-09-27 page-feature intake
+
+- Preserved source: `ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md`.
+- Source list ID: `IDEA-LIST-PAGE-FEATURES-001`.
+- Captured: 80 page feature/tool ideas + 5 consolidation architecture ideas.
+- Reused stable IDs already present in Product Architecture: `IDEA-DASH-*`, `IDEA-STUDIO-*`, `IDEA-PROJ-*`, `IDEA-AN-*`, `IDEA-EDIT-*`, `IDEA-VAULT-*`, `IDEA-SET-*`, `IDEA-GUIDE-*`.
+- Added consolidation IDs: `IDEA-ARCH-001` through `IDEA-ARCH-005`.
+- Routed all records to canonical capability IDs and product/page targets.
+- Status remains `UNREVIEWED`; this intake does not promote the ideas to tasks or implementation commitments.
+- Regenerated `ideas/MASTER_IDEAS.md` from the updated registry.
