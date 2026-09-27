@@ -57,6 +57,7 @@ describe("subtoolbox design governance", () => {
 
  it("uses V38 #95 as the canonical Toolbox header toggle primitive", () => {
   const systemCss = source("src/styles/subtoolbox-system.css")
+  const toolboxCss = source("src/styles/toolbox-system.css")
   const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
 
   expect(primitives).toContain('data-vt-header-toggle-primitive="v38-95"')
@@ -68,6 +69,8 @@ describe("subtoolbox design governance", () => {
   expect(systemCss).toContain("background: var(--pair-a")
   expect(systemCss).not.toContain("grid-template-columns: repeat(var(--vt-header-toggle-count")
   expect(systemCss).not.toContain("box-shadow: 3px 3px 0 0 #000")
+  expect(toolboxCss).not.toContain("min-width: 148px")
+  expect(toolboxCss).toContain("width: max-content")
  })
 
  it("keeps header anatomy and primary actions on canonical primitives", () => {
