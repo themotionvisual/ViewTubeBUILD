@@ -7,7 +7,7 @@
 **Concern:** permanent cross-system convergence, integration seams, dependencies, and critical-path completion  
 **Owner:** Integrated Application Program  
 **Registry ID:** DOC-PROGRAM-INTEGRATED  
-**Last Audited Main SHA:** e5bbb56fee503c26a1251c6e3643307af12c4632  
+**Last Audited Main SHA:** 3ed2bc91f324338fd110a160d65ddbed93806142
 **Supersedes:** docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md after migration certification  
 **Consolidates:** system convergence program relationships while preserving its detailed classification/task sources  
 **Related Authorities:** docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md; docs/architecture/PRODUCT_ARCHITECTURE.md; docs/governance/CONVERSATION_OS.md; docs/governance/DOCUMENTATION.md; docs/governance/TASK_AUTHORITY.md; docs/governance/VERIFICATION.md; docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md; Task Index
@@ -72,6 +72,13 @@ Every final render should become a canonical versioned asset that can be selecte
 
 ### UI / Widget / Toolbox certification
 Finish shared primitive migration, natural responsive behavior, truthful preview/empty/disconnected states and screenshot-driven certification without forcing unique tools into identical internal layouts.
+
+### Toolbox promotion + workflow-chain convergence
+Keep the Dashboard as an instrument panel rather than a collection of permanently expanded mini-applications. Complex surfaces should use a compact widget for status/selection/resume plus a Toolbox workstation for multi-stage editing, generation, provenance, comparison, history and cross-tool routing. Reuse canonical domain owners rather than synchronizing private widget/tool state.
+
+The subordinate specification is `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`. It consolidates the current oversized-widget audit, twenty promotion/workbench candidates and forty creator workflow recipes. The recipes are orchestration prior art, **not forty automatic tasks**. Shared implementation should converge on the reusable seams first: widget→Toolbox context/resume, registry handoff metadata, ActionPacket/operation identity, Project/ContentBuild/asset/evidence continuity, chain inspection, outcome/evaluation closure and responsive certification.
+
+Initial pilot chains are Thumbnail Refresh Experiment, Comment→New Video, Editor Missing-Shot Recovery, 72-Hour Launch Review and Missing Asset Finder. Their task-workspace proposal lives at `tasks/toolbox-workflow-convergence/`; permanent VT task IDs remain gated by Task Authority.
 
 ### Brain and Prompt architecture convergence
 Converge creator-facing AI on the stable Brain domain authority and Prompt specification. Remove AI-management work/status responsibilities from Brain docs; route continuity through Conversation OS, missions through Crown and exact state through Task Authority. Continue migration of direct legacy provider/generator paths, prompt-family/version coverage, context/evidence consistency, outcome/evaluation producers and governed learning. Preserve prompt inventory/reachability as machine projections rather than a second work ledger.
