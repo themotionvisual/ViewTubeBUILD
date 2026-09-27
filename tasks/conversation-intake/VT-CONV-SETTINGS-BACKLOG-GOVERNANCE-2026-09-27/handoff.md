@@ -13,12 +13,12 @@ Redesign Settings around canonical Toolbox/SubToolbox primitives, then use the C
 
 ## Current repository state
 
-- Main SHA inspected for this package: `4c18a8de6c97c4d172df6528ff483fa6a08c4e5c`
+- Main SHA inspected for this package: `3ed2bc91f324338fd110a160d65ddbed93806142`
 - Active mission: `VT-MISSION-current-main-backlog-reconciliation`
 - Canonical Task Index mutation: **not authorized yet** because Task Index VNext writer/storage is not positively resolved on current main.
 - Current plan families: Brain/AI, Analytics/VT-SYNC, Projects/ContentBuild, Asset/Vault, Editor/Remotion, Widgets, Toolbox, Publishing, Docs/Agents and Mobile/Responsive.
 - Related merged planning PR: #501.
-- Current main has advanced beyond the original #501 audit and now includes VT-001 + VT-023 DONE plus additional Brain/evidence convergence.
+- Current main has advanced beyond the original #501 audit and now includes VT-001 + VT-023 DONE, additional Brain/evidence convergence, Convergence Governance capability/plan-family infrastructure, and PR #512 reversible Project package selection authority.
 
 ## Read first
 
@@ -128,7 +128,7 @@ The detailed source ranges are preserved and routed in `worklog.json`. Major sur
 - Settings targeted governance/model/workspace tests passed during implementation waves.
 - Settings production build/local smoke/source governance passed in the merge waves.
 - Current main inspected for MetricComparabilityPolicy, ApprovedPublishSnapshot, Brain Project context, Opportunity evidence, Video Manager primitive migration, Resource Library and orientation-preservation foundations.
-- Current One-Goal ledger confirms VT-001 and VT-023 DONE at 4c18a8de6c97c4d172df6528ff483fa6a08c4e5c.
+- Current One-Goal ledger confirms VT-001 and VT-023 DONE at 3ed2bc91f324338fd110a160d65ddbed93806142.
 
 ## Verification still needed
 
@@ -151,7 +151,7 @@ The detailed source ranges are preserved and routed in `worklog.json`. Major sur
 
 ## Exact next action
 
-Refresh `tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md` to 4c18a8de6c97c4d172df6528ff483fa6a08c4e5c, correct stale One-Goal projection text/status where evidence is already canonical, then continue the existing mission with proposal-only dedupe until Task Index VNext writer/storage lands.
+Refresh `tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md` to 3ed2bc91f324338fd110a160d65ddbed93806142, correct stale One-Goal projection text/status where evidence is already canonical, then continue the existing mission with proposal-only dedupe until Task Index VNext writer/storage lands.
 
 ## Work log
 
