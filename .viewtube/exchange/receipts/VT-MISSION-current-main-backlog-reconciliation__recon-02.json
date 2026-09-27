@@ -19,7 +19,7 @@
     {
       "name": "current-main-refresh",
       "state": "proven",
-      "evidence": "Reconciliation refreshed from 76519e3d to 4c18a8de6c97c4d172df6528ff483fa6a08c4e5c; current One-Goal ledger shows VT-001 and VT-023 DONE."
+      "evidence": "Reconciliation refreshed from 76519e3d to 3ed2bc91f324338fd110a160d65ddbed93806142; current One-Goal ledger shows VT-001 and VT-023 DONE, and PR #512 further narrows Project package-selection debt."
     },
     {
       "name": "conversation-intake-reconciliation",
