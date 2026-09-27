@@ -2,16 +2,16 @@
 title: Resource Title
 short_title: Short Resource Title
 resource_id: stable-resource-id
-resource_type: guide
+resource_type: creator-guide
 category: Primary Category
 secondary_categories: Secondary Category A, Secondary Category B
 audience: YouTube creators
-difficulty: Beginner / Intermediate / Advanced
+difficulty: Beginner to Intermediate
 estimated_read_time: 15–25 minutes
 production_date: YYYY-MM-DD
 last_researched: YYYY-MM-DD
 recommended_review_date: YYYY-MM-DD
-research_status: source-grounded
+research_status: creator-first and source-grounded
 version: 1.0
 official_sources_prioritized: true
 viewtube_resource: true
@@ -22,83 +22,92 @@ related_resources: Resource A; Resource B
 
 # Resource Title
 
-## Quick-Reference Summary
+Open in plain language. Explain the creator problem, why the subject matters, and what the reader will be able to do after reading.
 
-Open with a concise explanation of the subject, why it matters, and the most important caveat.
+> **Creator principle:** Put the single most useful mental model here.
 
-> **Key distinction:** Put the highest-value conceptual distinction here.
+---
+
+## The Creator Mental Model
+
+Explain the subject as simply as possible before introducing technical terminology.
 
 ### At a Glance
 
-| Concept | What it means | Why it matters |
+| Creator question | Plain-English answer | Why it matters |
 |---|---|---|
-| Concept A | Concise definition | Creator implication |
-| Concept B | Concise definition | Creator implication |
-| Concept C | Concise definition | Creator implication |
+| ... | ... | ... |
+| ... | ... | ... |
 
-### System / Process Flow
+### Simple Process Flow
 
 ```mermaid
 flowchart LR
-    A[Input] --> B[Process]
+    A[Creator Input] --> B[Viewer or System Response]
     B --> C[Evidence]
-    C --> D[Decision]
-    D --> E[Outcome]
+    C --> D[Creator Decision]
 ```
 
 ---
 
-## Core Concept
+## What This Means for Your Channel
 
-Explain one major subject per `##` section. The ViewTube Resource Document renderer treats major sections as **SubToolboxes**.
+Connect the subject to ordinary creator decisions.
 
-### Definition Module
+Prefer questions such as:
 
-Short explanatory prose.
+- What should I look at?
+- What might this pattern mean?
+- What should I not assume?
+- Which ViewTube tool should I open next?
 
-### Evidence Grid
-
-| Claim | Evidence level | Source | Limitation |
-|---|---|---|---|
-| ... | Official / Strong / Inference / Observation / Unknown | ... | ... |
-
-> **Important limitation:** Make uncertainty visible rather than burying it in prose.
+> **Use this in ViewTube:** Give a concrete diagnostic or workflow handoff.
 
 ---
 
-## Comparison Section
+## Core Concepts
 
-| Dimension | Option A | Option B | Important difference |
-|---|---|---|---|
-| ... | ... | ... | ... |
+Introduce terminology only after the mental model is clear.
 
-### Creator Takeaway
+### Concept
 
-Explain what the comparison changes in practice.
+Explain it in creator language first.
 
----
+Then, if necessary, add the exact technical definition.
 
-## Decision Framework
+### Comparison
 
-| Situation | Evidence to inspect | What not to assume | Sensible next action |
+| Concept | What it measures/does | What it does not prove | Creator use |
 |---|---|---|---|
 | ... | ... | ... | ... |
 
-```mermaid
-flowchart TD
-    A[Observe signal] --> B{Enough evidence?}
-    B -- No --> C[Collect more evidence]
-    B -- Yes --> D[Compare against fair baseline]
-    D --> E[Choose action]
-```
-
 ---
 
-## Worked Example
+## Diagnose Real Creator Questions
 
-> **Illustrative example — not real YouTube data or an official benchmark.**
+Organize analysis around questions, not a field inventory.
 
-Walk through the reasoning step by step.
+### Question
+
+**Inspect:**
+
+- metric/evidence;
+- dimension/context;
+- filter/scope;
+- time window.
+
+**Possible interpretations:**
+
+- ...
+- ...
+
+**Do not conclude:**
+
+- ...
+
+**Open in ViewTube:**
+
+- ...
 
 ---
 
@@ -106,79 +115,52 @@ Walk through the reasoning step by step.
 
 ### Before You Start
 
-- [ ] Confirm the goal.
-- [ ] Confirm the relevant audience.
-- [ ] Identify the evidence needed.
+- [ ] Define the audience or goal.
+- [ ] Write the question you are trying to answer.
+- [ ] Choose a fair comparison.
 
 ### During Review
 
+- [ ] Check context, source and time window.
+- [ ] Separate evidence from inference.
 - [ ] Compare like-for-like cases.
-- [ ] Record assumptions.
-- [ ] Distinguish fact from inference.
 
 ### After Action
 
+- [ ] Record the hypothesis.
 - [ ] Record what changed.
 - [ ] Set a review window.
-- [ ] Recheck before promoting the result into durable learning.
+- [ ] Measure the result.
 
 ---
 
-## Common Misinterpretations
+## Common Misinterpretations and Myths
 
-### Misinterpretation 1
+### Myth / Misinterpretation
 
 **Common conclusion:** ...
 
-**What the evidence actually supports:** ...
+**What the evidence supports:** ...
 
 **What else to check:** ...
 
 ---
 
-## Myths vs Evidence
+## Use This in ViewTube
 
-### Myth
+Create a practical handoff map.
 
-State the real, common claim.
+| What you observe | ViewTube tool | Useful next question |
+|---|---|---|
+| ... | ... | ... |
 
-### What the Evidence Says
-
-Explain the strongest available evidence.
-
-### Practical Interpretation
-
-State the creator-facing lesson without overstating certainty.
-
----
-
-## What to Do With This Information
-
-### Monitor
-
-- ...
-
-### Compare
-
-- ...
-
-### Test
-
-- ...
-
-### Ignore
-
-- ...
-
-### Document
-
-- ...
+Include an example Brain prompt when useful.
 
 ---
 
 ## Quick Reference
 
-| Question | Best first answer |
+| Creator question | Best first evidence/action |
 |---|---|
 | ... | ... |
 | ... | ... |
@@ -187,34 +169,42 @@ State the creator-facing lesson without overstating certainty.
 
 ## Glossary
 
-**Term** — Concise, technically correct creator-facing definition.
+**Term** — Plain-English definition first. Add technical precision only where it helps the creator use the concept correctly.
+
+---
+
+## Advanced Reference
+
+This section is optional for ordinary creators.
+
+Move developer/API architecture, exact field names, backend schemas, historical model details, implementation caveats, and similar technical material here unless the reader genuinely needs it earlier.
+
+Never let advanced reference become the primary learning path.
 
 ---
 
 ## Related ViewTube Resources
 
-| Resource | Why read it next |
-|---|---|
-| Resource A | ... |
-| Resource B | ... |
+- Resource A
+- Resource B
 
 ---
 
 ## Sources and Further Reading
 
-### Official YouTube / Google Sources
+### Current Official Creator Sources
 
-**[S1] Source title** — Publisher, date. What it supports.  
+**Source title** — What creator-facing claim it supports.  
 https://example.com
 
-### Research / Academic Sources
+### Official Technical / Reference Sources
 
-**[S2] Source title** — Authors, date. What it supports.  
+**Source title** — What precise definition or technical constraint it supports.  
 https://example.com
 
-### Other High-Quality Sources
+### Research / Historical Sources
 
-### Historical / Superseded Sources
+Use only when useful, clearly dated, and not presented as an exact description of current proprietary systems.
 
 ---
 
@@ -224,16 +214,15 @@ https://example.com
 |---|---|
 | Document version | 1.0 |
 | Research completed | YYYY-MM-DD |
-| Review cadence | Semi-annual / annual / event-driven |
-| Primary source checks | Official pages to revisit |
-
-### Areas Most Likely to Change
-
-- ...
+| Primary audience | Everyday YouTube creators |
+| Technical depth | Creator-first with optional advanced reference |
+| Review cadence | Semi-annual / quarterly / event-driven |
 
 ### Maintenance Checklist
 
-- [ ] Recheck official sources.
-- [ ] Review renamed/deprecated metrics or features.
-- [ ] Reclassify evidence if stronger primary sources appear.
-- [ ] Update related resources and ViewTube tool links.
+- [ ] Recheck current official creator guidance.
+- [ ] Recheck technical definitions that materially affect creators.
+- [ ] Keep the primary reading path plain-language and action-oriented.
+- [ ] Move developer-only implementation detail out of the main path.
+- [ ] Update ViewTube tool handoffs.
+- [ ] Preserve stable resource ID after publication.
