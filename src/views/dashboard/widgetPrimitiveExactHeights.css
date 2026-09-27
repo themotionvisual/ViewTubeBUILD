@@ -125,9 +125,9 @@
 
 @layer primitives {
  .vt-spectrum-badge.is-height-18 { min-height:18px; height:18px; font-size:8px; font-weight:1000; line-height:1; }
- .vt-spectrum-badge.is-height-24 { min-height:24px; height:24px; font-size:16px; font-weight:1000; line-height:1; }
- .vt-spectrum-badge.is-height-32 { min-height:32px; height:32px; font-size:21px; font-weight:1000; line-height:1; }
- .vt-spectrum-badge.is-height-38 { min-height:38px; height:38px; font-size:26px; font-weight:1000; line-height:1; }
+ .vt-spectrum-badge.is-height-24 { min-height:24px; height:24px; font-size:18px; font-weight:1000; line-height:1; }
+ .vt-spectrum-badge.is-height-32 { min-height:32px; height:32px; font-size:24px; font-weight:1000; line-height:1; }
+ .vt-spectrum-badge.is-height-38 { min-height:38px; height:38px; font-size:30px; font-weight:1000; line-height:1; }
  .vt-spectrum-badge[class*="is-height-"] > span { font-size:inherit; font-weight:inherit; line-height:1; }
 }
 
