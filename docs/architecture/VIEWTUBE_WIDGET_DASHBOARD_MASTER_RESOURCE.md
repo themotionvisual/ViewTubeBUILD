@@ -3,7 +3,7 @@
 **Status:** CANONICAL LIVING WIDGET / DASHBOARD PLANNING + IMPLEMENTATION RESOURCE  
 **Created:** 2026-09-25  
 **Last edited:** 2026-09-27  
-**Last audited main:** `cf67573c2ce8eee58f5a63f7d2ae547e165ff3c8`  
+**Last audited main:** `3ed2bc91f324338fd110a160d65ddbed93806142`  
 **Current registered widget count:** 68  
 **Executable authority:** `src/views/dashboard/WidgetRegistryBase.ts`, `src/views/dashboard/WidgetRegistry.ts`, `src/views/dashboard/WidgetRenderer.tsx`, `src/views/dashboard/WidgetRendererBase.tsx`, `src/views/dashboard/WidgetShell.tsx`, `src/views/dashboard/DashboardCanvas.tsx`, `src/views/dashboard/storage.ts`, `src/views/dashboard/widgetCertification.ts`, `src/views/dashboard/WidgetPrimitives.tsx`, and widget-local modules under `src/views/dashboard/widgets/`.  
 **Design-system authority:** `.claude/skills/viewtube-widget-dashboard-system/`, `.claude/skills/viewtube-widget-dashboard/`, `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`, and the canonical widget primitives.  
@@ -25,6 +25,12 @@ Order of authority:
 6. **Historical Library artifacts / HTML atlases** — design and feature donors only; never override current runtime truth.
 
 When counts or implementation status conflict, remeasure current `main`; do not preserve stale numbers merely because an older document says them.
+
+### Dashboard instrument vs Toolbox workstation
+
+The Dashboard must not become a grid of full creator applications. When a widget needs multi-stage editing, generation queues, lineage/provenance, approvals, variant comparison, history, or repeated cross-tool routing, preserve a compact Dashboard instrument and move the deep workflow into a Toolbox workstation that uses the same canonical backend owners.
+
+The detailed promotion law and twenty audited promotion/consolidation candidates are maintained in `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`. Use that specification together with this Widget authority and the Toolbox UI authority before adding another large widget or embedding a full Studio tool inside `WidgetShell`.
 
 ---
 
