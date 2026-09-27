@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "viewtube.conversation-work-log.v1",
+  "conversationId": "VT-CONV-...",
+  "created": "YYYY-MM-DD",
+  "lastEdited": "YYYY-MM-DD",
+  "sourceHost": "ChatGPT",
+  "reviewStatus": "UNREVIEWED",
+  "items": [
+    {
+      "itemId": "VT-CWI-001",
+      "title": "Example work item",
+      "summary": "",
+      "details": "",
+      "kind": "PLAN",
+      "conversationState": "PLANNED",
+      "domains": [],
+      "capabilityIds": [],
+      "surfaces": [],
+      "sourceRefs": [],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [],
+      "value": {
+        "creatorImpact": "MEDIUM",
+        "systemLeverage": "MEDIUM",
+        "urgency": "MEDIUM",
+        "reusePotential": "MEDIUM",
+        "confidence": "MEDIUM",
+        "estimatedEffort": "UNKNOWN",
+        "implementationRisk": "UNKNOWN",
+        "rationale": ""
+      },
+      "relationship": "NEW",
+      "suggestedDestination": null,
+      "reviewStatus": "UNREVIEWED",
+      "disposition": null,
+      "targetRefs": [],
+      "harvestedMaterial": [],
+      "reviewNotes": ""
+    }
+  ]
+}
