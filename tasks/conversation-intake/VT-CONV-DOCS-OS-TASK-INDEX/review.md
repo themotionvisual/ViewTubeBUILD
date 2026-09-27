@@ -119,3 +119,23 @@ Disposition:
 - classify static-quality/full-suite as inherited current-main application debt;
 - classify Vercel failures as external deployment-account constraints;
 - do not attribute them to the Conversation Handoff & Work Reconciliation system.
+
+
+## PR #500 donor recovery
+
+PR #500 (`docs/incomplete-work-program-reconciliation`) became unmergeable after the governance/program branches advanced. It was audited as a DONOR rather than force-merged.
+
+Recovered into the current Integrated Application Program:
+- 22 cross-system completion fronts;
+- canonical routing/owner map;
+- eight-step critical-path sequence;
+- activation rule from observation/donor source to Task Authority;
+- explicit MASTER_SOURCE relationship.
+
+Already-current or newer material was not overwritten:
+- current-main backlog reconciliation;
+- Conversation Handoff & Work Reconciliation system;
+- Verification relationship;
+- newer registry state.
+
+Disposition: preserve PR #500 as provenance, transplant only unique material, and close the stale PR after the replacement PR is opened.
