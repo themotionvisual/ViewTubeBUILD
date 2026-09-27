@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewtube://schemas/convergence-governance",
+  "title": "ViewTube Convergence Governance Records",
+  "$defs": {
+    "priorArtCheck": {
+      "type": "object",
+      "required": [
+        "checked",
+        "verdict"
+      ],
+      "properties": {
+        "checked": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "verdict": {
+          "enum": [
+            "NEW",
+            "CONTINUATION",
+            "ALREADY_TRACKED",
+            "DUPLICATE",
+            "OVERLAPS",
+            "EXPANDS",
+            "SUPERSEDES",
+            "BUG_IN_EXISTING",
+            "VERIFICATION_ONLY",
+            "DONOR_ONLY"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "workPacket": {
+      "type": "object",
+      "required": [
+        "packetId",
+        "title",
+        "capabilityIds",
+        "existingWorkChecked",
+        "convergenceDecision"
+      ],
+      "properties": {
+        "packetId": {
+          "type": "string",
+          "pattern": "^VT-WORK-"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capabilityIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^CAP-"
+          }
+        },
+        "existingWorkChecked": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "convergenceDecision": {
+          "enum": [
+            "EXTEND",
+            "COMBINE",
+            "MERGE",
+            "GENERALIZE",
+            "ADAPT",
+            "CREATE_REVIEW"
+          ]
+        },
+        "planFamilyId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "taskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "codePaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "acceptance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nextAction": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "planFamily": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "capabilityIds",
+        "survivor",
+        "members",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^PLAN-FAMILY-"
+        },
+        "title": {
+          "type": "string"
+        },
+        "capabilityIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "survivor": {
+          "type": "string"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "RECONCILING",
+            "CONSOLIDATED",
+            "HISTORICAL"
+          ]
+        }
+      }
+    },
+    "idea": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "category",
+        "subcategory",
+        "targetType",
+        "targetId",
+        "sourceRefs",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^IDEA-"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "subcategory": {
+          "type": "string"
+        },
+        "capabilityIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targetType": {
+          "enum": [
+            "CAPABILITY",
+            "MASTER_TOOL",
+            "SYSTEM",
+            "FEATURE",
+            "FUNCTION",
+            "PAGE",
+            "WORKFLOW",
+            "GOVERNANCE"
+          ]
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "enum": [
+            "UNREVIEWED",
+            "REVIEWING",
+            "ACCEPTED",
+            "IMPLEMENTATION_WAVE",
+            "PROMOTED",
+            "DEFERRED",
+            "REJECTED",
+            "MERGED"
+          ]
+        }
+      }
+    },
+    "mergeRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "sources",
+        "survivor",
+        "harvested",
+        "disposition"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^PLAN-MERGE-"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "survivor": {
+          "type": "string"
+        },
+        "harvested": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "disposition": {
+          "type": "string"
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "trigger",
+        "steps",
+        "skillIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^WF-"
+        },
+        "title": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "skillIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
