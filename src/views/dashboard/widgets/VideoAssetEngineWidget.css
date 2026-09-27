@@ -133,7 +133,7 @@
   .vt-asset-engine-composer{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(76px,1fr)}
   .vt-asset-engine-preview-panel{min-height:0}
   .vt-asset-engine-preview .widget-media-upload-frame{max-height:130px}
-  .vt-asset-engine-slot-panel{overflow:hidden}
+  .vt-asset-engine-slot-panel{overflow:visible}
   .vt-asset-engine-slot-grid{
     display:grid;
     grid-auto-flow:column;
@@ -214,10 +214,10 @@
 
 @container vt-widget (max-width:520px){
   .vt-asset-engine-slot-panel{
-    width:calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance))));
+    width:calc(100% + (2 * var(--widget-content-inset)));
     max-width:none;
-    margin-inline:calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)));
-    padding-inline:calc(var(--widget-content-inset) + var(--widget-shadow-clearance));
+    margin-inline:calc(-1 * var(--widget-content-inset));
+    padding-inline:var(--widget-content-inset);
     overflow:visible;
     box-sizing:border-box;
   }
@@ -262,7 +262,17 @@
 @container vt-widget (max-width:520px){
   .vt-asset-engine-widget > .widget-step-tabs{
     min-height:32px;
-    height:auto;
+    height:32px;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  .vt-asset-engine-widget > .widget-step-tabs button{
+    gap:2px;
+    padding-inline:2px;
+    font-size:9px;
+    line-height:.9;
+  }
+  .vt-asset-engine-widget > .widget-step-tabs button > span{
+    display:none;
   }
   .vt-asset-engine-slot-grid{
     padding-inline:0;
