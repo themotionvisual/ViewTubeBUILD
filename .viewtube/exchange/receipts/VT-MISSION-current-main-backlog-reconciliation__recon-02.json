@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "receiptId": "VT-RECEIPT-current-main-backlog-recon-02",
+  "worker": "viewtube-conversation-work-reconciliation",
+  "kind": "reconciliation",
+  "changedPaths": [
+    "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/handoff.md",
+    "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/worklog.json",
+    "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/review.md",
+    "tasks/conversation-intake/INDEX.md",
+    "tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md",
+    "tasks/documentation-backlog-integration/todo.md",
+    "tasks/viewtube-one-goal-status.md",
+    ".viewtube/exchange/missions/VT-MISSION-current-main-backlog-reconciliation.json",
+    ".viewtube/exchange/work-orders/VT-MISSION-current-main-backlog-reconciliation__conversation-intake-02.json"
+  ],
+  "checks": [
+    {
+      "name": "current-main-refresh",
+      "state": "proven",
+      "evidence": "Reconciliation refreshed from 76519e3d to 3ed2bc91f324338fd110a160d65ddbed93806142; current One-Goal ledger shows VT-001 and VT-023 DONE, and PR #512 further narrows Project package-selection debt."
+    },
+    {
+      "name": "conversation-intake-reconciliation",
+      "state": "proven",
+      "evidence": "Current conversation captured as handoff/worklog/review package with reviewStatus RECONCILED and 24 grouped work items covering all remembered backlog ranges."
+    },
+    {
+      "name": "anti-duplication-routing",
+      "state": "proven",
+      "evidence": "Remembered work routes to existing plan families/VT identities/authorities; no 410-task parallel ledger was created."
+    },
+    {
+      "name": "task-writer-safety",
+      "state": "proven",
+      "evidence": "Task Index VNext canonical writer/storage remains unresolved; no canonical lifecycle mutation or permanent ID allocation was attempted."
+    },
+    {
+      "name": "stale-projection-cleanup",
+      "state": "supported",
+      "evidence": "Reconciliation audit updated for VT-001/VT-023 completion and malformed VT-003/VT-004 One-Goal evidence text cleaned."
+    }
+  ],
+  "artifacts": [
+    "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/review.md",
+    "tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md"
+  ],
+  "limitations": [
+    "This receipt does not claim the full historical donor corpus is consolidated or archived.",
+    "Leaf-level Task Authority dedupe remains proposal-only until Task Index VNext writer/storage lands.",
+    "Implementation-complete UI/external workflows still require their task-specific runtime/visual/authenticated verification before DONE."
+  ],
+  "status": "partial"
+}
