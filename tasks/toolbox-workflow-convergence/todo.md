@@ -11,7 +11,8 @@
 - [ ] Classify each as KEEP_WIDGET / PROMOTE_TOOLBOX / WIDGET_PLUS_TOOLBOX / MERGE_WORKBENCH / RETIRE_AFTER_PARITY.
 - [ ] Verify every proposed owner against Product Architecture and Domain Authorities.
 - [ ] Identify all existing persisted widget IDs affected by merge/rename.
-- [ ] Identify every current ActionPacket/SendToMenu producer and consumer.
+- [x] Audit the core ActionPacket/SendToMenu runtime foundation (capability registry, SendToMenu, ThumbnailHandoffBar, workflow learning, WorkflowChainBuilder).
+- [ ] Complete the exhaustive producer/consumer inventory across all tools/widgets.
 - [ ] Identify overlap with system-convergence OperationRecord work.
 - [ ] Produce no-loss donor map for existing widget consolidation plans.
 
@@ -25,7 +26,9 @@
 
 - [ ] C1 define compact-widget → Toolbox open/resume context contract.
 - [ ] C1 add return/resume behavior contract.
-- [ ] C2 add accepts / produces / suggestedHandoffs / requiredContext schema.
+- [x] C2 confirm accepts / produces already exist in VIEWTUBE_TOOL_CAPABILITIES.
+- [ ] C2 extend metadata with requiredContext / mutationClass / resumable destination / explicit suggested handoffs where needed.
+- [ ] C2 bridge universal tool capability metadata with WidgetRegistry rather than duplicating fields.
 - [ ] C2 add mutation/external-write classification.
 - [ ] C2 add registry validation tests.
 - [ ] C3 reconcile operation/workflow identity with system-convergence plan.
@@ -82,14 +85,16 @@
 
 ## Phase 3 — Workflow registry + chain viewer
 
-- [ ] C4 define structured workflow-recipe schema.
+- [x] C4 confirm existing VIEWTUBE_SUGGESTED_TOOL_CHAINS foundation (8 templates).
+- [ ] C4 generalize the existing suggested-chain model into the structured workflow-recipe schema.
 - [ ] Encode the forty recipes from the specification.
 - [ ] Validate tool IDs and payload compatibility.
 - [ ] Mark external-write boundaries.
 - [ ] Mark required Project/ContentBuild/video/asset/evidence context per recipe.
-- [ ] C5 build chain viewer model.
-- [ ] Show source, transformations, destinations, artifacts, evidence and outcomes.
-- [ ] Support paused/stopped/failed/complete states.
+- [x] C5 confirm existing WorkflowChainBuilder/workflowEngine chain, step, status, artifact and provenance foundation.
+- [ ] C5 converge existing chain builder with universal ActionPacket/GenerationRecord/ContentBuild receipts.
+- [ ] Show source, transformations, destinations, artifacts, evidence, approval state and outcomes.
+- [ ] Extend/normalize paused/stopped/failed/complete states without creating a second workflow store.
 
 ### Checkpoint 3
 
@@ -137,8 +142,9 @@
 - [ ] C6 rank destinations using packet type + Project context + evidence + User Controls.
 - [ ] Always expose compatible manual destinations.
 - [ ] Never suggest destinations lacking required context.
-- [ ] C7 record accepted/rejected handoff suggestions only when learning is enabled.
-- [ ] Route preference feedback through governed learning rather than direct model memory.
+- [x] C7 accepted/rejected handoff preference signals are already creator-learning gated.
+- [ ] Certify privacy/retention/freshness semantics for the existing preference store.
+- [ ] Route any broader promotion of preference feedback through governed outcome/evaluation learning rather than direct model memory.
 
 ## Phase 7 — Outcome / evaluation closure
 
