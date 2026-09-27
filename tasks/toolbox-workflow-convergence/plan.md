@@ -52,42 +52,41 @@ Define a reusable contract for:
 
 **Acceptance:** at least two promoted surfaces use the same contract without sharing inappropriate top-level layout code.
 
-### C2 — Tool + Widget Handoff Metadata
-Extend registries with:
-- accepts;
-- produces;
-- suggestedHandoffs;
+### C2 — Tool + Widget Handoff Metadata — PARTIAL FOUNDATION
+`VIEWTUBE_TOOL_CAPABILITIES` already defines `accepts` and `produces`, and SendToMenu already resolves compatibility from it. Extend rather than recreate:
 - requiredContext;
-- mutationClass;
-- resumable destination information.
+- mutationClass / external-write semantics;
+- resumable destination information;
+- explicit suggestedHandoffs where static intent is useful;
+- WidgetRegistry ↔ universal tool-capability bridge.
 
-**Acceptance:** compatibility can be determined from registry metadata rather than hard-coded menu conditionals for pilot flows.
+**Acceptance:** compatibility and required context can be determined from governed registry metadata rather than bespoke menu conditionals for pilot flows.
 
-### C3 — Universal Operation Identity
-Reconcile ViewTubeActionPacket, ToolReceipt, GenerationRecord, BrainTrace and render/generation operation identity with the existing system-convergence OperationRecord direction.
+### C3 — Universal Operation Identity — PARTIAL FOUNDATION
+Persisted ViewTubeActionPackets already create GenerationRecords, Vault artifacts, optional ContentBuild asset links/events and Brain inbox items. Reconcile those existing receipts with ToolReceipt, BrainTrace and render/generation operation identity under the system-convergence OperationRecord direction.
 
-**Acceptance:** one pilot chain can be traced end-to-end through one stable operation/workflow identity without replacing current stores.
+**Acceptance:** one pilot chain can be traced end-to-end through one stable operation/workflow identity without replacing current stores or duplicating existing ActionPacket receipts.
 
-### C4 — Workflow Recipe Registry
-Encode the forty specification recipes as structured, non-authoritative orchestration templates.
+### C4 — Workflow Recipe Registry — PARTIAL FOUNDATION
+`VIEWTUBE_SUGGESTED_TOOL_CHAINS` already contains eight hard-coded chain templates. Generalize this existing concept and encode the forty specification recipes as structured, non-authoritative orchestration templates.
 
-**Acceptance:** recipe validation rejects unknown tools, impossible payload transitions and missing external-write approval declarations.
+**Acceptance:** recipe validation rejects unknown tools, impossible payload transitions and missing external-write approval declarations while preserving compatibility with the existing suggested-chain API.
 
-### C5 — Workflow Chain Viewer
-Show:
+### C5 — Workflow Chain Viewer Convergence — PARTIAL FOUNDATION
+`WorkflowChainBuilder.tsx` and `workflowEngine.ts` already provide local chain creation, steps, statuses, artifact links and provenance. Converge that system with universal ActionPacket receipts instead of building another viewer. Target view:
 source → transformations → destination → produced artifacts → evidence → approval state → outcomes.
 
-**Acceptance:** a creator can inspect a pilot chain and identify which exact asset/variant/evidence moved at each step.
+**Acceptance:** a creator can inspect a pilot chain and identify which exact packet, asset/variant/evidence and canonical identity moved at each step.
 
-### C6 — Brain-Compatible Destination Ranking
-Use bounded context, current Project, packet payload type, evidence and User Controls to rank compatible destinations.
+### C6 — Brain-Compatible Destination Ranking — PARTIAL FOUNDATION
+`rankWorkflowTargets` already adapts ordering from creator-learning preference signals. Extend ranking with bounded current Project, packet payload type, evidence/required-context compatibility and User Controls.
 
-**Acceptance:** ranking never invents incompatible destinations and can be bypassed by direct creator selection.
+**Acceptance:** ranking never invents incompatible destinations, respects required context, and can always be bypassed by direct creator selection.
 
-### C7 — Handoff Preference Feedback
-Record accepted/rejected suggestions as outcomes or preference evidence when creator learning is enabled.
+### C7 — Handoff Preference Feedback — IMPLEMENTED FOUNDATION / CONNECT
+`buildWorkflowSelectionSignals` and `recordWorkflowPreferenceSignal` already record accepted choices and skipped-higher-ranked negative signals, gated by the creator-learning User Control. Do not rebuild this store. Connect it to governed outcome/evaluation semantics where appropriate and certify retention/decay/privacy behavior.
 
-**Acceptance:** disabled learning creates no durable preference update; enabled learning remains governed rather than direct model memory.
+**Acceptance:** disabled learning creates no durable preference update; enabled learning remains governed rather than direct model memory, and any promotion into broader learning has explicit evidence/outcome provenance.
 
 ### C8 — Core Existing-Tool Promotion Wave
 Audit and converge:
@@ -150,8 +149,9 @@ Certify widget + Toolbox pairs for:
 
 ## Pilot execution order
 
+0. Preserve and test the existing SendToMenu / ActionPacket / preference-learning / WorkflowChainBuilder foundations; do not reopen them as greenfield work.
 1. C1 promotion contract.
-2. C2 registry handoff metadata.
+2. C2 registry handoff metadata extension + WidgetRegistry bridge.
 3. C10 identity continuity test harness.
 4. Thumbnail Refresh Experiment pilot.
 5. Comment → New Video pilot.
