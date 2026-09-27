@@ -4,7 +4,7 @@
 **Reviewed:** 2026-09-27  
 **Reviewer:** ChatGPT / Conversation Work Reconciliation  
 **Status:** RECONCILED  
-**Current Main:** `4c18a8de6c97c4d172df6528ff483fa6a08c4e5c`
+**Current Main:** `3ed2bc91f324338fd110a160d65ddbed93806142`
 
 ## Sources reviewed
 
@@ -32,6 +32,7 @@ Key eliminations/narrowings:
 - Video Manager primitive migration → implemented.
 - Resource Library base reader + first three creator guides → implemented.
 - Video Director base product → exists; keep runtime/provider/mobile-specific work.
+- Project package thumbnail selection now remains reversible/idempotent and does not implicitly emit finalization provenance (PR #512); keep later explicit finalization/experiment/outcome work only.
 - Remotion 100-asset library → already exists; keep integration/quality defects only.
 - Documentation/Conversation OS/Task Authority foundation → implemented; Task Index VNext and consolidation remain.
 
@@ -130,4 +131,4 @@ The old unfinished-work master, 100-item audit, dated Finish Program materials a
 
 ## Final next action
 
-Refresh the active reconciliation audit to `4c18a8de6c97c4d172df6528ff483fa6a08c4e5c`, fix stale projection text in the One-Goal ledger where evidence is already proven, and continue proposal-only reconciliation under `VT-MISSION-current-main-backlog-reconciliation`.
+Refresh the active reconciliation audit to `3ed2bc91f324338fd110a160d65ddbed93806142`, fix stale projection text in the One-Goal ledger where evidence is already proven, and continue proposal-only reconciliation under `VT-MISSION-current-main-backlog-reconciliation`.
