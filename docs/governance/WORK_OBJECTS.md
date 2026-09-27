@@ -25,6 +25,12 @@
 - RECEIPT — compact evidence of work performed and observed.
 - CONVERSATION — interaction context that may propose work/decisions/evidence but owns no canonical truth.
 - REFERENCE — supporting source/resource.
+- PLAN_FAMILY — stable grouping for related plans/handoffs/audits/prototypes with one current survivor.
+- WORK_PACKET — cross-agent/context transport envelope carrying capability, prior-art, convergence and acceptance information.
+- IDEA — noncommittal concept preserved in the Ideas Registry; not a Task.
+- OPEN_QUESTION — unresolved research/creator/architecture question; not a Task until accepted resolution work exists.
+- WORKFLOW — reusable orchestration of several skills/procedures; not product truth.
+- PLAN_MERGE_RECORD — no-loss record of sources, survivor, harvested material and disposition.
 - OPPORTUNITY — noncommittal improvement candidate with evidence/confidence/impact.
 - RISK — evidence-backed concern that may need mitigation but is not automatically a task.
 - TASK_MUTATION_PROPOSAL — requested canonical task change submitted to Task Authority.
@@ -64,3 +70,18 @@ Conversation Work Item != Task. It may become a Task Candidate only after prior-
 Reconciliation Review != work ledger. It documents how intake material was valued, deduplicated, merged and routed.
 
 A completed conversation work item may become evidence/receipt or prove an existing task needs verification; it does not automatically become Task Index DONE.
+
+
+## Convergence object rules
+
+Plan Family != Plan. A family groups related sources and designates one survivor.
+
+Work Packet != Task. It transports context and acceptance between agents/apps/conversations.
+
+Idea != Task. Promotion requires review and Task Authority when implementation work is accepted.
+
+Open Question != Task. It records uncertainty without inflating the backlog.
+
+Workflow != Skill. Workflow orchestrates several procedures; skills execute procedures.
+
+Plan Merge Record != authority. It preserves the no-loss provenance of convergence.
