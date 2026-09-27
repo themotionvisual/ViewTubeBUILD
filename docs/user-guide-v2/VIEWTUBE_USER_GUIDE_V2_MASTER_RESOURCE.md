@@ -110,3 +110,24 @@ The Guide V2 is healthy when:
 - experimental/legacy/lab content is clearly labeled;
 - technical depth links to owning master docs;
 - governance tests detect product/guide drift.
+
+
+## 13. User Guide feature opportunity intake — 2026-09-27
+
+**Canonical catalog:** \`docs/architecture/PRODUCT_ARCHITECTURE.md#user-guide-opportunities\`  
+**Status:** OPPORTUNITY / FUTURE DEVELOPMENT INPUT.
+
+1. **IDEA-GUIDE-001 — Interactive ViewTube Academy:** structured learning paths from account connection through advanced AI/analytics/production/automation.
+2. **IDEA-GUIDE-002 — Contextual Help Mode:** optional live explanations keyed to canonical page/control/widget/metric/workflow IDs.
+3. **IDEA-GUIDE-003 — Ask ViewTube Guide:** Brain-assisted Q&A grounded in current Guide registries and canonical authorities.
+4. **IDEA-GUIDE-004 — Workflow Cookbook:** creator recipes for real goals and workflows rather than isolated feature descriptions.
+5. **IDEA-GUIDE-005 — Feature Explorer:** searchable catalog derived from canonical page/tool/widget/capability/integration registries.
+6. **IDEA-GUIDE-006 — Interactive Guided Tours:** replayable in-product walkthroughs over live interfaces.
+7. **IDEA-GUIDE-007 — Metric Encyclopedia:** metric/dimension/source/scope/compatibility/limitation/interpretation teaching keyed to canonical analytics definitions.
+8. **IDEA-GUIDE-008 — What Can I Do? Navigator:** goal-to-capability/tool/workflow router without a second product inventory.
+9. **IDEA-GUIDE-009 — Release & Change Center:** human-readable projection of shipped changes, migrations, renames and deprecations.
+10. **IDEA-GUIDE-010 — Troubleshooting & System Doctor:** guide-layer diagnosis/routing for auth, analytics, generation, asset, render, sync and empty-state problems.
+
+### Guide integration rule
+
+Guide features remain projections over canonical registries and owning diagnostics/capabilities. The Guide may teach, route and explain; it must not become a parallel tool registry, analytics store, lifecycle authority or implementation-status source.
