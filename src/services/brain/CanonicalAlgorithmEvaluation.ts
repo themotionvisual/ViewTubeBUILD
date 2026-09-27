@@ -1,57 +1,89 @@
 import type { VtSyncSnapshot } from "../../features/vt-sync-local/adapters/contracts"
-import { getCanonicalIntelligenceDatasetCatalog } from "../analytics-canon"
+import {
+ getCanonicalIntelligenceDatasetCatalog,
+ type MetricComparisonContext,
+ type MetricEntityScope,
+ type MetricFormatScope,
+ type MetricAvailabilityForComparison,
+} from "../analytics-canon"
 import type { AlgorithmMetricObservation } from "./AlgorithmEvaluationEngine"
 import type {
  AlgorithmEvaluationTarget,
  AlgorithmIntelligenceEvent,
 } from "./AlgorithmIntelligenceEventLedger"
 
+export interface CanonicalMetricFieldRule {
+ field: string
+ unit: MetricComparisonContext["unit"]
+ aggregation: MetricComparisonContext["aggregation"]
+}
+
 export interface CanonicalMetricResolutionRule {
  metric: string
  datasetIds: string[]
- fields: string[]
- aggregation: "sum" | "average"
+ fields: CanonicalMetricFieldRule[]
 }
 
 type CanonicalCatalog = ReturnType<typeof getCanonicalIntelligenceDatasetCatalog>
+type CanonicalDataset = CanonicalCatalog[number]
 
 /**
  * Phase 6 semantic metric registry.
  *
- * These are evaluation concepts used by the Brain, not new analytics fields.
- * Resolution stays on top of analytics-canon and only maps a concept to an
- * already-canonical metric when that evidence actually exists.
+ * A semantic evaluation metric can resolve from more than one canonical source
+ * field. Unit and aggregation live on each source field rather than on the
+ * semantic metric because similarly named concepts can be represented by
+ * fundamentally different measurements (for example APV percent vs AVD
+ * seconds). The comparability policy must see that distinction.
  */
 export const CANONICAL_ALGORITHM_METRIC_RULES: CanonicalMetricResolutionRule[] = [
  {
   metric: "ctr",
   datasetIds: ["videos", "daily", "weekly", "monthly", "channel_totals"],
-  fields: ["impressionsCtr", "impressionsClickThroughRate", "clickThroughRate", "ctr"],
-  aggregation: "average",
+  fields: [
+   { field: "impressionsCtr", unit: "percent", aggregation: "average" },
+   { field: "impressionsClickThroughRate", unit: "percent", aggregation: "average" },
+   { field: "clickThroughRate", unit: "percent", aggregation: "average" },
+   { field: "ctr", unit: "percent", aggregation: "average" },
+  ],
  },
  {
   metric: "watch_quality",
   datasetIds: ["videos", "retentions", "daily", "weekly", "monthly", "channel_totals"],
-  fields: ["averagePercentageViewed", "avgPercentageViewed", "averageViewPercentage", "avgViewDuration", "averageViewDuration"],
-  aggregation: "average",
+  fields: [
+   { field: "averagePercentageViewed", unit: "percent", aggregation: "average" },
+   { field: "avgPercentageViewed", unit: "percent", aggregation: "average" },
+   { field: "averageViewPercentage", unit: "percent", aggregation: "average" },
+   { field: "avgViewDuration", unit: "seconds", aggregation: "average" },
+   { field: "averageViewDuration", unit: "seconds", aggregation: "average" },
+  ],
  },
  {
   metric: "qualified_views",
   datasetIds: ["videos", "daily", "weekly", "monthly", "channel_totals"],
-  fields: ["engagedViews", "views"],
-  aggregation: "sum",
+  fields: [
+   { field: "engagedViews", unit: "count", aggregation: "sum" },
+   { field: "views", unit: "count", aggregation: "sum" },
+  ],
  },
  {
   metric: "session_continuation",
   datasetIds: ["playlists", "daily", "weekly", "monthly", "videos"],
-  fields: ["viewsPerPlaylistStart", "endScreenElementClickRate", "endScreenClickRate", "endScreenClicks"],
-  aggregation: "average",
+  fields: [
+   { field: "viewsPerPlaylistStart", unit: "rate", aggregation: "average" },
+   { field: "endScreenElementClickRate", unit: "percent", aggregation: "average" },
+   { field: "endScreenClickRate", unit: "percent", aggregation: "average" },
+   { field: "endScreenClicks", unit: "count", aggregation: "sum" },
+  ],
  },
  {
   metric: "followup_demand",
   datasetIds: ["traffic_detail_search_terms", "traffic_detail_suggested_videos", "traffic", "videos"],
-  fields: ["views", "engagedViews", "trafficViewShare"],
-  aggregation: "sum",
+  fields: [
+   { field: "views", unit: "count", aggregation: "sum" },
+   { field: "engagedViews", unit: "count", aggregation: "sum" },
+   { field: "trafficViewShare", unit: "percent", aggregation: "average" },
+  ],
  },
 ]
 
@@ -75,12 +107,80 @@ const findVideoRow = (
  return index >= 0 ? { row: rows[index], index } : null
 }
 
+const formatScopeFor = (value: unknown): MetricFormatScope => {
+ const format = String(value || "").trim().toLowerCase()
+ if (!format) return "unknown"
+ if (format === "all") return "all"
+ if (format.includes("short")) return "shorts"
+ if (format.includes("long")) return "long"
+ if (format.includes("live")) return "live"
+ if (format.includes("story")) return "story"
+ return "unknown"
+}
+
+const entityScopeForDataset = (datasetId: string): MetricEntityScope => {
+ const id = datasetId.toLowerCase()
+ if (id === "videos" || id.includes("retention")) return "video"
+ if (id.includes("search")) return "search_term"
+ if (id.includes("traffic")) return "traffic_source"
+ if (id.includes("playlist")) return "playlist"
+ if (id.includes("geo") || id.includes("city") || id.includes("province") || id.includes("dma")) return "geography"
+ if (id.includes("audience") || id.includes("demographic") || id.includes("subscriber")) return "audience"
+ if (id.includes("daily") || id.includes("weekly") || id.includes("monthly") || id.includes("channel")) return "channel"
+ return "unknown"
+}
+
+const availabilityFor = (dataset: CanonicalDataset): MetricAvailabilityForComparison => {
+ if (dataset.status === "available" || dataset.status === "stale") return "available"
+ if (dataset.status === "partial") return "partial"
+ return "unavailable"
+}
+
+const coverageFor = (dataset: CanonicalDataset): number | null => {
+ if (dataset.status === "available") return 1
+ if (dataset.status === "partial") return 0.6
+ if (dataset.status === "stale") return 0.35
+ return null
+}
+
+const comparisonContextFor = (input: {
+ rule: CanonicalMetricResolutionRule
+ field: CanonicalMetricFieldRule
+ dataset: CanonicalDataset
+ window?: MetricComparisonContext["window"]
+ matchedVideoRow?: Record<string, unknown> | null
+}): MetricComparisonContext => ({
+ metricKey: input.rule.metric,
+ unit: input.field.unit,
+ entityScope: input.matchedVideoRow ? "video" : entityScopeForDataset(input.dataset.id),
+ formatScope: input.matchedVideoRow
+  ? formatScopeFor(
+    input.matchedVideoRow.format
+    || input.matchedVideoRow.contentType
+    || input.matchedVideoRow.creatorContentType,
+   )
+  : "all",
+ window: input.window || "unknown",
+ aggregation: input.matchedVideoRow ? "snapshot" : input.field.aggregation,
+ coverage: coverageFor(input.dataset),
+ availability: availabilityFor(input.dataset),
+})
+
+export interface ResolvedCanonicalAlgorithmMetric {
+ value: number
+ evidenceId: string
+ datasetId: string
+ sourceField: string
+ comparisonContext: MetricComparisonContext
+}
+
 export const resolveAlgorithmMetricFromCanonicalCatalog = (input: {
  catalog: CanonicalCatalog
  snapshotId: string
  videoId?: string | null
+ window?: MetricComparisonContext["window"]
  rule: CanonicalMetricResolutionRule
-}): { value: number; evidenceId: string } | null => {
+}): ResolvedCanonicalAlgorithmMetric | null => {
  const ordered = input.rule.datasetIds
   .map((id) => input.catalog.find((dataset) => dataset.id === id))
   .filter(Boolean)
@@ -91,41 +191,66 @@ export const resolveAlgorithmMetricFromCanonicalCatalog = (input: {
   if (input.videoId) {
    const matched = findVideoRow(dataset.sampleRows, input.videoId)
    if (matched) {
-    for (const field of input.rule.fields) {
-     const value = numericValue(matched.row[field])
+    for (const fieldRule of input.rule.fields) {
+     const value = numericValue(matched.row[fieldRule.field])
      if (value == null) continue
      return {
       value,
-      evidenceId: `${input.snapshotId}:${dataset.id}:${matched.index + 1}:${field}`,
+      evidenceId: `${input.snapshotId}:${dataset.id}:${matched.index + 1}:${fieldRule.field}`,
+      datasetId: dataset.id,
+      sourceField: fieldRule.field,
+      comparisonContext: comparisonContextFor({
+       rule: input.rule,
+       field: fieldRule,
+       dataset,
+       window: input.window,
+       matchedVideoRow: matched.row,
+      }),
      }
     }
    }
   }
 
-  for (const field of input.rule.fields) {
-   const summary = dataset.metrics[field]
+  for (const fieldRule of input.rule.fields) {
+   const summary = dataset.metrics[fieldRule.field]
    if (summary) {
-    const value = input.rule.aggregation === "sum" ? summary.sum : summary.average
+    const value = fieldRule.aggregation === "sum" ? summary.sum : summary.average
     if (Number.isFinite(value)) {
      return {
       value,
-      evidenceId: `${input.snapshotId}:${dataset.id}:summary:${field}`,
+      evidenceId: `${input.snapshotId}:${dataset.id}:summary:${fieldRule.field}`,
+      datasetId: dataset.id,
+      sourceField: fieldRule.field,
+      comparisonContext: comparisonContextFor({
+       rule: input.rule,
+       field: fieldRule,
+       dataset,
+       window: input.window,
+      }),
      }
     }
    }
   }
 
-  for (const field of input.rule.fields) {
+  for (const fieldRule of input.rule.fields) {
    const values = dataset.sampleRows
-    .map((row) => numericValue(row[field]))
+    .map((row) => numericValue(row[fieldRule.field]))
     .filter((value): value is number => value != null)
    if (!values.length) continue
-   const value = input.rule.aggregation === "sum"
+   const value = fieldRule.aggregation === "sum"
     ? values.reduce((total, candidate) => total + candidate, 0)
     : values.reduce((total, candidate) => total + candidate, 0) / values.length
    return {
     value,
-    evidenceId: `${input.snapshotId}:${dataset.id}:sample:${field}`,
+    evidenceId: `${input.snapshotId}:${dataset.id}:sample:${fieldRule.field}`,
+    datasetId: dataset.id,
+    sourceField: fieldRule.field,
+    comparisonContext: comparisonContextFor({
+     rule: input.rule,
+     field: fieldRule,
+     dataset,
+     window: input.window,
+    }),
    }
   }
  }
@@ -138,11 +263,10 @@ export const collectCanonicalAlgorithmObservations = (input: {
 }): AlgorithmMetricObservation[] => {
  const requiredMetrics = [...new Set(input.event.evaluationTargets.map((target) => target.metric))]
  const observedAt = observedAtFor(input.snapshot)
- // Request enough canonical rows to resolve a concrete video when present. The
- // catalog remains privacy-filtered because analytics-canon owns row exposure.
  const catalog = getCanonicalIntelligenceDatasetCatalog(input.snapshot, 5000)
+ const window = (input.snapshot.selectedTimeWindow || "lifetime") as MetricComparisonContext["window"]
+
  return requiredMetrics.flatMap((metric) => {
-  // Workflow/tool completion is intentionally not fabricated from analytics.
   if (metric === "diagnosis_complete") return []
   const rule = CANONICAL_ALGORITHM_METRIC_RULES.find((candidate) => candidate.metric === metric)
   if (!rule) return []
@@ -150,6 +274,7 @@ export const collectCanonicalAlgorithmObservations = (input: {
    catalog,
    snapshotId: input.snapshot.snapshotId,
    videoId: input.event.videoId,
+   window,
    rule,
   })
   if (!resolved) return []
@@ -158,6 +283,7 @@ export const collectCanonicalAlgorithmObservations = (input: {
    value: resolved.value,
    observedAt,
    evidenceId: resolved.evidenceId,
+   comparisonContext: resolved.comparisonContext,
   }]
  })
 }
@@ -171,10 +297,15 @@ export const hydrateEvaluationTargetsWithCanonicalBaseline = (input: {
   snapshot: input.baselineSnapshot,
   event: input.event,
  })
+
  return input.event.evaluationTargets.map((target) => {
-  if (target.baselineValue != null) return target
   const baseline = baselineObservations.find((observation) => observation.metric === target.metric)
-  return baseline?.value == null ? target : { ...target, baselineValue: baseline.value }
+  if (!baseline) return target
+  return {
+   ...target,
+   baselineValue: target.baselineValue ?? baseline.value,
+   baselineComparisonContext: target.baselineComparisonContext ?? baseline.comparisonContext ?? null,
+  }
  })
 }
 
