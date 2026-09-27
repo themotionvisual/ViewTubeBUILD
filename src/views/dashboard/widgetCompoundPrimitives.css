@@ -41,7 +41,9 @@
   min-width:var(--widget-data-grid-min,520px);
   border-top:2px solid var(--widget-border);
   border-left:2px solid var(--widget-border);
-  color:var(--widget-ink,var(--vt-ink,var(--widget-border)));
+  border-radius:var(--widget-control-radius,8px);
+  overflow:hidden;
+  color:var(--vt-ink,var(--widget-ink,var(--widget-border)));
 }
 .widget-data-grid-row{
   display:grid;
@@ -142,7 +144,9 @@
   grid-template-columns:repeat(7,minmax(0,1fr));
   border-top:2px solid var(--widget-border);
   border-left:2px solid var(--widget-border);
-  color:var(--widget-ink,var(--vt-ink,var(--widget-border)));
+  border-radius:var(--widget-control-radius,8px);
+  overflow:hidden;
+  color:var(--vt-ink,var(--widget-ink,var(--widget-border)));
 }
 .widget-calendar-day{
   min-width:0;
@@ -209,9 +213,21 @@
    fallbacks are intentionally avoided in the canonical widget library. */
 .widget-section-band,
 .widget-data-grid,
+.widget-data-grid-cell,
 .widget-checklist-progress-row,
+.widget-checklist-progress-copy,
 .widget-calendar-grid,
-.widget-calendar-event{
+.widget-calendar-day,
+.widget-calendar-day-label,
+.widget-calendar-event,
+.widget-video-mini-card,
+.widget-video-mini-card-title,
+.widget-video-mini-card-footer,
+.widget-video-mini-card-placeholder,
+.widget-preview-state,
+.widget-preview-state-head,
+.widget-preview-state-head p,
+.widget-preview-state-badge{
   color:var(--vt-ink,var(--widget-border));
 }
 
