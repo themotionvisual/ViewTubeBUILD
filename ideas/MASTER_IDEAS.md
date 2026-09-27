@@ -287,6 +287,207 @@
 - **Universal Provenance Envelope** — Use shared provenance fields for AI/assets/actions/renders/publish/outcomes.  
   Target: `GOVERNANCE:PROVENANCE` · Status: `UNREVIEWED` · Source: ideas/lists/governance/document-governance-improvements.md
 
+## Product Architecture
+
+### Consolidation Layers
+
+- **Asset Layer** — Unify Vault, Asset Engine, generations, provenance, version families, project relationships, render outputs, and publication asset identity.  
+  Target: `GOVERNANCE:PRODUCT-ARCHITECTURE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **ContentBuild Layer** — Treat Idea → Research → Script → Assets → Production → Edit → Packaging → Publish → Performance → Learning as one continuous Project/ContentBuild lifecycle.  
+  Target: `GOVERNANCE:PRODUCT-ARCHITECTURE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Intelligence Layer** — Unify AI Brain, Creator Context/Channel Knowledge, Evidence & Intelligence, specialist intelligence, analytics learning, Project Memory, and governed outcomes/learning behind existing owners.  
+  Target: `GOVERNANCE:PRODUCT-ARCHITECTURE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Measurement Layer** — Connect analytics, anomalies, experiments, opportunities, outcomes, cohorts, and evidence without creating parallel analytics truth.  
+  Target: `GOVERNANCE:PRODUCT-ARCHITECTURE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Orchestration Layer** — Connect Projects, tasks, operations, automation, workflows, integrations, approvals, notifications, and system state through shared contracts.  
+  Target: `GOVERNANCE:PRODUCT-ARCHITECTURE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+## Product Surface Features
+
+### Analytics
+
+- **Analytics Explorer** — Flexible query workspace capable of comparing supported metrics, dimensions, time periods, formats, traffic sources, geography, or project/video scope.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Analytics-to-Brain Learning Pipeline** — Convert validated analytical findings into structured evidence and learning candidates that BrainRuntime and Channel Knowledge can retrieve later.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Audience Journey Map** — Show supported viewer paths from discovery through watching, continuation, subscription, return, playlists, or exit while marking unavailable transitions.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Comparative Cohorts** — Build groups such as topic families, Shorts under 30 seconds, tutorials, videos over an impression threshold, or time-based upload cohorts and compare them.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Content Pattern Discovery** — Find correlations between topics, lengths, styles, titles, thumbnail traits, upload timing, structure, formats, and measured performance while distinguishing correlation from causation.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Experiment Analytics** — Central ledger/view for thumbnail, title, format, workflow, publishing, or content experiments with hypotheses, measured results, and evidence.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Performance Decomposition** — Explain changes by breaking growth or decline into impressions, CTR, retention, traffic sources, returning viewers, geography, format, and other measurable contributors.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Retention Intelligence Lab** — Detect hooks, dips, spikes, rewatch points, abandonment zones, chapter effects, duration patterns, and recurring retention structures.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Traffic Intelligence** — Deep explorer for browse, suggested, search, Shorts feed, external, playlists, channel pages, notifications, end screens, and related supported sources.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Video Lifecycle Analyzer** — Visualize Launch → Growth → Plateau → Revival → Long-tail behavior and compare lifecycle shapes across videos.  
+  Target: `FEATURE:PAGE-ANALYTICS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+### Dashboard
+
+- **AI Brain Briefing** — Generates a channel-aware briefing from Channel Knowledge, Evidence, projects, historical performance, audience behavior, and current objectives.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Anomaly Monitor** — Detects significant deviations across videos and channel metrics and explains what changed, when, and possible contributing signals.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Channel Pulse** — A compact real-time health instrument combining views, watch time, subscribers, revenue, CTR, retention, publishing frequency, and momentum versus normal ranges.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Content Pipeline Visualizer** — Shows every piece of content moving through Idea → Research → Script → Production → Edit → Package → Publish → Measure → Learn.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Creator Command Center** — One master module showing channel health, active projects, urgent tasks, publishing pipeline, anomalies, opportunities, AI recommendations, and recent changes.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Dashboard Composer** — Full widget layout editor allowing saved dashboards for Channel, Production, Revenue, Shorts, Research, Projects, or custom workflows.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Goal & Forecast Tracker** — Tracks user-defined goals such as subscribers, uploads, revenue, watch hours, project completion, or content cadence and shows progress trajectories without replacing measured data.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Opportunity Radar** — Continuously surfaces unusually strong topics, videos, formats, traffic sources, search terms, audience behaviors, and content gaps worth investigating.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Recent Changes / Activity Ledger** — Unified log/projection of uploads, edits, AI generations, analytics changes, project actions, Vault additions, tests, and system activity.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Today / This Week Workspace** — Turns analytics, projects, tasks, comments, deadlines, and publishing plans into a prioritized operational view.  
+  Target: `FEATURE:PAGE-DASHBOARD` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+### Editor
+
+- **AI Edit Assistant** — Conversational editing proposals such as shortening an intro, replacing B-roll, or normalizing captions, with preview/diff/approval before mutation.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **AI Rough Cut** — Assemble a proposed initial edit from script, narration, footage, generated media, timestamps, and scene definitions.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Automated Quality Control** — Before render, inspect missing files, clipping, blank frames, silent audio, caption overflow, unsafe crop areas, broken transitions, incorrect ratios, and render configuration.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Remotion Component Browser** — Drag reusable animated components, charts, maps, lower thirds, timelines, backgrounds, diagrams, and historical visuals directly into the edit.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Scene Inspector** — Selecting a scene exposes its script, assets, prompt, camera treatment, audio, captions, effects, sources, and alternatives.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Script-Synchronized Timeline** — Link timeline sections directly to script paragraphs, narration sentences, scenes, evidence, and source assets.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Smart B-Roll Manager** — Identify sections needing visual coverage and recommend existing Vault assets or generation prompts/operations.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Timeline Intelligence** — Detect dead space, pacing problems, missing media, overly long static sections, audio gaps, duplicate footage, and unresolved placeholders.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Version Branching** — Create alternate cuts without duplicating the entire project: Short cut, long cut, social cut, experimental hook, revised intro, and similar variants.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Visual Style System** — Apply project-level typography, colors, motion language, captions, transitions, overlays, grain, framing, and recurring graphics consistently.  
+  Target: `FEATURE:PAGE-EDITOR` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+### Projects
+
+- **Dependency & Blocker Graph** — Visually shows which unfinished task, asset, decision, generation, or approval is preventing another stage from progressing.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Multi-Video Campaigns** — Group related projects into series, campaigns, playlists, historical arcs, courses, launches, or experimentation programs.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Post-Publish Learning Loop** — After publishing, attach performance evidence and validated lessons back to the project and governed Channel Knowledge/learning systems.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Project Command Board** — Unified Project Builder + Board showing lifecycle, stage, readiness, assets, blockers, tasks, publishing target, and ContentBuild state.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Project Intelligence Panel** — Project-specific recommendations derived from Channel Knowledge, evidence, historical performance, audience, and comparable content.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Project Memory** — Persistent project-scoped record containing decisions, versions, rejected directions, research, style decisions, generated assets, prompts, and lessons.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Project Readiness Engine** — Evaluates whether research, script, visuals, audio, metadata, thumbnail, legal/policy checks, and publishing requirements are complete.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Project Timeline** — Chronological view of meaningful project events, including AI work, edits, files, generations, renders, publishing changes, and analytics.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Smart Project Templates** — Create projects from reusable structures with predefined stages, briefs, asset requirements, checklists, tools, and AI instructions.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Version & Experiment Manager** — Track alternative scripts, edits, titles, thumbnails, hooks, cuts, generation prompts, and packaging variants.  
+  Target: `FEATURE:PAGE-PROJECTS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+### Settings
+
+- **AI Brain Control Center** — Manage models, providers, reasoning levels/profiles, context/memory sources, evidence policies, tools, permissions, and contextual scope.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Automation Center** — Control syncs, project automations, asset processing, publishing workflows, analytics refreshes, notifications, and AI routines.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Creator Profile & Style DNA** — Define voice, audience, visual language, topics, editorial principles, recurring formats, preferences, and channel-specific creative identity.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Data & Sync Controller** — Configure datasets, lifetime/7/28/90/365 windows, dimensions, traffic sources, geographic scope, schedules, failures, and status.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Integration Manager** — One place for YouTube, Google, AI providers, image/video generation services, storage, publishing, analytics, and future connectors.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Model Routing Rules** — Decide which approved models/providers handle research, scripting, reasoning, images, video, summaries, metadata, classification, or inexpensive batch jobs.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Notifications & Attention Rules** — Fine control over what deserves interruption: anomalies, publishing failures, render completion, comments, project blockers, sync problems, or opportunity alerts.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Privacy / Data Governance Center** — Show what data exists, where it came from, where AI may use it, retention settings, exports, permissions, and deletion controls.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **System Health & Diagnostics** — Authentication status, API health, synchronization, queues, provider status, storage, broken connections, errors, migrations, configuration problems, and repair actions.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Workspace & Interface Profiles** — Save UI density, dashboard layouts, navigation choices, themes, mobile layouts/behaviors, toolbox settings, and creator-specific workspace presets.  
+  Target: `FEATURE:PAGE-SETTINGS` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+### Studio
+
+- **AI Director** — Converts a concept or script into scenes, shot lists, visual prompts, camera directions, transitions, audio ideas, pacing, and generation instructions.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Asset Engine** — Automatically determines what assets a project requires, finds existing assets, identifies missing ones, and generates or requests what is still needed.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Content Repurposing Lab** — Turn a long-form project into Shorts, clips, social posts, community posts, alternate cuts, images, quotes, or follow-up content.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Packaging Studio** — Build title, description, tags, chapters, thumbnail, pinned comment, community post, Shorts derivatives, end screens, and publishing metadata together.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Production Recipe System** — Save reusable creation workflows such as historical Shorts, long documentaries, tutorials, and other formats including tools, prompts, stages, presets, and expected assets.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Research Workbench** — Gather sources, evidence, quotes, images, references, competing videos, historical materials, notes, and citations into a project-aware research workspace.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Script Studio** — Channel-aware writing environment with structure analysis, hooks, pacing, scene links, claims/evidence, narration timing, revisions, and AI assistance.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Thumbnail Studio** — Thumbnail ideation, generation, composition, title pairing, variants, historical-performance context, and experiment management.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Unified Content Builder** — A central creation environment connecting idea generation, research, scripting, assets, video generation, editing, packaging, publishing, and measurement.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Video Generation Console** — Unified interface for image-to-video, text-to-video, avatar, B-roll, animation, Remotion, voice, music, and batch generation providers.  
+  Target: `FEATURE:PAGE-STUDIO` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+### User Guide
+
+- **Ask ViewTube Guide** — AI assistant grounded in ViewTube documentation, features, architecture, current UI, workflows, known issues, and tutorials.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Contextual Help Mode** — Toggle explanations directly on pages, controls, widgets, metrics, and workflows.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Feature Explorer** — Searchable catalog of every page, widget, tool, primitive, AI capability, command, integration, and automation.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Interactive Guided Tours** — Walk users through real interfaces while highlighting controls and requiring simple actions rather than relying on static documentation.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Interactive ViewTube Academy** — Structured learning paths from first channel connection through advanced AI, analytics, production, and automation.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Metric Encyclopedia** — Explain analytics metrics, dimensions, sources, limitations, compatible comparisons, and appropriate interpretation.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Release & Change Center** — Human-readable record of new features, redesigned tools, migrations, renamed systems, deprecated functionality, and important behavioral changes.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Troubleshooting & System Doctor** — Diagnose missing analytics, broken sign-in, failed generations, unavailable assets, render errors, sync failures, or empty widgets and route toward owning remediation.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **What Can I Do? Navigator** — User describes a goal and ViewTube routes them to the correct tool/workflow and prepares the appropriate handoff.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Workflow Cookbook** — Step-by-step recipes such as creating a Short, researching a historical video, diagnosing CTR, or building a thumbnail experiment.  
+  Target: `FEATURE:PAGE-USER-GUIDE` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
+### Vault
+
+- **Asset Intelligence Enrichment** — Automatically derive descriptions, tags, entities, dates, colors, ratios, media properties, provenance, and project relationships with factual/inferred status.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Asset Relationship Graph** — Connect source → edit → derivative → generation → project → published video → performance evidence.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Asset Usage History** — Show where each asset appears across videos, projects, generations, thumbnails, edits, and published content.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Asset Version Families** — Group original, crop, retouch, upscale, animation, alternate generation, edited audio, and derivative files as one lineage.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Duplicate & Near-Duplicate Detector** — Find identical files, resized copies, near-identical generations, alternate encodes, and redundant imports.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Missing Asset Finder** — Compare active projects against Asset Engine requirements and identify missing images, footage, narration, music, documents, graphics, or generated material.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Semantic Asset Search** — Search by meaning rather than filename, including scenes, subjects, locations, visual traits, and intended use.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Smart Collections** — Dynamic collections based on tags, projects, subjects, formats, generation models/providers, dates, people, usage frequency, or custom rules.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Universal Asset Library** — Images, video, audio, documents, generated assets, references, templates, prompts, renders, project materials, and source material in one canonical library experience.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+- **Vault Inbox / Import Station** — Batch upload/intake with classification, tagging, duplicate checks, metadata extraction, and project assignment.  
+  Target: `FEATURE:PAGE-VAULT` · Status: `UNREVIEWED` · Source: ideas/lists/product/page-surface-feature-opportunities-2026-09-27.md, docs/architecture/PRODUCT_ARCHITECTURE.md
+
 ## Studio / Projects / Analytics Tools
 
 ### Creator Workflow Tools
