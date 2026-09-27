@@ -51,6 +51,7 @@ export type AssetType =
  | "timestamps"
  | "education_questions"
  | "thumbnail_concept"
+ | "thumbnail_analysis"
  | "concept_direction"
  | "scene_plan"
 
