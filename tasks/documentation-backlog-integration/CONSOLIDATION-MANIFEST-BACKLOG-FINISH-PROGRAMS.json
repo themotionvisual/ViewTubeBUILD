@@ -34,7 +34,7 @@
       "classification": "SUPERSEDED_TASK_PROJECTION",
       "sourceCommit": null,
       "sourcePr": null,
-      "archivedPath": null
+      "archivedPath": "archive/removed/tasks/viewtube-finish-program-2026-09-24.md"
     }
   ],
   "accounting": [
@@ -148,6 +148,6 @@
     "allSourcesArchived": false,
     "allUniqueMaterialAccounted": true,
     "inboundReferencesChecked": true,
-    "notes": "Unique task/program/idea/governance/reference classes have destinations. Archival is intentionally blocked because live inbound references remain. Next wave must classify and rewire active references, then preserve source bytes under archive/removed and update registry/archive index."
+    "notes": "Unique material remains accounted for. The dated Finish Program task projection is now archived byte-for-byte; the three documentation donors remain active because live inbound references still require migration."
   }
 }
