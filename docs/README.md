@@ -21,6 +21,7 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Cross-system application convergence | [Integrated Application Program](./programs/INTEGRATED_APPLICATION.md) |
 | Documentation governance | [Documentation Governance](./governance/DOCUMENTATION.md) + [Machine Registry](./registry.json) |
 | Convergence governance | [Convergence Governance](./governance/CONVERGENCE.md) |
+| Ideas Library / consolidation | [Ideas Library](../ideas/README.md) + [Master Ideas](../ideas/MASTER_IDEAS.md) |
 | Capability homes | [Capability Home Index](./capabilities/README.md) |
 | Development control room | [Convergence Control Room](./generated/CONVERGENCE_CONTROL_ROOM.md) |
 | Verification / completion evidence | [Verification](./governance/VERIFICATION.md) |

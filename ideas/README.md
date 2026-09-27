@@ -35,3 +35,13 @@ Source lists are provenance. They may overlap.
 New idea list → preserve source list → extract idea records → similarity review → merge duplicates while preserving all source refs → route by capability/tool/system/feature/function → update Master Ideas.
 
 Ideas do not become tasks automatically.
+
+## Current conversation imports
+
+The September 27 workflow/tool/widget audit is preserved as three governed source lists:
+
+- `ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md` — 40 multi-tool creator workflow recipes with prompts, assets, generations, deliverables, tool order and optimization rules.
+- `ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md` — 20 widget/toolbox/workbench promotion ideas plus 12 shared workflow-infrastructure ideas.
+- `ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md` — 50 application plan/convergence/completion ideas from the main docs/code audit.
+
+All are normalized into `ideas/registry.json` and projected into `ideas/MASTER_IDEAS.md`. They remain ideas until reviewed/promoted through the convergence and Task Authority processes.

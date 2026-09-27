@@ -289,6 +289,32 @@
   gap: 6px;
 }
 
+.longform-optimizer-daily {
+  min-width: 0;
+}
+
+.longform-optimizer-daily-summary {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+.longform-optimizer-daily-summary > span:last-child {
+  min-width: 12rem;
+  flex: 1 1 12rem;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.12;
+  opacity: .64;
+}
+
+.longform-optimizer-daily-grid {
+  min-width: 0;
+}
+
 .longform-optimizer-review {
   min-width: 0;
   display: grid;

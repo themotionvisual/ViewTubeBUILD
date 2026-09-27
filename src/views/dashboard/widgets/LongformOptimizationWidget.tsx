@@ -42,6 +42,12 @@ import {
   type LongformOptimizationAnalysis,
   type LongformOptimizationVideoInput,
 } from "../../../services/longformOptimization"
+import {
+  fetchAndRecordLongformOptimizationDailyComparison,
+  readLatestLongformOptimizationDailyComparison,
+  type LongformOptimizationDailyComparison,
+} from "../../../services/longformOptimizationComparison"
+import { deriveLegacyContentBuildId } from "../../../services/asset-engine/ContentBuildRepository"
 import "./LongformOptimizationWidget.css"
 
 type Page = "report" | "changes" | "outcome"
@@ -192,6 +198,9 @@ export const LongformOptimizationWidget: React.FC<
   const [decision, setDecision] = useState<CreatorDecision>("iterate")
   const [reviewNote, setReviewNote] = useState("")
   const [reviewSaved, setReviewSaved] = useState(false)
+  const [dailyComparison, setDailyComparison] = useState<LongformOptimizationDailyComparison | null>(null)
+  const [dailyLoading, setDailyLoading] = useState(false)
+  const [dailyError, setDailyError] = useState("")
 
   const ranked = useMemo(
     () => rankLongformOptimizationCandidates(buildVideoInputs(data)),
@@ -243,17 +252,32 @@ export const LongformOptimizationWidget: React.FC<
   }))
 
   const activeAnalysis = analysis && analysisVideoId === selectedVideoId ? analysis : null
+  const selectedContentBuildId = activeAnalysis?.contentBuildId
+    || (selected ? deriveLegacyContentBuildId({ videoId: selected.videoId }) : null)
   const history = useMemo(() => selected ? listLongformOptimizationHistory({
     channelId,
     videoId: selected.videoId,
-    contentBuildId: activeAnalysis?.contentBuildId || null,
-  }) : [], [activeAnalysis?.contentBuildId, channelId, historyRevision, selected])
+    contentBuildId: selectedContentBuildId,
+  }) : [], [channelId, historyRevision, selected, selectedContentBuildId])
 
+  const executionEvent = history.find((event) => event.kind === "RECOMMENDATION_EXECUTED") || null
   const measuredEvent = history.find((event) => event.kind === "OUTCOME_MEASURED") || null
   const measuredEvaluation = recordFrom(measuredEvent?.metadata?.evaluation)
   const targetResults = Array.isArray(measuredEvaluation.targetResults)
     ? measuredEvaluation.targetResults.map(recordFrom)
     : []
+
+  useEffect(() => {
+    if (!selected?.videoId || !selectedContentBuildId) {
+      setDailyComparison(null)
+      setDailyError("")
+      return
+    }
+    setDailyComparison(readLatestLongformOptimizationDailyComparison({
+      contentBuildId: selectedContentBuildId,
+      videoId: selected.videoId,
+    }))
+  }, [historyRevision, selected?.videoId, selectedContentBuildId])
 
   const analyze = async () => {
     if (!selected) return
@@ -312,10 +336,30 @@ export const LongformOptimizationWidget: React.FC<
     setPage("changes")
   }
 
+  const refreshDailyComparison = async () => {
+    if (!selected || !selectedContentBuildId || !executionEvent) return
+    setDailyLoading(true)
+    setDailyError("")
+    try {
+      const next = await fetchAndRecordLongformOptimizationDailyComparison({
+        videoId: selected.videoId,
+        contentBuildId: selectedContentBuildId,
+        channelId,
+        changeAt: executionEvent.at,
+      })
+      setDailyComparison(next)
+      setHistoryRevision((value) => value + 1)
+    } catch (reason) {
+      setDailyError(reason instanceof Error ? reason.message : "The 7+7 comparison could not be refreshed.")
+    } finally {
+      setDailyLoading(false)
+    }
+  }
+
   const saveReview = () => {
-    if (!activeAnalysis?.contentBuildId) return
+    if (!selectedContentBuildId) return
     recordLongformOptimizationCreatorReview({
-      contentBuildId: activeAnalysis.contentBuildId,
+      contentBuildId: selectedContentBuildId,
       review,
       decision,
       note: reviewNote,
@@ -344,6 +388,28 @@ export const LongformOptimizationWidget: React.FC<
       result: String(result.status || "unavailable").toUpperCase(),
     },
   }))
+
+  const dailyRows = (dailyComparison?.days || []).map((day) => ({
+    id: `daily-${day.relativeDay}`,
+    cells: {
+      day: day.relativeDay === 0 ? "CHANGE" : `D${day.relativeDay > 0 ? "+" : ""}${day.relativeDay}`,
+      date: day.date,
+      views: day.pending ? "PENDING" : formatNumber(day.views),
+      watch: day.pending ? "PENDING" : day.watchTimeMinutes == null ? "—" : `${formatNumber(day.watchTimeMinutes)}m`,
+      avp: day.pending ? "PENDING" : day.avp == null ? "—" : `${day.avp.toFixed(1)}%`,
+      likes: day.pending ? "PENDING" : formatNumber(day.likes),
+      comments: day.pending ? "PENDING" : formatNumber(day.comments),
+      revenue: day.pending ? "PENDING" : formatMoney(day.revenue),
+    },
+  }))
+
+  const dailySubtitle = !executionEvent
+    ? "MARK A CHANGE APPLIED TO START THE COMPARISON CLOCK"
+    : !dailyComparison
+      ? "READY TO READ VIDEO-SCOPED YOUTUBE ANALYTICS"
+      : dailyComparison.status === "ready"
+        ? "7 BEFORE + 7 AFTER COMPLETE"
+        : `${dailyComparison.after.daysObserved}/7 AFTER DAYS COMPLETE · THROUGH ${dailyComparison.completeThrough}`
 
   return (
     <WidgetShell
@@ -483,10 +549,61 @@ export const LongformOptimizationWidget: React.FC<
               {page === "outcome" ? (
                 <div className="longform-optimizer-outcome">
                   <WidgetModuleFrame
+                    className="longform-optimizer-daily"
+                    header={<WidgetModuleHeader
+                      icon={<Activity />}
+                      title="DAILY 7 BEFORE / 7 AFTER"
+                      subtitle={dailySubtitle}
+                      controls={<WidgetSizedButton
+                        height={24}
+                        tone="primary"
+                        textFit="adaptive"
+                        disabled={!executionEvent || !selectedContentBuildId || dailyLoading}
+                        onClick={() => void refreshDailyComparison()}
+                      >
+                        {dailyLoading ? "REFRESHING…" : "REFRESH 7+7"}
+                      </WidgetSizedButton>}
+                    />}
+                  >
+                    {dailyRows.length ? (
+                      <>
+                        <div className="longform-optimizer-daily-summary">
+                          <WidgetBadge height={18}>BEFORE {dailyComparison?.before.daysObserved || 0}/7</WidgetBadge>
+                          <WidgetBadge height={18} status={dailyComparison?.status === "ready" ? "positive" : "warning"}>AFTER {dailyComparison?.after.daysObserved || 0}/7</WidgetBadge>
+                          <span>Observed association only; this comparison does not prove causation.</span>
+                        </div>
+                        <WidgetDataGrid
+                          className="longform-optimizer-daily-grid"
+                          ariaLabel="Daily seven days before and after optimization change"
+                          minWidth={760}
+                          columns={[
+                            { key: "day", label: "DAY", width: "76px" },
+                            { key: "date", label: "DATE", width: "96px" },
+                            { key: "views", label: "VIEWS", align: "end" },
+                            { key: "watch", label: "WATCH", align: "end" },
+                            { key: "avp", label: "AVP", align: "end" },
+                            { key: "likes", label: "LIKES", align: "end" },
+                            { key: "comments", label: "COMMENTS", align: "end" },
+                            { key: "revenue", label: "REVENUE", align: "end" },
+                          ]}
+                          rows={dailyRows}
+                        />
+                      </>
+                    ) : (
+                      <p className="longform-optimizer-outcome-note">
+                        {executionEvent
+                          ? "Refresh to load real video-scoped daily YouTube Analytics for D−7 through D+7. Future days remain pending until YouTube has complete data."
+                          : "Mark the selected recommendation as applied before starting a before/after comparison."}
+                      </p>
+                    )}
+                    {dailyError ? <div className="longform-optimizer-error" role="alert">{dailyError}</div> : null}
+                  </WidgetModuleFrame>
+
+                  <WidgetModuleFrame
                     header={<WidgetModuleHeader
                       icon={<Activity />}
                       title="MEASURED OUTCOME"
-                      subtitle={measuredEvent ? String(measuredEvaluation.status || "MEASURED").toUpperCase() : "WAITING FOR CANONICAL VIDEO-SCOPED CHECKPOINT EVIDENCE"}
+                      subtitle={measuredEvent ? String(measuredEvaluation.status || "MEASURED").toUpperCase() : "WAITING FOR THE CANONICAL 168H EVALUATION"}
                       controls={measuredEvent ? <WidgetBadge height={18} status={measuredEvaluation.status === "positive" ? "positive" : measuredEvaluation.status === "negative" ? "danger" : "neutral"}>{String(measuredEvaluation.status || "measured")}</WidgetBadge> : undefined}
                     />}
                   >
@@ -504,7 +621,7 @@ export const LongformOptimizationWidget: React.FC<
                         rows={outcomeRows}
                       />
                     ) : (
-                      <p className="longform-optimizer-outcome-note">The 7-day monitoring horizon is attached when the creator marks a change applied. This widget will not fabricate D−7 / D+7 rows from channel-level data; it waits for canonical video-scoped evidence.</p>
+                      <p className="longform-optimizer-outcome-note">The daily 7+7 projection is descriptive evidence. The existing Algorithm Monitoring evaluator remains the authority for the final measured outcome and learning candidate.</p>
                     )}
                   </WidgetModuleFrame>
 

@@ -25,6 +25,195 @@
 - **Reusable Workflow Registry** — Make repeatable development workflows first-class governed objects.  
   Target: `GOVERNANCE:WORKFLOWS` · Status: `IMPLEMENTATION_WAVE` · Source: ideas/lists/governance/document-governance-improvements.md
 
+## Application Convergence & Completion
+
+### ARCHIVE / REMOVE
+
+- **Legacy Global Documentation Removal Wave** — Move superseded global authorities into archive/removed only after donor harvest, inbound-link audit, hashes and successor mapping.  
+  Target: `SYSTEM:LEGACY-GLOBAL-DOCUMENTATION-REMOVAL-WAVE` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### AUDIT
+
+- **Outcome Coverage Matrix** — Map Publisher, Projects, Editor, Community, experiments, packaging, Brain and asset generators to canonical outcomes.  
+  Target: `SYSTEM:OUTCOME-COVERAGE-MATRIX` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Production Caller & Reachability Census** — Finish production-caller inventory for overlapping context/evidence/AI/asset/operation subsystems before deletion or consolidation.  
+  Target: `SYSTEM:PRODUCTION-CALLER-REACHABILITY-CENSUS` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Prompt Production Reachability** — Inventory every prompt constant, alias and caller and classify live, compatibility-only and dead paths.  
+  Target: `SYSTEM:PROMPT-PRODUCTION-REACHABILITY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### AUDIT / CONNECT
+
+- **Vault ↔ Editor Media Operations** — Audit VT_E1 then define derivative-vs-overwrite, protected-asset rules and verified transform gaps.  
+  Target: `SYSTEM:VAULT-EDITOR-MEDIA-OPERATIONS` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### AUDIT / OPTIMIZE
+
+- **Algorithm Intelligence Ledger Cleanup** — Audit helper/ledger sprawl after metric-comparability work and consolidate redundant evaluation paths.  
+  Target: `SYSTEM:ALGORITHM-INTELLIGENCE-LEDGER-CLEANUP` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### AUDIT / REMOVE
+
+- **Legacy Direct Provider Cleanup** — Inventory direct provider callers, harvest useful prompts/schemas/tests/error handling, migrate, then quarantine after zero reachability.  
+  Target: `SYSTEM:LEGACY-DIRECT-PROVIDER-CLEANUP` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### AUDIT / STABILIZE
+
+- **Auth + Diagnostics Reliability** — Certify sign-in/session restoration, API routes, account proxy, mobile failures and always-accessible diagnostics.  
+  Target: `SYSTEM:AUTH-DIAGNOSTICS-RELIABILITY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### AUDIT / UPDATE
+
+- **Analytics Coverage & Provenance** — Reconcile dataset/window ownership, traffic details, geography, retention, CSV augmentation, missingness and provenance.  
+  Target: `SYSTEM:ANALYTICS-COVERAGE-PROVENANCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### CERTIFY
+
+- **10-Widget Production Cohort** — Select and certify the supported cohort across responsive sizes, states and interactions.  
+  Target: `SYSTEM:10-WIDGET-PRODUCTION-COHORT` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Cross-Surface Handoff Identity** — Test Project/ContentBuild/video/asset/evidence continuity through Dashboard, Studio, Vault, Editor, Publisher and Brain.  
+  Target: `SYSTEM:CROSS-SURFACE-HANDOFF-IDENTITY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Evidence-ID Continuity** — Prove evidence IDs survive analytics → specialists → Brain → UI → outcomes.  
+  Target: `SYSTEM:EVIDENCE-ID-CONTINUITY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### CERTIFY / CLEAN
+
+- **Settings Final Visual & Accessibility Closeout** — Finish responsive, keyboard/focus/destructive/error certification and remove legacy visual authority after parity.  
+  Target: `SYSTEM:SETTINGS-FINAL-VISUAL-ACCESSIBILITY-CLOSEOUT` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### CONNECT
+
+- **Publish → Analytics → Outcome Loop** — Preserve ContentBuild/video/package identity after publish and connect measured performance to exact approved assets/variants.  
+  Target: `SYSTEM:PUBLISH-ANALYTICS-OUTCOME-LOOP` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Vault ↔ Projects Creator Lane** — Complete project stage/priority/due date/promise/storyboard/title/checklist/script/asset/stat projections.  
+  Target: `SYSTEM:VAULT-PROJECTS-CREATOR-LANE` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### CREATE
+
+- **Documentation CI/Governance Automation** — Add stale-plan, unregistered-doc, duplicate-active-concern, broken-ref, metadata, supersession and archive-manifest checks.  
+  Target: `SYSTEM:DOCUMENTATION-CI-GOVERNANCE-AUTOMATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Generated Human Documentation Registry** — Generate the readable documentation registry from docs/registry.json instead of hand-maintaining parallel registry truth.  
+  Target: `SYSTEM:GENERATED-HUMAN-DOCUMENTATION-REGISTRY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **One-Write-Owner Matrix** — Define exact mutable ownership for Project, ContentBuild, VideoPackage and PublishingPackage fields.  
+  Target: `SYSTEM:ONE-WRITE-OWNER-MATRIX` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **OperationRecord v1** — Converge reasoning, research, generation, transform, render, handoff and external execution around shared operation identity.  
+  Target: `SYSTEM:OPERATIONRECORD-V1` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Outcome Producer Identity Contract** — Standardize producer ID, source operation, project/video identity, timestamp, evidence and idempotency semantics.  
+  Target: `SYSTEM:OUTCOME-PRODUCER-IDENTITY-CONTRACT` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Prompt Evaluation Program** — Build rich/sparse/empty/stale/disabled/conflicting fixtures, quality baselines, validators and regression thresholds.  
+  Target: `SYSTEM:PROMPT-EVALUATION-PROGRAM` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Unified Backlog Source Manifest** — Hash and classify every audit, plan, handoff, conversation backlog, donor branch and task source before more planning is created.  
+  Target: `SYSTEM:UNIFIED-BACKLOG-SOURCE-MANIFEST` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Universal Widget Empty/Preview Contract** — Give every widget intentional loading/empty/disconnected/sample presentation without fake live data.  
+  Target: `SYSTEM:UNIVERSAL-WIDGET-EMPTY-PREVIEW-CONTRACT` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Widget Handoff Capability Metadata** — Extend widget/tool registries with accepts, produces, suggestedHandoffs and context requirements.  
+  Target: `SYSTEM:WIDGET-HANDOFF-CAPABILITY-METADATA` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### CREATE / FINISH
+
+- **Public Agent Readiness** — Add llms.txt strategy, sitemap, canonical/meta/OG/JSON-LD, public text/Markdown surfaces and rescan readiness.  
+  Target: `SYSTEM:PUBLIC-AGENT-READINESS` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### FINISH
+
+- **Editor Completion Program** — Complete desktop/mobile parity, four-layout certification, typed Brain proposals, generation queue, Video Director integration and final-render assets.  
+  Target: `SYSTEM:EDITOR-COMPLETION-PROGRAM` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Publishing Durability & Recovery** — Move remaining publishing authority toward durable persistence, remote reconciliation, retry/recovery and crash-safe idempotency.  
+  Target: `SYSTEM:PUBLISHING-DURABILITY-RECOVERY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Vault Intake Intelligence** — Complete suggested tags/vision, arbitrary local-media transcript support and proxy derivative generation.  
+  Target: `SYSTEM:VAULT-INTAKE-INTELLIGENCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### FINISH / RESTRUCTURE
+
+- **VT-SYNC Controller + Progress** — Complete combined status/controller accuracy, batch selection, windows, queue/finish states and trustworthy counts.  
+  Target: `SYSTEM:VT-SYNC-CONTROLLER-PROGRESS` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### MERGE
+
+- **100-Item Audit Reconciliation** — Harvest still-valid requirements from the 100-item audit into current authorities and demote the audit to evidence.  
+  Target: `SYSTEM:100-ITEM-AUDIT-RECONCILIATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **2026-09-11 Unfinished Work Reconciliation** — Harvest remaining valid requirements from the older unfinished-work master and retire its parallel backlog role.  
+  Target: `SYSTEM:2026-09-11-UNFINISHED-WORK-RECONCILIATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **ActionPacket / ToolReceipt / GenerationRecord Convergence** — Keep specialist projections while stopping overlapping histories from becoming separate truth stores.  
+  Target: `SYSTEM:ACTIONPACKET-TOOLRECEIPT-GENERATIONRECORD-CONVERGENCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Handoff Document Family Consolidation** — Consolidate Toolbox, Resource Library, Editor, Vault and Brain handoff families into living authorities plus governed handoff records.  
+  Target: `SYSTEM:HANDOFF-DOCUMENT-FAMILY-CONSOLIDATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **System Convergence Donor Harvest** — Harvest unique convergence rules into Product Architecture, Integrated Application and scoped specifications.  
+  Target: `SYSTEM:SYSTEM-CONVERGENCE-DONOR-HARVEST` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### MERGE / ARCHIVE
+
+- **Brain + Prompt Phase-D Documentation Cleanup** — Retire superseded AI/prompt phase documents after no-loss harvest into current Brain/Prompt authorities.  
+  Target: `SYSTEM:BRAIN-PROMPT-PHASE-D-DOCUMENTATION-CLEANUP` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### MERGE / CERTIFY
+
+- **Asset Engine + Vault Identity & Lineage Contract** — Unify shared asset identity and version/variant/derivative lineage across Project, Vault, Editor, Publisher and generation.  
+  Target: `SYSTEM:ASSET-ENGINE-VAULT-IDENTITY-LINEAGE-CONTRACT` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### MERGE / RESTRUCTURE
+
+- **Dashboard Workbench Consolidation** — Consolidate overlapping widgets into domain workbenches instead of continuing widget multiplication.  
+  Target: `SYSTEM:DASHBOARD-WORKBENCH-CONSOLIDATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### MERGE / RETIRE
+
+- **Crown + Herald + Conversation Predecessor Cleanup** — Harvest superseded coordination contracts and retire duplicate predecessor documents.  
+  Target: `SYSTEM:CROWN-HERALD-CONVERSATION-PREDECESSOR-CLEANUP` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### MERGE / UPDATE
+
+- **Prompt Families + Context Recipes** — Give reachable prompts canonical family/version/schema/context recipes and propagate prompt/model provenance.  
+  Target: `SYSTEM:PROMPT-FAMILIES-CONTEXT-RECIPES` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### OPTIMIZE
+
+- **Governed Learning Promotion** — Complete reinforce/hold/reject/supersede, contradiction handling, decay/review and no-direct-model-write guarantees.  
+  Target: `SYSTEM:GOVERNED-LEARNING-PROMOTION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### OPTIMIZE / REMOVE
+
+- **Toolbox CSS & Primitive Ownership Finalization** — Finish canonical geometry ownership and remove feature-local overrides only after parity and screenshots.  
+  Target: `SYSTEM:TOOLBOX-CSS-PRIMITIVE-OWNERSHIP-FINALIZATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### RESEARCH / PLAN
+
+- **Project-Grounded RAG** — Add project-grounded retrieval behind the canonical Context Resolver without a second memory store.  
+  Target: `SYSTEM:PROJECT-GROUNDED-RAG` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### RESEARCH + BUILD
+
+- **Media Provider Gateway** — Route Veo/image/video generation through governed generation, Asset Engine/Vault, provenance, queue, cancel and retry contracts.  
+  Target: `SYSTEM:MEDIA-PROVIDER-GATEWAY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### RESEARCH + IMPLEMENT
+
+- **Task Index VNext Authority** — Resolve canonical Task Index writer/storage, aliases, projections and freshness checks.  
+  Target: `SYSTEM:TASK-INDEX-VNEXT-AUTHORITY` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### RESTRUCTURE
+
+- **Brain Hub Product UI** — Organize Brain Hub into Overview, Systems, Agents & Runs, Prompts, Plans, Evidence & Traces, Knowledge & Learning, Audit and Health.  
+  Target: `SYSTEM:BRAIN-HUB-PRODUCT-UI` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Vault Dense Creator UX** — Replace persistent workspace/navigator/operations chrome with contextual toolbar, selection bar, drawers/popovers and media-first cards.  
+  Target: `SYSTEM:VAULT-DENSE-CREATOR-UX` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### UPDATE
+
+- **Creator Context Final Migration** — Move remaining Sidebar/Brain Hub context assembly through CreatorContextResolver and complete no-project/ContentBuild fixtures.  
+  Target: `SYSTEM:CREATOR-CONTEXT-FINAL-MIGRATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+- **Evaluation-Target Coverage** — Verify consequential actions declare measurable evaluation targets/checkpoints using canonical comparability semantics.  
+  Target: `SYSTEM:EVALUATION-TARGET-COVERAGE` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### UPDATE / CLOSE
+
+- **Settings Workspace Completion Receipt** — Close stale Settings plan/todo projections with a no-loss completion receipt and current evidence.  
+  Target: `SYSTEM:SETTINGS-WORKSPACE-COMPLETION-RECEIPT` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
+### UPDATE → ARCHIVE
+
+- **Finish Program Migration** — Reconcile surviving Finish Program items into Integrated Application/Task Authority and archive the predecessor.  
+  Target: `SYSTEM:FINISH-PROGRAM-MIGRATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md
+
 ## Capability & Plan Convergence
 
 ### Build Gate
@@ -167,6 +356,91 @@
   Target: `FEATURE:LIB-2` · Status: `PROMOTED` · Source: ideas/lists/product/current-main-audit-expansion-opportunities.md, docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md
 - **YouTube Revenue and Monetization Fundamentals** — Explain estimated revenue, ad revenue, Premium revenue, monetized playbacks, CPM/RPM concepts, memberships, fan funding, shopping/commerce considerations and why revenue reports can change after initial estimates.  
   Target: `FEATURE:LIB-9` · Status: `UNREVIEWED` · Source: ideas/lists/product/current-main-audit-expansion-opportunities.md, docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md
+
+## Creator Workflow Chains
+
+### Workflow Recipes
+
+- **72-Hour Launch Review** — Review early performance without panic edits.  
+  Target: `WORKFLOW:72-HOUR-LAUNCH-REVIEW` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Accessibility Completion** — Catch accessibility defects before release.  
+  Target: `WORKFLOW:ACCESSIBILITY-COMPLETION` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Algorithm Explanation to Action** — Convert creator education into one testable action.  
+  Target: `WORKFLOW:ALGORITHM-EXPLANATION-TO-ACTION` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Asset Rights Preflight** — Prevent packages from publishing with unknown or insufficient asset rights.  
+  Target: `WORKFLOW:ASSET-RIGHTS-PREFLIGHT` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Audience Segment Video** — Design content for a meaningful under-served segment.  
+  Target: `WORKFLOW:AUDIENCE-SEGMENT-VIDEO` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Calendar Gap Filler** — Fill an open publishing slot with the most appropriate ready work.  
+  Target: `WORKFLOW:CALENDAR-GAP-FILLER` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Channel Session Builder** — Build coherent video-to-video viewing routes.  
+  Target: `WORKFLOW:CHANNEL-SESSION-BUILDER` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Channel Strategy Sprint** — Turn current channel evidence into a bounded multi-video production slate.  
+  Target: `WORKFLOW:CHANNEL-STRATEGY-SPRINT` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Comment Response Campaign** — Process a large comment queue while preserving creator review and extracting useful audience signals.  
+  Target: `WORKFLOW:COMMENT-RESPONSE-CAMPAIGN` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Comment to Community Campaign** — Test audience interest before committing to a larger production.  
+  Target: `WORKFLOW:COMMENT-TO-COMMUNITY-CAMPAIGN` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Comment to New Video** — Convert repeated audience demand into a planned content opportunity.  
+  Target: `WORKFLOW:COMMENT-TO-NEW-VIDEO` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Content Series Builder** — Plan a multi-video series with a recognizable but non-repetitive system.  
+  Target: `WORKFLOW:CONTENT-SERIES-BUILDER` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Editor Missing-Shot Recovery** — Fill a concrete timeline gap without losing project continuity.  
+  Target: `WORKFLOW:EDITOR-MISSING-SHOT-RECOVERY` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **End-Screen Optimization** — Improve the next-view path based on audience intent.  
+  Target: `WORKFLOW:END-SCREEN-OPTIMIZATION` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Evergreen Revival** — Refresh and redistribute an older asset when current evidence justifies it.  
+  Target: `WORKFLOW:EVERGREEN-REVIVAL` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Experiment Design Workflow** — Create the smallest experiment that can answer a creator question.  
+  Target: `WORKFLOW:EXPERIMENT-DESIGN-WORKFLOW` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Full Creator Improvement Loop** — Close the loop from recommendation to creation to measurement to governed learning.  
+  Target: `WORKFLOW:FULL-CREATOR-IMPROVEMENT-LOOP` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **High Performer to Sequel** — Reuse a proven audience promise without cloning surface details.  
+  Target: `WORKFLOW:HIGH-PERFORMER-TO-SEQUEL` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Hook Learning Loop** — Learn from exact hooks rather than vague video-level success.  
+  Target: `WORKFLOW:HOOK-LEARNING-LOOP` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Idea to Published Longform** — Move one evidence-backed opportunity through a complete long-form creator lifecycle.  
+  Target: `WORKFLOW:IDEA-TO-PUBLISHED-LONGFORM` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Idea to Published Short** — Convert a supported opportunity into a concise vertical video.  
+  Target: `WORKFLOW:IDEA-TO-PUBLISHED-SHORT` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Localization Workflow** — Localize a published or ready video while preserving creator meaning and terminology.  
+  Target: `WORKFLOW:LOCALIZATION-WORKFLOW` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Longform to Shorts** — Derive self-contained short-form assets from a source video.  
+  Target: `WORKFLOW:LONGFORM-TO-SHORTS` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Missing Asset Finder Loop** — Resolve package gaps through the cheapest valid source.  
+  Target: `WORKFLOW:MISSING-ASSET-FINDER-LOOP` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Packaging Learning Loop** — Turn measured package experiments into governed learning.  
+  Target: `WORKFLOW:PACKAGING-LEARNING-LOOP` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Pre-Launch Command** — Coordinate a minimal launch sequence around a finished video.  
+  Target: `WORKFLOW:PRE-LAUNCH-COMMAND` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Project Package Readiness** — Show only true blockers preventing a ContentBuild from publishing.  
+  Target: `WORKFLOW:PROJECT-PACKAGE-READINESS` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Project Postmortem** — Preserve what actually happened during a project and what can safely be learned.  
+  Target: `WORKFLOW:PROJECT-POSTMORTEM` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Research to Historical Video** — Build a source-backed history production workflow.  
+  Target: `WORKFLOW:RESEARCH-TO-HISTORICAL-VIDEO` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Retention Rescue** — Turn retention evidence into reversible editing proposals.  
+  Target: `WORKFLOW:RETENTION-RESCUE` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Revenue Opportunity Investigation** — Explore revenue differences without presenting correlation as guaranteed monetization.  
+  Target: `WORKFLOW:REVENUE-OPPORTUNITY-INVESTIGATION` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Script to Production Package** — Convert an approved script into the minimum complete production asset set.  
+  Target: `WORKFLOW:SCRIPT-TO-PRODUCTION-PACKAGE` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Search Gap to Video** — Convert a credible search gap into a channel-fit project.  
+  Target: `WORKFLOW:SEARCH-GAP-TO-VIDEO` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Storyboard to Generated Sequence** — Produce a visually coherent generated shot sequence.  
+  Target: `WORKFLOW:STORYBOARD-TO-GENERATED-SEQUENCE` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **System Doctor to Recovery** — Route an app problem to its real owner instead of duplicating repair logic.  
+  Target: `WORKFLOW:SYSTEM-DOCTOR-TO-RECOVERY` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Thumbnail Refresh Experiment** — Run a traceable packaging experiment on an existing video.  
+  Target: `WORKFLOW:THUMBNAIL-REFRESH-EXPERIMENT` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Title Refresh Experiment** — Test a new framing strategy without losing the video's actual promise.  
+  Target: `WORKFLOW:TITLE-REFRESH-EXPERIMENT` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Trend Reaction Workflow** — Decide whether a current trend deserves accelerated production.  
+  Target: `WORKFLOW:TREND-REACTION-WORKFLOW` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Underperforming Upload Rescue** — Diagnose and improve an existing upload without random simultaneous edits.  
+  Target: `WORKFLOW:UNDERPERFORMING-UPLOAD-RESCUE` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Vault Reuse to New Project** — Turn reusable archived material into a new coherent content project.  
+  Target: `WORKFLOW:VAULT-REUSE-TO-NEW-PROJECT` · Status: `UNREVIEWED` · Source: ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
 
 ## Debugging & Simplification
 
@@ -338,6 +612,78 @@
 
 - **Task Completion Feedback Into Plans** — When tasks become verified DONE, update owning plan maturity/progress projections instead of copying status prose.  
   Target: `GOVERNANCE:TASK-AUTHORITY` · Status: `UNREVIEWED` · Source: ideas/lists/governance/document-governance-improvements.md
+
+## Toolbox & Widget Architecture
+
+### Promotion Candidates
+
+- **Asset Engine Toolbox** — Promote or consolidate Video Asset Engine into Asset Engine Toolbox; Dashboard role: package readiness + missing slot launcher.  
+  Target: `FEATURE:ASSET-ENGINE-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Audience Intelligence** — Promote or consolidate Audience Matrix + Device Matrix + Guest Ratio into Audience Intelligence; Dashboard role: top segment shift.  
+  Target: `FEATURE:AUDIENCE-INTELLIGENCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Brain Hub Toolbox** — Promote or consolidate Brain Hub into Brain Hub Toolbox; Dashboard role: ask/resume/status/evidence health.  
+  Target: `FEATURE:BRAIN-HUB-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Comment Operations Toolbox** — Promote or consolidate Comment Responder into Comment Operations Toolbox; Dashboard role: queue count + priority replies.  
+  Target: `FEATURE:COMMENT-OPERATIONS-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Daily Creator Command Toolbox** — Promote or consolidate Daily Oracle into Daily Creator Command Toolbox; Dashboard role: daily top action + compact evidence.  
+  Target: `FEATURE:DAILY-CREATOR-COMMAND-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Dashboard Control Toolbox** — Promote or consolidate Settings widget into Dashboard Control Toolbox; Dashboard role: compact switchboard.  
+  Target: `FEATURE:DASHBOARD-CONTROL-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Discovery & Distribution** — Promote or consolidate Traffic Sources + Playback Origins + Sharing DNA + Bridge Efficiency into Discovery & Distribution; Dashboard role: current discovery mix.  
+  Target: `FEATURE:DISCOVERY-DISTRIBUTION` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Keyword Intelligence** — Promote or consolidate Keyword Engine + Keyword Overlap into Keyword Intelligence; Dashboard role: top opportunity/overlap alert.  
+  Target: `FEATURE:KEYWORD-INTELLIGENCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Metadata / SEO Workbench** — Promote or consolidate Title Rewriter + Description Editor + Tag Generator + Hashtag Analyzer into Metadata / SEO Workbench; Dashboard role: package score/status + open workbench.  
+  Target: `FEATURE:METADATA-SEO-WORKBENCH` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Monetization Intelligence** — Promote or consolidate Revenue Tracker + Revenue Momentum + Ad Stack + CPM Geography + Premium Pulse into Monetization Intelligence; Dashboard role: revenue pulse.  
+  Target: `FEATURE:MONETIZATION-INTELLIGENCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Opportunity Intelligence Workbench** — Promote or consolidate Opportunity Radar into Opportunity Intelligence Workbench; Dashboard role: spatial opportunity map + open action.  
+  Target: `FEATURE:OPPORTUNITY-INTELLIGENCE-WORKBENCH` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Publishing Calendar** — Promote or consolidate Mini Calendar + Upload Scheduler into Publishing Calendar; Dashboard role: next slot + conflict/status.  
+  Target: `FEATURE:PUBLISHING-CALENDAR` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Retention Lab** — Promote or consolidate Retention Dip + Benchmark + Simulator into Retention Lab; Dashboard role: retention alert/summary.  
+  Target: `FEATURE:RETENTION-LAB` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Thumbnail Studio Toolbox** — Promote or consolidate Thumbnail Lab / ThumbAI / A-B Thumbnail into Thumbnail Studio Toolbox; Dashboard role: selected variant + experiment status.  
+  Target: `FEATURE:THUMBNAIL-STUDIO-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **UI Reference Studio Toolbox** — Promote or consolidate UI Reference Library into UI Reference Studio Toolbox; Dashboard role: developer/reference launcher only.  
+  Target: `FEATURE:UI-REFERENCE-STUDIO-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Video Director Toolbox** — Promote or consolidate Video Director into Video Director Toolbox; Dashboard role: active job, preset, queue and Generate launcher.  
+  Target: `FEATURE:VIDEO-DIRECTOR-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Video Manager Toolbox** — Promote or consolidate Video Manager into Video Manager Toolbox; Dashboard role: selected-video status + quick actions.  
+  Target: `FEATURE:VIDEO-MANAGER-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Video Optimization Toolbox** — Promote or consolidate Longform Optimization into Video Optimization Toolbox; Dashboard role: strongest optimization signal.  
+  Target: `FEATURE:VIDEO-OPTIMIZATION-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Video Performance Autopsy Toolbox** — Promote or consolidate Video Autopsy into Video Performance Autopsy Toolbox; Dashboard role: headline diagnosis + strongest issue.  
+  Target: `FEATURE:VIDEO-PERFORMANCE-AUTOPSY-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Video Publisher Toolbox** — Promote or consolidate Video Uploader / Publisher into Video Publisher Toolbox; Dashboard role: readiness/publish status + resume.  
+  Target: `FEATURE:VIDEO-PUBLISHER-TOOLBOX` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+
+### Workflow Infrastructure
+
+- **Brain-compatible destination ranking** — Preference-based ranking already exists; extend ranking with bounded Project/evidence/required-context compatibility and User Controls.  
+  Target: `SYSTEM:BRAIN-COMPATIBLE-DESTINATION-RANKING` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Core Toolbox promotions** — Director, Publisher, Manager, Autopsy, Oracle, Brain Hub, Comment Operations, Optimization, Asset Engine and Thumbnail Studio.  
+  Target: `SYSTEM:CORE-TOOLBOX-PROMOTIONS` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Creator preference learning** — Accepted/rejected suggestion signals are already creator-learning gated; remaining work is governed outcome/evaluation integration, freshness/decay policy if required, and certification.  
+  Target: `SYSTEM:CREATOR-PREFERENCE-LEARNING` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Domain-workbench consolidation** — Metadata/SEO, Retention, Keyword, Calendar, Audience, Discovery and Monetization.  
+  Target: `SYSTEM:DOMAIN-WORKBENCH-CONSOLIDATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Handoff metadata convergence** — `accepts` / `produces` already exist in `VIEWTUBE_TOOL_CAPABILITIES`; add required-context, mutation/resume semantics, explicit suggested-handoff metadata where useful, and bridge tool metadata with WidgetRegistry rather than recreating it.  
+  Target: `SYSTEM:HANDOFF-METADATA-CONVERGENCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Outcome/evaluation closure** — Consequential recipes declare outcome target/checkpoint and bind later measurements.  
+  Target: `SYSTEM:OUTCOME-EVALUATION-CLOSURE` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Project/asset identity continuity certification** — ActionPacket already carries Project/ContentBuild/video/evidence fields and persists scoped events; prove package/asset/version identity through real destination consumers.  
+  Target: `SYSTEM:PROJECT-ASSET-IDENTITY-CONTINUITY-CERTIFICATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Promotion framework** — Reusable compact-widget → Toolbox launcher/resume contract.  
+  Target: `SYSTEM:PROMOTION-FRAMEWORK` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Responsive/accessibility certification** — Compact widget and full Toolbox pairs pass desktop/narrow/mobile portrait/mobile landscape and relevant state matrices.  
+  Target: `SYSTEM:RESPONSIVE-ACCESSIBILITY-CERTIFICATION` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Universal operation envelope** — ActionPacket already fans into GenerationRecord, Vault and ContentBuild events; converge these IDs/receipts/BrainTrace/render-generation records toward shared operation identity.  
+  Target: `SYSTEM:UNIVERSAL-OPERATION-ENVELOPE` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Workflow chain viewer convergence** — WorkflowChainBuilder/workflowEngine already exist; connect them to universal packet receipts, evidence, canonical IDs and outcomes instead of building a parallel viewer.  
+  Target: `SYSTEM:WORKFLOW-CHAIN-VIEWER-CONVERGENCE` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
+- **Workflow recipe registry** — Eight hard-coded suggested chain templates already exist; generalize them into structured validated recipe definitions and add the remaining catalog without creating another execution owner.  
+  Target: `SYSTEM:WORKFLOW-RECIPE-REGISTRY` · Status: `UNREVIEWED` · Source: ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md, docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md
 
 ## Verification & Health
 

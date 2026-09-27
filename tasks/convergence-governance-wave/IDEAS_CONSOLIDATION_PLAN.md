@@ -15,7 +15,7 @@
 
 Extend the existing `ideas/` library and `viewtube-ideas-curator`; do not create another ideas store or another conversation task ledger. The Conversation OS is already installed through `AGENTS.md`, `CLAUDE.md`, `docs/governance/CONVERSATION_OS.md`, `agent/contracts/conversation-os.md`, and its skill. Conversation handoffs live in `tasks/conversation-intake/`.
 
-Current main already has category source folders, `ideas/registry.json`, generated `ideas/MASTER_IDEAS.md`, `generate:ideas-master`, similarity helpers, and a structural audit. It contains two registered source lists. The CLI groups likely matches, but its group retains a representative title and summary plus unioned source IDs/refs; it does not produce a reviewed composite of each source's distinct requirements. The master generator renders registry entries as written and does not perform its own consolidation. The audit checks IDs, categories, targets and provenance, but not source item coverage or requirement retention.
+Current main already has category source folders, `ideas/registry.json`, generated `ideas/MASTER_IDEAS.md`, `generate:ideas-master`, similarity helpers, and a structural audit. It contains five registered source lists after the September 27 workflow/tool/widget/app-convergence intake. The CLI groups likely matches, but its group retains a representative title and summary plus unioned source IDs/refs; it does not produce a reviewed composite of each source's distinct requirements. The master generator renders registry entries as written and does not perform its own consolidation. The audit checks IDs, categories, targets and provenance, but not source item coverage or requirement retention.
 
 ## Existing work checked
 
@@ -74,3 +74,13 @@ Start with one small pair of overlapping governance ideas and one pair of genuin
 ## Next action
 
 Implement Wave 1 inventory and a source-item coverage report on a feature branch. Use its measured gaps to finalize the versioned schema before any bulk migration.
+
+## September 27 workflow/tool/widget intake
+
+The current conversation has now been preserved as three additional governed source lists:
+
+- `IDEA-LIST-WORKFLOWS-001` — 40 creator workflow-chain recipes;
+- `IDEA-LIST-TOOLBOX-WIDGETS-001` — 20 widget/toolbox/workbench promotion ideas plus 12 workflow-infrastructure ideas;
+- `IDEA-LIST-APP-CONVERGENCE-001` — 50 app plan/convergence/completion ideas.
+
+All 122 source items are represented in `ideas/registry.json` and `ideas/MASTER_IDEAS.md` as `UNREVIEWED` ideas. This is intake/normalization, not semantic merge certification: the lossless-consolidation review workflow still needs to classify overlaps as SAME_OBJECTIVE, COMPLEMENTARY, DEPENDENCY, CONFLICT or DISTINCT before any master idea identities are merged or promoted.
