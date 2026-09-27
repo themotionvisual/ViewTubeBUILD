@@ -41,12 +41,12 @@ Explain the subject as simply as possible before introducing technical terminolo
 
 ### Simple Process Flow
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     A[Creator Input] --> B[Viewer or System Response]
     B --> C[Evidence]
     C --> D[Creator Decision]
-\`\`\`
+```
 
 ---
 
