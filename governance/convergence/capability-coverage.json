@@ -1,0 +1,343 @@
+{
+  "schemaVersion": "viewtube.capability-coverage.v1",
+  "lastEdited": "2026-09-27",
+  "source": "docs/architecture/capabilities.json",
+  "capabilities": [
+    {
+      "id": "CAP-CREATOR-CONTEXT",
+      "name": "Creator Context Resolution",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "codeOwners": [
+        "src/services/brain/**",
+        "src/features/projects/**"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Channel Intelligence Hub",
+        "Project & Production Command"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-EVIDENCE-INTELLIGENCE",
+      "name": "Evidence & Intelligence",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "codeOwners": [
+        "src/features/vt-sync-local/**",
+        "src/services/brain/**"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Opportunity Radar",
+        "Channel Intelligence Hub",
+        "Content Strategy Lab"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-PROJECT-CONTENT-IDENTITY",
+      "name": "Project / ContentBuild Identity",
+      "authority": "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md",
+      "codeOwners": [
+        "src/features/projects/**",
+        "src/services/contentBuild*"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Project & Production Command"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-ASSET-LINEAGE",
+      "name": "Asset Lineage & Provenance",
+      "authority": "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md",
+      "codeOwners": [
+        "src/features/vault/**",
+        "src/services/asset*"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Vault & Asset Engine",
+        "Visual Development Studio",
+        "Video Director & Editor"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-CREATOR-OPERATIONS",
+      "name": "Creator Operations & Generation",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "codeOwners": [
+        "src/services/brain/**",
+        "src/features/video-director/**",
+        "src/features/editor/**"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Script & Story Studio",
+        "Visual Development Studio",
+        "Video Director & Editor"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-OUTCOME-LEARNING",
+      "name": "Outcome Evaluation & Governed Learning",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "codeOwners": [
+        "src/services/brain/**",
+        "src/services/analytics*"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Channel Intelligence Hub",
+        "Packaging & Experiment Lab",
+        "Audience & Community Desk"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-BRAIN-EXPERIENCE",
+      "name": "Brain Runtime Experience",
+      "authority": "docs/domains/BRAIN.md",
+      "codeOwners": [
+        "src/services/brain/**",
+        "src/views/BrainHub*"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Channel Intelligence Hub",
+        "Content Strategy Lab"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-ANALYTICS-CANON",
+      "name": "Canonical Analytics Evidence",
+      "authority": "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md",
+      "codeOwners": [
+        "src/features/vt-sync-local/**"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Channel Intelligence Hub",
+        "Monetization & Operations Hub"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-EDITOR-RENDER",
+      "name": "Editor & Deterministic Rendering",
+      "authority": "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md",
+      "codeOwners": [
+        "src/features/editor/**",
+        "src/server/vt-e1-render-server.mjs"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Video Director & Editor"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-PUBLISH",
+      "name": "Approved Publishing & Distribution",
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "codeOwners": [
+        "src/services/youtube/**",
+        "src/views/*Publish*",
+        "src/features/*publish*"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Publisher & Distribution Center"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-WIDGET-SURFACES",
+      "name": "Composable Dashboard Widgets",
+      "authority": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md",
+      "codeOwners": [
+        "src/views/dashboard/**",
+        "src/components/dashboard/**"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [
+        "Monetization & Operations Hub"
+      ],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.42857142857142855,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-DOCUMENT-GOVERNANCE",
+      "name": "Documentation Governance & Lineage",
+      "authority": "docs/governance/DOCUMENTATION.md",
+      "codeOwners": [
+        "docs/**",
+        ".claude/skills/viewtube-document-system/**"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "uiSurfaces",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.2857142857142857,
+      "lastAudited": "2026-09-27"
+    },
+    {
+      "id": "CAP-VERIFICATION",
+      "name": "Implementation Verification",
+      "authority": "docs/governance/VERIFICATION.md",
+      "codeOwners": [
+        "scripts/**",
+        "src/**/*.test.*",
+        "server/**/*.test.mjs"
+      ],
+      "taskRefs": [],
+      "tests": [],
+      "uiSurfaces": [],
+      "guideRefs": [],
+      "verificationRefs": [],
+      "complete": false,
+      "missing": [
+        "taskRefs",
+        "tests",
+        "uiSurfaces",
+        "guideRefs",
+        "verificationRefs"
+      ],
+      "coverageRatio": 0.2857142857142857,
+      "lastAudited": "2026-09-27"
+    }
+  ]
+}
