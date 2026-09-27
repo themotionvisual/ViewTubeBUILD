@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewtube://schemas/conversation-handoff",
+  "title": "ViewTube Conversation Handoff",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "handoffId",
+    "conversationId",
+    "producedAt",
+    "goal",
+    "currentState",
+    "nextAction",
+    "worklogPath"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "viewtube.conversation-handoff.v1"
+    },
+    "handoffId": {
+      "type": "string",
+      "pattern": "^VT-HANDOFF-"
+    },
+    "conversationId": {
+      "type": "string",
+      "pattern": "^VT-CONV-"
+    },
+    "producedAt": {
+      "type": "string"
+    },
+    "lastEdited": {
+      "type": "string"
+    },
+    "sourceHost": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "currentState": {
+      "type": "object"
+    },
+    "missionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "taskIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "capabilityIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "authoritiesRead": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "completed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "inProgress": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unfinished": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bugsBlockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "opportunitiesRisks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "changedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "doNotRedo": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nextAction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "worklogPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewPath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reconciliationStatus": {
+      "enum": [
+        "UNREVIEWED",
+        "REVIEWING",
+        "PARTIALLY_RECONCILED",
+        "RECONCILED"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
