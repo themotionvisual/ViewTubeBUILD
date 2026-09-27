@@ -14,11 +14,13 @@ describe("Brain evidence quality integration", () => {
   expect(broker).toContain("Missing dataset:")
  })
 
- it("builds one canonical evidence snapshot for statistics, quality and audience reasoning", () => {
+ it("builds one Evidence Intelligence envelope for statistics, quality and audience reasoning", () => {
   const orchestrator = read("src/services/brain/BrainOrchestrator.ts")
-  expect(orchestrator).toContain("buildBrainEvidenceIntelligence")
-  expect(orchestrator).toContain("evidenceQuality")
-  expect(orchestrator).toContain("canonicalEvidence")
-  expect(orchestrator).toContain("buildBrainAudienceIntelligence(canonicalEvidence)")
+  expect(orchestrator).toContain("resolveEvidenceIntelligence")
+  expect(orchestrator).toContain("evidenceIntelligence.evidenceQuality")
+  expect(orchestrator).toContain("evidenceIntelligence.statisticsIntelligence")
+  expect(orchestrator).toContain("evidenceIntelligence.audienceIntelligence")
+  expect(orchestrator).not.toContain("buildBrainEvidenceIntelligence")
+  expect(orchestrator).not.toContain("buildBrainAudienceIntelligence")
  })
 })

@@ -26,22 +26,22 @@
 - [x] Add channel-scope/privacy tests.
 - [ ] Add project/no-project tests.
 - [x] Add personalization-disabled tests.
-- [ ] Migrate BrainContextBroker.
+- [x] Migrate BrainContextBroker.
 - [ ] Migrate SidebarChatbot context assembly.
 - [ ] Migrate BrainHubWidget context assembly.
 - [ ] Classify now-redundant adapter behavior.
 
 ## Evidence & Intelligence
 
-- [ ] Inventory all analytics-canon consumers in Brain.
-- [ ] Define unified EvidenceRecord projection.
-- [ ] Map BrainAnalyticsEvidence.
-- [ ] Map BrainStatisticsBridge.
-- [ ] Map BrainAudienceBridge.
-- [ ] Map AudienceEvidenceCollector.
-- [ ] Map AnomalySignalBridge.
-- [ ] Map OpportunityEvidenceAdapter.
-- [ ] Preserve Statistics/Audience/Channel/Opportunity specialists.
+- [x] Inventory all analytics-canon consumers in Brain.
+- [ ] Implement unified EvidenceRecord projection. Contract drafted in `tasks/system-convergence/EVIDENCE-RECORD-DERIVED-SIGNAL-CONTRACT.md`.
+- [x] Map BrainAnalyticsEvidence.
+- [x] Map BrainStatisticsBridge.
+- [x] Map BrainAudienceBridge.
+- [x] Map AudienceEvidenceCollector.
+- [x] Map AnomalySignalBridge.
+- [x] Map OpportunityEvidenceAdapter.
+- [x] Preserve Statistics/Audience/Channel/Opportunity specialists.
 - [ ] Audit Algorithm Intelligence helper/ledger sprawl.
 - [ ] Add metric comparability guard.
 - [ ] Certify evidence IDs end-to-end.
@@ -122,5 +122,19 @@
 - [x] Migrate BrainOrchestrator bounded algorithm Project context through CreatorContextResolver.
 - [x] Preserve existing canonical stores; no new persistence introduced.
 - [x] Prove RED→GREEN architecture tests in CI.
-- [ ] Replace visibleContext-derived Project details with canonical Project + ContentBuild resolution.
+- [x] Replace visibleContext-derived Project details with canonical Project + ContentBuild resolution.
 - [ ] Add explicit no-project and canonical-ContentBuild resolver fixtures.
+
+
+## Evidence & Intelligence first runtime seam — 2026-09-27
+
+- [x] Complete runtime caller classification for BrainStatisticsBridge, BrainAudienceBridge, BrainAnalyticsEvidence, AudienceEvidenceCollector, AnomalySignalBridge and OpportunityEvidenceAdapter.
+- [x] Add `EvidenceIntelligenceResolver` as a read-only runtime projection facade.
+- [x] Prove resolver RED contract before implementation.
+- [x] Route one canonical analytics snapshot to evidence quality, Statistics Intelligence and optional Audience Intelligence.
+- [x] Route Opportunity evidence through the same Brain runtime facade while preserving its deterministic builder.
+- [ ] Verify BrainOrchestrator migration GREEN in CI.
+- [ ] Prove BrainStatisticsBridge and BrainAudienceBridge have zero production callers after merge.
+- [ ] Donor-harvest BrainAnalyticsEvidence evidence-explanation behavior before quarantine decision.
+- [ ] Define the broader `EvidenceRecord / DerivedSignal` cross-domain contract.
+- [ ] Add metric-comparability guard before cross-window/cross-population comparisons.

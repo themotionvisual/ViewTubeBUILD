@@ -35,10 +35,11 @@
 | Current subsystem | Proposed destination | Disposition | Reason |
 | --- | --- | --- | --- |
 | analytics-canon | Evidence | KEEP | Canonical analytics truth owner. |
-| BrainAnalyticsEvidence | Evidence projection | ADAPTER → PROJECT | Brain-specific conversion should shrink behind shared evidence contract. |
-| BrainStatisticsBridge | Evidence/derived signals | ADAPTER → PROJECT | Translation layer, not separate owner. |
-| BrainAudienceBridge | Evidence/intelligence | ADAPTER → PROJECT | Translation layer, not separate owner. |
-| AudienceEvidenceCollector | Evidence intake | PAIR / MERGE pending callers | Likely reusable collector semantics. |
+| EvidenceIntelligenceResolver | Evidence runtime projection | KEEP facade | One read-only Brain runtime envelope over canonical evidence, quality and specialists; owns no analytics persistence. |
+| BrainAnalyticsEvidence | Evidence projection | DONOR / possible QUARANTINE | No production caller found in 2026-09-27 audit; harvest evidence-explanation semantics before any quarantine. |
+| BrainStatisticsBridge | Evidence/derived signals | ADAPTER → PROJECT | Runtime responsibility is migrating to EvidenceIntelligenceResolver; retain until zero-caller certification. |
+| BrainAudienceBridge | Evidence/intelligence | ADAPTER → PROJECT | Runtime responsibility is migrating to EvidenceIntelligenceResolver; AudienceIntelligence remains the specialist. |
+| AudienceEvidenceCollector | Evidence intake | KEEP / PAIR | OnboardingBootstrap actively uses packet construction; acquisition is distinct from Audience Intelligence. |
 | BrainEvidenceQuality | Evidence quality | KEEP | Unique cross-cutting epistemic responsibility. |
 | AnomalySignalBridge | Derived signals | ADAPTER | Preserve compatibility while signal contract converges. |
 | OpportunityEvidenceAdapter | Derived signals | ADAPTER | Provenance-preserving deterministic builder; may fold later. |
