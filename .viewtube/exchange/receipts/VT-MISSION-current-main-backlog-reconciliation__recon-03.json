@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "receiptId": "VT-RECEIPT-current-main-backlog-recon-03",
+  "worker": "viewtube-document-consolidation",
+  "kind": "consolidation",
+  "changedPaths": [
+    "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+    "ideas/registry.json",
+    "ideas/MASTER_IDEAS.md",
+    "tasks/documentation-backlog-integration/CONSOLIDATION-MANIFEST-BACKLOG-FINISH-PROGRAMS.json",
+    "tasks/documentation-backlog-integration/BACKLOG-DONOR-INBOUND-REFERENCES.md",
+    "tasks/documentation-backlog-integration/todo.md",
+    "governance/convergence/plan-merges.json",
+    "governance/convergence/plan-families.json",
+    "agent/registry/references.md",
+    "tasks/viewtube-finish-program/todo.md",
+    ".viewtube/exchange/work-orders/VT-MISSION-current-main-backlog-reconciliation__donor-consolidation-03.json"
+  ],
+  "checks": [
+    {
+      "name": "idea-bank-preservation",
+      "state": "proven",
+      "evidence": "All 55 expansion ideas from the 100-item audit are preserved in IDEA-LIST-AUDIT-EXPANSION-001 and normalized in ideas/registry.json; 52 remain UNREVIEWED and the three already-shipped Resource Library entries are PROMOTED."
+    },
+    {
+      "name": "ideas-convergence-schema",
+      "state": "proven",
+      "evidence": "105 total ideas validated against convergence idea enums/required fields with zero duplicate IDs, invalid target types or invalid statuses; all 55 imported titles appear in generated MASTER_IDEAS.md."
+    },
+    {
+      "name": "no-loss-backlog-family-accounting",
+      "state": "proven",
+      "evidence": "CONSOL-BACKLOG-FINISH-PROGRAMS accounts for four donor sources across task, decision, reference, idea and conflict classes. Manifest schema check returned zero errors and allUniqueMaterialAccounted=true."
+    },
+    {
+      "name": "inbound-reference-gate",
+      "state": "proven",
+      "evidence": "Inbound references to the September 11 unfinished master, September 25 100-item audit and dated Finish Program were discovered/classified. Archive remains blocked while live references require rewiring."
+    },
+    {
+      "name": "plan-family-lineage",
+      "state": "proven",
+      "evidence": "PLAN-MERGE-0005 records multi-target donor harvest and all active plan families now identify the broad donor sources while reconciliation is in progress."
+    },
+    {
+      "name": "stale-authority-rewire",
+      "state": "proven",
+      "evidence": "agent/registry/references.md no longer calls the external historical HTML Task Index sole authority and no longer presents dated Crown/Brain contracts as current; Finish Program todo now points to Integrated Application + Task Authority."
+    }
+  ],
+  "artifacts": [
+    "tasks/documentation-backlog-integration/CONSOLIDATION-MANIFEST-BACKLOG-FINISH-PROGRAMS.json",
+    "tasks/documentation-backlog-integration/BACKLOG-DONOR-INBOUND-REFERENCES.md",
+    "ideas/lists/product/current-main-audit-expansion-opportunities.md"
+  ],
+  "limitations": [
+    "No donor source was moved or deleted in this wave because live inbound references remain.",
+    "The current reconciliation audit still points to live donor paths and will be rewired only once final archive destinations exist.",
+    "Task Index VNext remains unresolved; donor tasks are routed to plan families/current projections rather than canonical lifecycle mutations."
+  ],
+  "status": "partial"
+}
