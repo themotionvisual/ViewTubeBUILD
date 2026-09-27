@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "receiptId": "VT-RECEIPT-current-main-backlog-recon-01",
+  "worker": "viewtube-document-system",
+  "kind": "reconciliation",
+  "changedPaths": [
+    "docs/programs/INTEGRATED_APPLICATION.md",
+    "docs/registry.json",
+    ".viewtube/exchange/missions/VT-MISSION-current-main-backlog-reconciliation.json",
+    ".viewtube/exchange/work-orders/VT-MISSION-current-main-backlog-reconciliation__archivist.json"
+  ],
+  "checks": [
+    {
+      "name": "current-main-baseline",
+      "state": "proven",
+      "evidence": "Audited main 76519e3d81f33df4a3084f49a369f5edbb1ee937."
+    },
+    {
+      "name": "projects-greenfield-elimination",
+      "state": "supported",
+      "evidence": "Project Builder/Board/Calendar composition, shared ProjectCreationDialog, Project↔ContentBuild identity and shell-governance tests exist on current main."
+    },
+    {
+      "name": "publishing-foundation-elimination",
+      "state": "supported",
+      "evidence": "ApprovedPublishSnapshot and PublishTransaction bind frozen snapshot identity/idempotency and persist YouTube identity during transaction steps."
+    },
+    {
+      "name": "resource-settings-remotion-elimination",
+      "state": "supported",
+      "evidence": "Resource Library route/renderer, Workspace Experience preference controls, and validated 50 static + 50 motion Remotion asset library exist on current main."
+    },
+    {
+      "name": "governance-routing",
+      "state": "documented",
+      "evidence": "Surviving work is routed through Integrated Application, Domain Authorities, Task Authority, Verification and Removed Archive rules rather than a new status ledger."
+    }
+  ],
+  "artifacts": [
+    "docs/programs/INTEGRATED_APPLICATION.md",
+    ".viewtube/exchange/missions/VT-MISSION-current-main-backlog-reconciliation.json"
+  ],
+  "limitations": [
+    "This receipt does not claim all historical backlog items are fully reconciled; it establishes the current-main elimination baseline and execution plan.",
+    "Canonical Task Index state was not mutated because Task Authority requires the active VNext writer path to be positively resolved first.",
+    "User-visible/runtime completion claims still require the verification profile appropriate to each task."
+  ],
+  "status": "partial"
+}
