@@ -958,3 +958,26 @@ Whenever this system changes:
 - PR #174 / #167 — Projects Content Asset Engine
 
 **Conflict rule:** when this document, an older plan and current code disagree, inspect current production code and the latest accepted product decision. Reconcile deliberately and record the result here rather than silently creating another authority.
+
+
+---
+
+## 24. Project page feature opportunity intake — 2026-09-27
+
+**Canonical catalog:** \`docs/architecture/PRODUCT_ARCHITECTURE.md#projects-opportunities\`  
+**Status:** OPPORTUNITY / FUTURE DEVELOPMENT INPUT.
+
+1. **IDEA-PROJ-001 — Project Command Board:** unify Builder + Board command state around lifecycle, readiness, assets, blockers, tasks, publish target and ContentBuild.
+2. **IDEA-PROJ-002 — Smart Project Templates:** reusable stages, briefs, asset requirements, checklists, tool links and AI instructions.
+3. **IDEA-PROJ-003 — Project Readiness Engine:** explicit readiness/blocker evaluation across research, script, media, metadata, thumbnail, policy/legal and publishing requirements.
+4. **IDEA-PROJ-004 — Dependency & Blocker Graph:** show what unfinished tasks/assets/decisions/generations/approvals prevent downstream work.
+5. **IDEA-PROJ-005 — Project Memory:** governed project-scoped decisions, versions, rejected directions, research, style choices, prompts and lessons without a parallel memory silo.
+6. **IDEA-PROJ-006 — Project Timeline:** chronological projection of project events, AI work, files, edits, generations, renders, publishing changes and analytics links.
+7. **IDEA-PROJ-007 — Project Intelligence Panel:** project-scoped evidence-backed recommendations through BrainRuntime/Channel Knowledge.
+8. **IDEA-PROJ-008 — Multi-Video Campaigns:** group Projects into series/campaigns/playlists/courses/launches/experiment programs while preserving individual Project identity.
+9. **IDEA-PROJ-009 — Version & Experiment Manager:** alternative scripts, edits, titles, thumbnails, hooks, cuts, prompts and packages with lineage/outcomes.
+10. **IDEA-PROJ-010 — Post-Publish Learning Loop:** bind measured publication outcomes and validated lessons back to the originating Project/ContentBuild and governed learning.
+
+### Projects integration rule
+
+These extend the existing Project/ContentBuild/Video Package/Asset Engine/publishing spine. They must not introduce a second project identity, second ContentBuild, or independent analytics/learning store. Promote exact work through the normal task program and keep the \`IDEA-PROJ-*\` ID attached until disposition.
