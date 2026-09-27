@@ -10,7 +10,7 @@ import { readBrainUserControls } from "./BrainUserControls"
 import type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
 import type { AudienceIntelligenceSnapshot } from "./AudienceIntelligence"
 import type { BrainEvidenceQualityReport } from "./BrainEvidenceQuality"
-import type { ChannelKnowledgeRetrieval } from "./ChannelKnowledgeProjection"
+import type { CreatorContextEnvelope } from "./CreatorContextResolver"
 import { buildAlgorithmIntelligenceContext, type AlgorithmIntelligencePortfolio } from "./AlgorithmIntelligenceOrchestrator"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
@@ -27,10 +27,17 @@ export const buildBrainContextPack = (input: {
  evidenceQuality?: BrainEvidenceQualityReport | null
  audienceIntelligence?: AudienceIntelligenceSnapshot | null
  algorithmIntelligence?: AlgorithmIntelligencePortfolio | null
- channelKnowledge?: ChannelKnowledgeRetrieval | null
+ creatorContext?: CreatorContextEnvelope | null
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
- const controls = readBrainUserControls(input.channelId)
+ const requestedChannelId = input.channelId || null
+ const creatorContextMatchesChannel = Boolean(
+  input.creatorContext
+  && (input.creatorContext.channelId || null) === requestedChannelId,
+ )
+ const controls = creatorContextMatchesChannel && input.creatorContext
+  ? input.creatorContext.controls
+  : readBrainUserControls(input.channelId)
  const maximumCharacters = input.maximumCharacters || 24_000
  const omittedSections: string[] = []
  const system = clip(input.systemPrompt, 11_000)
@@ -104,13 +111,48 @@ export const buildBrainContextPack = (input: {
   ? clip(buildAlgorithmIntelligenceContext(input.algorithmIntelligence), 4800)
   : ""
 
- const channelKnowledge = controls.personalization && input.channelKnowledge
+ const creatorContext = creatorContextMatchesChannel ? input.creatorContext : null
+ const channelKnowledge = controls.personalization && creatorContext?.channelKnowledge
   ? clip([
-    ...input.channelKnowledge.records.slice(0, 10).map((record) =>
+    ...creatorContext.channelKnowledge.records.slice(0, 10).map((record) =>
      `[${record.knowledgeClass}/${record.confidence}; state=${record.lifecycleState}] ${record.statement} | evidence=${record.evidenceRefs.join(",") || "none"}`),
-    ...input.channelKnowledge.contradictions.slice(0, 6).map((record) =>
+    ...creatorContext.channelKnowledge.contradictions.slice(0, 6).map((record) =>
      `Contradiction: [${record.confidence}] ${record.statement} | evidence=${record.evidenceRefs.join(",") || "none"}`),
    ].join("\n"), 4200)
+  : ""
+
+ const projectContext = controls.allowProjects && creatorContext?.project
+  ? clip([
+    `projectId=${creatorContext.project.projectId || "none"}`,
+    `contentBuildId=${creatorContext.project.contentBuildId || "none"}`,
+    creatorContext.project.title ? `title=${creatorContext.project.title}` : "",
+    creatorContext.project.topic ? `topic=${creatorContext.project.topic}` : "",
+    creatorContext.project.format ? `format=${creatorContext.project.format}` : "",
+    creatorContext.project.plannedPublishAt ? `plannedPublishAt=${creatorContext.project.plannedPublishAt}` : "",
+    creatorContext.provenance.projectSource ? `source=${creatorContext.provenance.projectSource}` : "",
+    creatorContext.project.evidenceIds?.length
+     ? `evidence=${creatorContext.project.evidenceIds.join(",")}`
+     : "",
+   ].filter(Boolean).join("\n"), 2200)
+  : ""
+
+ const creatorStyle = controls.personalization && creatorContext?.styleProfile
+  ? clip([
+    `scope=${creatorContext.styleProfile.scope}; confidence=${creatorContext.styleProfile.confidence}; source=${creatorContext.styleProfile.source}`,
+    creatorContext.styleProfile.assetType ? `assetType=${creatorContext.styleProfile.assetType}` : "",
+    creatorContext.styleProfile.descriptor.voice ? `voice=${creatorContext.styleProfile.descriptor.voice}` : "",
+    creatorContext.styleProfile.descriptor.pacing ? `pacing=${creatorContext.styleProfile.descriptor.pacing}` : "",
+    creatorContext.styleProfile.descriptor.structure ? `structure=${creatorContext.styleProfile.descriptor.structure}` : "",
+    creatorContext.styleProfile.descriptor.openingPattern ? `opening=${creatorContext.styleProfile.descriptor.openingPattern}` : "",
+    creatorContext.styleProfile.descriptor.closingPattern ? `closing=${creatorContext.styleProfile.descriptor.closingPattern}` : "",
+    creatorContext.styleProfile.descriptor.productionQuality ? `productionQuality=${creatorContext.styleProfile.descriptor.productionQuality}` : "",
+    creatorContext.styleProfile.descriptor.vocabulary.prefer.length
+     ? `prefer=${creatorContext.styleProfile.descriptor.vocabulary.prefer.join(",")}`
+     : "",
+    creatorContext.styleProfile.descriptor.vocabulary.avoid.length
+     ? `avoid=${creatorContext.styleProfile.descriptor.vocabulary.avoid.join(",")}`
+     : "",
+   ].filter(Boolean).join("\n"), 2200)
   : ""
 
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
@@ -134,6 +176,8 @@ export const buildBrainContextPack = (input: {
   audience ? "\nAUDIENCE INTELLIGENCE\n" + audience : "",
   algorithm ? "\nALGORITHM / CHANNEL / OPPORTUNITY INTELLIGENCE\n" + algorithm : "",
   channelKnowledge ? "\nCHANNEL KNOWLEDGE\n" + channelKnowledge : "",
+  projectContext ? "\nACTIVE PROJECT CONTEXT\n" + projectContext : "",
+  creatorStyle ? "\nCREATOR STYLE\n" + creatorStyle : "",
   memory ? "\nCONFIRMED CREATOR CONTEXT\n" + memory : "",
   clippedConversation ? "\nRECENT CONVERSATION\n" + clippedConversation : "",
   knowledge ? "\nPUBLIC NICHE KNOWLEDGE\n" + knowledge : "",
@@ -152,7 +196,7 @@ export const buildBrainContextPack = (input: {
    maximumCharacters,
    systemCharacters: system.length,
    evidenceCharacters: evidence.length + evidenceQuality.length + statistics.length + audience.length + algorithm.length,
-   memoryCharacters: memory.length + channelKnowledge.length,
+   memoryCharacters: memory.length + channelKnowledge.length + projectContext.length + creatorStyle.length,
    knowledgeCharacters: knowledge.length + research.length,
    conversationCharacters: clippedConversation.length,
    omittedSections,
