@@ -3,12 +3,12 @@
 **Production Date:** 2026-09-27  
 **Class:** AUDIT / task-workspace evidence  
 **Status:** ACTIVE RECONCILIATION EVIDENCE  
-**Audited Main SHA:** `4c18a8de6c97c4d172df6528ff483fa6a08c4e5c`  
+**Audited Main SHA:** `3ed2bc91f324338fd110a160d65ddbed93806142`  
 **Purpose:** eliminate work already completed or superseded before integrating unfinished work into governed artifacts.
 
 ## Execution refresh — 2026-09-27
 
-Current main advanced **122 commits** beyond the original `76519e3d…` planning baseline before this execution wave.
+Current main advanced substantially beyond the original `76519e3d…` planning baseline before this execution wave.
 
 Newly proven changes that shrink the unfinished interpretation:
 
@@ -18,6 +18,7 @@ Newly proven changes that shrink the unfinished interpretation:
 - **Conversation Handoff + Work Reconciliation is on current main.** Long conversations now have governed `handoff.md`, `worklog.json`, and `review.md` intake packages; do not create another conversation backlog store.
 - **Evidence/intelligence convergence advanced.** Current main contains `EvidenceRecord`, derived-signal convergence work, Evidence Intelligence auditing and additional Brain evidence-quality integration tests. Older Brain/evidence backlog claims must be rechecked before leaf task promotion.
 - **Task Index VNext writer/storage remains unresolved on current main.** Canonical task mutation therefore stays proposal-only.
+- **Project package asset selection authority advanced in PR #512.** Project thumbnail/package selection now keeps canonical ContentBuild selection reversible and idempotent, preserves VariantGroup selection without implicit finalization, and reserves `asset.finalized` for explicit later finalization. Do not retain “fix contradictory package selection/finalization provenance” as open greenfield work.
 
 This refresh does not erase the original baseline; it supersedes its current-state claims for execution.
 
