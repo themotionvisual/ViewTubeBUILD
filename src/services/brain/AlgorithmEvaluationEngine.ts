@@ -1,4 +1,5 @@
 import type { BrainConfidenceLevel } from "../../types"
+import { compareMetricContexts, type MetricComparabilityResult, type MetricComparisonContext } from "../analytics-canon"
 import {
  listAlgorithmIntelligenceEvents,
  recordAlgorithmIntelligenceEvent,
@@ -13,6 +14,7 @@ export interface AlgorithmMetricObservation {
  value: number | null
  observedAt: number
  evidenceId?: string | null
+ comparisonContext?: MetricComparisonContext | null
 }
 
 export interface AlgorithmTargetEvaluation {
@@ -22,6 +24,7 @@ export interface AlgorithmTargetEvaluation {
  observedValue: number | null
  relativeChange: number | null
  target: AlgorithmEvaluationTarget
+ comparability: MetricComparabilityResult | null
 }
 
 export interface AlgorithmEvaluationResult {
@@ -43,17 +46,39 @@ const relativeChange = (baseline: number | null | undefined, current: number | n
 const evaluateTarget = (target: AlgorithmEvaluationTarget, observation: AlgorithmMetricObservation | undefined): AlgorithmTargetEvaluation => {
  const baseline = target.baselineValue ?? null
  const current = observation?.value ?? null
+ const comparability = target.baselineComparisonContext && observation?.comparisonContext
+  ? compareMetricContexts(target.baselineComparisonContext, observation.comparisonContext)
+  : null
+
+ if (comparability && !comparability.comparable) {
+  return {
+   metric: target.metric,
+   status: "unavailable",
+   baselineValue: baseline,
+   observedValue: current,
+   relativeChange: null,
+   target,
+   comparability,
+  }
+ }
+
  const delta = relativeChange(baseline, current)
- if (current == null) return { metric: target.metric, status: "unavailable", baselineValue: baseline, observedValue: null, relativeChange: null, target }
- if (target.direction === "inspect") return { metric: target.metric, status: "neutral", baselineValue: baseline, observedValue: current, relativeChange: delta, target }
- if (baseline == null) return { metric: target.metric, status: "unavailable", baselineValue: null, observedValue: current, relativeChange: null, target }
+ if (current == null) {
+  return { metric: target.metric, status: "unavailable", baselineValue: baseline, observedValue: null, relativeChange: null, target, comparability }
+ }
+ if (target.direction === "inspect") {
+  return { metric: target.metric, status: "neutral", baselineValue: baseline, observedValue: current, relativeChange: delta, target, comparability }
+ }
+ if (baseline == null) {
+  return { metric: target.metric, status: "unavailable", baselineValue: null, observedValue: current, relativeChange: null, target, comparability }
+ }
  const threshold = target.minimumRelativeChange ?? 0
  const met = target.targetValue != null
   ? target.direction === "increase" ? current >= target.targetValue : target.direction === "decrease" ? current <= target.targetValue : Math.abs(current - target.targetValue) <= Math.abs(target.targetValue) * Math.max(threshold, 0.01)
   : target.direction === "increase" ? (delta ?? 0) >= threshold
    : target.direction === "decrease" ? (delta ?? 0) <= -threshold
    : Math.abs(delta ?? 0) <= Math.max(threshold, 0.05)
- return { metric: target.metric, status: met ? "met" : "missed", baselineValue: baseline, observedValue: current, relativeChange: delta, target }
+ return { metric: target.metric, status: met ? "met" : "missed", baselineValue: baseline, observedValue: current, relativeChange: delta, target, comparability }
 }
 
 const confidenceFor = (available: number, total: number): BrainConfidenceLevel => {
@@ -79,7 +104,7 @@ export const evaluateAlgorithmEvent = (input: { event: AlgorithmIntelligenceEven
  const explanation = status === "positive" ? `${met}/${targetResults.length} evaluation targets were met.`
   : status === "negative" ? `${missed}/${targetResults.length} evaluation targets were missed.`
    : status === "mixed" ? `${met} targets were met and ${missed} were missed.`
-    : status === "insufficient_data" ? "The checkpoint was reached but the required metric observations are unavailable."
+    : status === "insufficient_data" ? "The checkpoint was reached but the required metric observations are unavailable or not semantically comparable."
      : status === "pending" ? "The evaluation checkpoint has not been reached yet."
       : "The observed result is neutral relative to the defined targets."
  return { eventId: input.event.id, channelId: input.event.channelId, status, confidence: confidenceFor(available.length, targetResults.length), targetResults, evidenceIds, explanation, evaluatedAt: now }
