@@ -869,4 +869,12 @@ describe("spectrum tone classes", () => {
     const info = renderToStaticMarkup(<WidgetToast status="neutral" title="Heads up" />)
     expect(info).toContain('role="status"')
   })
+  it("owns footer and full-divider width through shell tracks rather than negative margins", () => {
+    const footerMarkup = renderToStaticMarkup(<WidgetFooter>Footer</WidgetFooter>)
+    expect(footerMarkup).toContain("vt-widget-zone-full")
+    expect(widgetSystemCss).toContain(".widget-divider.is-full")
+    expect(widgetSystemCss).not.toContain(".widget-divider.is-full {\n  width: auto;\n  margin-inline: calc(-1 * var(--widget-content-inset));")
+    expect(widgetSystemCss).not.toContain(".widget-footer {\n  box-sizing: border-box;\n  flex: 0 0 auto;\n  margin-inline: calc(-1 * var(--widget-content-inset));")
+  })
+
 })
