@@ -363,7 +363,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   evidenceQuality,
   audienceIntelligence,
   algorithmIntelligence,
-  channelKnowledge: creatorContext ? creatorContext.channelKnowledge : null,
+  creatorContext,
  })
  try {
   if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
@@ -405,7 +405,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    evidenceQuality,
    audienceIntelligence,
    algorithmIntelligence,
-   channelKnowledge: creatorContext ? creatorContext.channelKnowledge : null,
+   creatorContext,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)

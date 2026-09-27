@@ -17,16 +17,18 @@ describe("Brain Channel Knowledge integration", () => {
   expect(resolver).toContain("buildChannelKnowledgeContextFromProfile")
  })
 
- it("resolves task-specific Channel Knowledge once per Brain turn through CreatorContextResolver", () => {
+ it("passes one Creator Context envelope into both Brain context builds", () => {
   const orchestrator = read("src/services/brain/BrainOrchestrator.ts")
   expect(orchestrator).toContain("resolveCreatorContext")
-  expect(orchestrator).toContain("creatorContext.channelKnowledge")
-  expect(orchestrator.match(/creatorContext\.channelKnowledge/g)?.length || 0).toBeGreaterThanOrEqual(2)
+  expect(orchestrator.match(/creatorContext,/g)?.length || 0).toBeGreaterThanOrEqual(2)
   expect(orchestrator).not.toContain("loadRelevantChannelKnowledge")
+  expect(orchestrator).not.toContain("channelKnowledge: creatorContext")
  })
 
- it("preserves contradiction and provenance labels in prompt context", () => {
+ it("lets BrainContextBroker read Channel Knowledge from the Creator Context envelope", () => {
   const broker = read("src/services/brain/BrainContextBroker.ts")
+  expect(broker).toContain("creatorContext?.channelKnowledge")
+  expect(broker).toContain("CHANNEL KNOWLEDGE")
   expect(broker).toContain("evidence=")
   expect(broker).toContain("Contradiction:")
  })
