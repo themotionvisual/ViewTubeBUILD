@@ -76,7 +76,7 @@ Source:
 - [x] Rewire stale agent Task/Crown/Brain authority references.
 - [x] Rewire the Finish Program todo to Integrated Application / Task Authority and record landed A06/B11 foundations.
 - [ ] Rewire remaining active/historical links to archive/manifest destinations.
-- [ ] Copy source bytes to Removed Archive and update archive index/registry only after the link gate is clean.
+- [ ] Copy source bytes to Removed Archive and update archive index/registry only after the link gate is clean. — 1 of 4 principal donors migrated: dated Finish Program task projection.
 
 ## Phase 4 — Donor consolidation
 - [ ] Consolidate 2026-09-11 unfinished master.
