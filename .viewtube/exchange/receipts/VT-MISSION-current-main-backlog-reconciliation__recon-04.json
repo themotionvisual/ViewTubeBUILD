@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "receiptId": "VT-RECEIPT-current-main-backlog-recon-04",
+  "worker": "viewtube-document-consolidation",
+  "kind": "archive-migration",
+  "changedPaths": [
+    "archive/removed/tasks/viewtube-finish-program-2026-09-24.md",
+    "tasks/viewtube-finish-program-2026-09-24.md",
+    "archive/removed/INDEX.md",
+    "tasks/documentation-backlog-integration/CONSOLIDATION-MANIFEST-BACKLOG-FINISH-PROGRAMS.json",
+    "governance/convergence/plan-merges.json",
+    "governance/convergence/plan-families.json",
+    "tasks/documentation-backlog-integration/todo.md"
+  ],
+  "checks": [
+    {
+      "name": "byte-preservation",
+      "state": "proven",
+      "evidence": "Original and archive Git blob are both af68dad94cc926c962d027d7b03a27ac13899e4b."
+    },
+    {
+      "name": "active-source-removal",
+      "state": "proven",
+      "evidence": "Original active task path is absent after archive move."
+    },
+    {
+      "name": "archive-presence",
+      "state": "proven",
+      "evidence": "Archive blob: af68dad94cc926c962d027d7b03a27ac13899e4b"
+    },
+    {
+      "name": "lineage-update",
+      "state": "proven",
+      "evidence": "Consolidation manifest archivedPath, PLAN-MERGE-0005/plan-family memberships and Removed Archive index now resolve to the archived donor."
+    }
+  ],
+  "artifacts": [
+    "archive/removed/tasks/viewtube-finish-program-2026-09-24.md",
+    "tasks/documentation-backlog-integration/CONSOLIDATION-MANIFEST-BACKLOG-FINISH-PROGRAMS.json"
+  ],
+  "limitations": [
+    "Only one of the four principal donor sources is archive-safe in this wave.",
+    "The three large documentation donors remain active until all inbound references are migrated.",
+    "allSourcesArchived remains false for CONSOL-BACKLOG-FINISH-PROGRAMS."
+  ],
+  "status": "partial"
+}
