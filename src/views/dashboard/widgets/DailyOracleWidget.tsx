@@ -490,7 +490,7 @@ export const DailyOracleWidget = ({
       <WidgetWorkflowMain className="daily-oracle-v2">
         <WidgetScrollArea
           ariaLabel={page === "today" ? "Daily Oracle ranked actions" : "Daily Oracle focus controls"}
-          edge="inset"
+          edge="full"
           className="daily-oracle-v2__scroll"
           contentClassName="daily-oracle-v2__content"
         >
