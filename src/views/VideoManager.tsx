@@ -565,6 +565,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    shellClassName="animate-fade-in"
    contentClassName={embedded ? "p-0" : "p-8"}>
    <div className="flex flex-col h-full">
+    <ViewTubeHandoffReceiver targetToolId="video-manager" onPacket={handleLongformOptimizerHandoff} />
     {error && <SubToolboxAlert level="l1" tone="danger" className="mb-6" icon={<AlertCircle size={20} />} title="Video Manager Issue" detail={error} />}
     {saveSuccess && <SubToolboxAlert level="l1" tone="success" className="mb-6" icon={<CheckCircle size={20} />} title="Asset Deployed Successfully" />}
 
