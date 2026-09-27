@@ -504,7 +504,7 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
          <StandardInput aria-label="Target runtime minutes" type="number" min={1} max={180} value={brief.runtimeMinutes} onChange={event => updateBrief("runtimeMinutes", Math.max(1, Number(event.target.value) || 1))} style={{ fontSize: "16px" }} />
         </div>
         <div className="flex items-end">
-         <SubToolboxGridActionButton label="FORGE 3 DIRECTIONS" iconName="sparkles" tone="yellow" onClick={forgeConcepts} disabled={!brief.idea.trim()} className="w-full" />
+         <SubToolboxGridActionButton label={conceptGenerating ? "FORGING…" : "FORGE 3 DIRECTIONS"} iconName="sparkles" tone="yellow" onClick={() => void forgeConcepts()} disabled={!brief.idea.trim() || conceptGenerating} className="w-full" />
         </div>
        </div>
       </SubToolbox>
@@ -545,7 +545,7 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
          })}
          <div className="grid grid-cols-[100px_1fr] gap-2">
           <StandardInput aria-label="Scene count" type="number" min={3} max={12} value={sceneCount} onChange={event => setSceneCount(Math.max(3, Math.min(12, Number(event.target.value) || 6)))} style={{ fontSize: "16px" }} />
-          <SubToolboxGridActionButton label="BUILD SCENE BLUEPRINT" iconName="video" tone="cyan" onClick={buildScenes} disabled={!selectedConcept} />
+          <SubToolboxGridActionButton label={sceneGenerating ? "DESIGNING…" : "BUILD SCENE BLUEPRINT"} iconName="video" tone="cyan" onClick={() => void buildScenes()} disabled={!selectedConcept || sceneGenerating} />
          </div>
         </div>
        ) : (
@@ -566,6 +566,18 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
        overflowVisible
        helpText="Scenes are production blueprints, not just script paragraphs. Every scene carries intent, shot grammar, prompt material, asset needs, timing, transition, and continuity."
       >
+       <div className="mb-2 rounded-[9px] border-[3px] border-black bg-[#F6F8FB] p-2">
+        <label className={compactLabel}>SCRIPT BEATS</label>
+        <StandardTextArea
+         aria-label="Script beats"
+         value={scriptBeatsText}
+         onChange={event => setScriptBeatsText(event.target.value)}
+         placeholder={"Paste or write one script beat per line. Scene Design preserves these as structural source material.\n\nExample:\nThe impossible result\nThe deception is established\nThe trap closes\nThe payoff"}
+         minHeight="112px"
+         style={{ minHeight: "112px", textTransform: "none", fontWeight: 700, fontSize: "16px" }}
+        />
+        <p className="mt-1 text-[9px] font-bold leading-snug text-[#26324A]/60">Optional · one beat per line · carried into governed scene generation and the production packet.</p>
+       </div>
        {scenes.length ? (
         <div className="space-y-2">
          {scenes.map((scene, index) => (
@@ -603,6 +615,10 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
              <label className={compactLabel}>GENERATION PROMPT</label>
              <StandardTextArea aria-label={`Scene ${scene.order} generation prompt`} value={scene.visualPrompt} onChange={event => updateScene(scene.id, "visualPrompt", event.target.value)} minHeight="86px" style={{ minHeight: "86px", textTransform: "none", fontWeight: 700, fontSize: "16px" }} />
             </div>
+            <div className="md:col-span-2">
+             <label className={compactLabel}>MOTION BRIEF</label>
+             <StandardTextArea aria-label={`Scene ${scene.order} motion brief`} value={scene.motionBrief} onChange={event => updateScene(scene.id, "motionBrief", event.target.value)} minHeight="72px" style={{ minHeight: "72px", textTransform: "none", fontWeight: 700, fontSize: "16px" }} />
+            </div>
             <div className="grid grid-cols-[110px_1fr] gap-2 md:col-span-2">
              <div>
               <label className={compactLabel}>SECONDS</label>
@@ -637,7 +653,8 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
        openUnits={4}
        helpText="Each handoff records a shared action packet, generation artifact, workflow chain, and ContentBuild event before navigating to the destination."
       >
-       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+       <div className={compactLabel}>READINESS REVIEW</div>
+       <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         <div className="rounded-[7px] border-[2px] border-black bg-white p-2"><div className={compactLabel}>DIRECTION</div><div className="mt-1 text-[11px] font-[1000] uppercase">{selectedConcept?.label || "—"}</div></div>
         <div className="rounded-[7px] border-[2px] border-black bg-white p-2"><div className={compactLabel}>SCENES</div><div className="mt-1 text-[11px] font-[1000]">{scenes.length}</div></div>
         <div className="rounded-[7px] border-[2px] border-black bg-white p-2"><div className={compactLabel}>ASSETS</div><div className="mt-1 text-[11px] font-[1000]">{new Set(scenes.flatMap(scene => scene.assetNeeds)).size}</div></div>
