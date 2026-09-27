@@ -18,6 +18,7 @@ import { buildPublishingCommandModel } from "./publishingCommandModel"
 import "./FlightCheckWidget.css"
 
 const STORAGE_KEY = "vt_flight_check"
+const taskStorageKey = (packageId: string) => `${STORAGE_KEY}:${packageId || "manual"}`
 
 const DEFAULT_ITEMS = [
   { text: "Rendered in 4K/1080p", done: false },
@@ -82,15 +83,24 @@ export const FlightCheckWidget = ({
 
   const [items, setItems] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || DEFAULT_ITEMS
+      return JSON.parse(localStorage.getItem(taskStorageKey(selectedPackageId)) || "null") || DEFAULT_ITEMS
     } catch {
       return DEFAULT_ITEMS
     }
   })
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  }, [items])
+    try {
+      const next = JSON.parse(localStorage.getItem(taskStorageKey(selectedPackageId)) || "null")
+      setItems(Array.isArray(next) ? next : DEFAULT_ITEMS)
+    } catch {
+      setItems(DEFAULT_ITEMS)
+    }
+  }, [selectedPackageId])
+
+  useEffect(() => {
+    localStorage.setItem(taskStorageKey(selectedPackageId), JSON.stringify(items))
+  }, [items, selectedPackageId])
 
   const canonical = useMemo(() => {
     const videoPackage = packages.find((item) => item.id === selectedPackageId) || packages[0] || null
@@ -152,7 +162,7 @@ export const FlightCheckWidget = ({
                 tone="secondary"
                 value={canonical.videoPackage?.id || ""}
                 onChange={setSelectedPackageId}
-                label="Publishing package / video"
+                label="Project / video publishing package"
                 options={packages.map((item) => ({
                   value: item.id,
                   label: `${item.identity.workingTitle} · ${item.projectId}`,
