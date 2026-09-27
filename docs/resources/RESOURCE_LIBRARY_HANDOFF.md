@@ -43,10 +43,10 @@ The Resource Library is now a real production feature on current main.
 
 | # | Resource | ID | Category | Status |
 |---|---|---|---|---|
-| 1 | How YouTube Recommendations and Discovery Work | youtube-recommendations-discovery | YouTube Strategy | Published |
-| 2 | YouTube Metrics and Dimensions Master Glossary | youtube-metrics-dimensions-glossary | Analytics | Published |
+| 1 | How YouTube Finds Viewers for Your Videos | youtube-recommendations-discovery | YouTube Strategy | Published |
+| 2 | How to Read YouTube Analytics | youtube-metrics-dimensions-glossary | Analytics | Published |
 
-The second document is already substantially authored and registered. Its major sections include analytics surface architecture, API capability matrices, authentication, privacy/timing, dimensions, geography, traffic sources, devices, demographics, views/reach, watch time, Shorts metrics, audience cohorts, revenue, playlists, live metrics, cross-API naming, format applicability, analytical compatibility, developer pipeline guidance, Studio-vs-API discrepancies, myths, diagnostics, glossary, sources, and maintenance metadata.
+Both seed resources were rewritten on 2026-09-26 around a creator-first editorial contract. Resource #1 now teaches the recommendation system through audience fit, discovery surfaces, packaging, watch behavior, satisfaction, catalog relationships and a ViewTube diagnosis workflow. Resource #2 now teaches metrics, dimensions, filters, time windows, traffic sources, audience, retention, revenue, comparisons and question-driven analysis. API/backend detail remains only as optional advanced reference.
 
 ### Remaining first-series resources
 
@@ -65,6 +65,52 @@ The second document is already substantially authored and registered. Its major 
 15. Reading Analytics Correctly: Scope, Windows, Missingness and Statistical Traps
 
 The next logical content task is **Resource #3: Shorts vs Long-Form: Different Systems, Different Signals**.
+
+---
+
+## Creator-First Editorial Authority
+
+The first two resources exposed an important correction: source-grounded research can still fail as creator education if the primary reading path is organized around engineering architecture, API schemas or analyst terminology.
+
+All Resource Library authoring now follows this hierarchy:
+
+1. **Explain it like a creator** — plain language, useful mental model, why it matters.
+2. **Show how it affects a channel or video** — recognizable creator situations.
+3. **Teach diagnosis and action** — what to inspect, compare, test or change.
+4. **Connect the lesson to ViewTube** — relevant tools, workflows and Brain questions.
+5. **Prevent bad conclusions** — myths, limitations, missing context and uncertainty.
+6. **Provide advanced reference** — technical/API/model detail only after the creator path.
+7. **Provide sources and maintenance metadata** — evidence remains explicit and reviewable.
+
+### Required creator test
+
+Before publishing a resource, ask:
+
+> Could an ordinary YouTuber with no API or machine-learning background understand the first half, use it to make a better decision, and know what to open in ViewTube next?
+
+If not, the document is not ready even if the research is technically correct.
+
+### Technical material
+
+Do not delete valuable technical research merely because it is too advanced for the primary learning path.
+
+Instead:
+
+- summarize the creator-relevant implication in the main sections;
+- move field names, schemas, APIs, model architecture and implementation detail to **Advanced Reference**;
+- move ViewTube-internal engineering implementation that does not educate creators into engineering documentation rather than the Resource Library.
+
+### Standard ViewTube handoff
+
+Major educational sections should include a practical ViewTube connection whenever useful:
+
+- what to inspect;
+- what the pattern might mean;
+- what not to assume;
+- which ViewTube tool to open;
+- an evidence-aware Brain question when appropriate.
+
+The canonical resource template now encodes this creator-first order.
 
 ---
 
@@ -821,15 +867,17 @@ Recommended execution:
 
 1. Receive or retrieve the completed research.
 2. Audit factual claims and citations.
-3. Normalize it using the canonical Resource template.
-4. Preserve explicit distinctions between Shorts and long-form metrics/discovery.
-5. Add comparison matrices heavily where appropriate.
-6. Register it under a stable ID such as shorts-vs-long-form-signals.
-7. Update the README from **2 of 15** to **3 of 15**.
-8. Add or update registry test expectations.
-9. Run Resource Library tests.
-10. Inspect the resulting document in /resources on desktop and mobile.
-11. Improve the shared renderer only if the document reveals a reusable gap.
+3. Normalize it using the **creator-first** canonical Resource template.
+4. Open with the creator mental model and practical Shorts-vs-long-form differences before any platform/API detail.
+5. Preserve explicit distinctions between Shorts and long-form metrics/discovery.
+6. Add comparison matrices heavily where appropriate.
+7. Add explicit **Use This in ViewTube** diagnosis/handoff sections.
+8. Register it under a stable ID such as shorts-vs-long-form-signals.
+9. Update the README from **2 of 15** to **3 of 15**.
+10. Add or update registry test expectations.
+11. Run Resource Library tests.
+12. Inspect the resulting document in /resources on desktop and mobile.
+13. Improve the shared renderer only if the document reveals a reusable gap.
 
 ---
 
