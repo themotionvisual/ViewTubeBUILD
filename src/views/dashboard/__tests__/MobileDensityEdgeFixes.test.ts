@@ -44,6 +44,7 @@ describe("mobile widget density and edge contracts", () => {
     expect(legacy).not.toContain("overflow-x: hidden !important")
     expect(mobile).toContain("--vt-widget-edge-safe")
     expect(shellCss).toContain(".vt-widget-shadow-safe")
+    expect(shellCss).toContain(".vt-widget-paint-clip {\n    overflow:visible;")
   })
 
   it("keeps shell interior geometry out of the legacy monolith", () => {
