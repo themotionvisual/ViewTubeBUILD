@@ -2,7 +2,7 @@
 
 **Status:** CANONICAL LIVING WIDGET / DASHBOARD PLANNING + IMPLEMENTATION RESOURCE  
 **Created:** 2026-09-25  
-**Last edited:** 2026-09-26  
+**Last edited:** 2026-09-27  
 **Last audited main:** `cf67573c2ce8eee58f5a63f7d2ae547e165ff3c8`  
 **Current registered widget count:** 68  
 **Executable authority:** `src/views/dashboard/WidgetRegistryBase.ts`, `src/views/dashboard/WidgetRegistry.ts`, `src/views/dashboard/WidgetRenderer.tsx`, `src/views/dashboard/WidgetRendererBase.tsx`, `src/views/dashboard/WidgetShell.tsx`, `src/views/dashboard/DashboardCanvas.tsx`, `src/views/dashboard/storage.ts`, `src/views/dashboard/widgetCertification.ts`, `src/views/dashboard/WidgetPrimitives.tsx`, and widget-local modules under `src/views/dashboard/widgets/`.  
@@ -2217,3 +2217,28 @@ Every recovery/migration PR records:
 The target is not merely visual parity.
 
 > **Recovery should reduce private implementation while increasing certified capability.**
+
+
+---
+
+## AJ. Page feature opportunity intake — 2026-09-27
+
+**Canonical catalog:** \`docs/architecture/PRODUCT_ARCHITECTURE.md#page-surface-feature-opportunity-registry\`  
+**Status:** OPPORTUNITY / PLANNING INPUT — not a shipped-widget claim.
+
+Dashboard-local development should consider these stable product ideas before inventing new widgets or stores:
+
+1. **IDEA-DASH-001 — Creator Command Center:** compose channel health, projects, urgent work, publishing, anomalies, opportunities, Brain recommendations and recent activity.
+2. **IDEA-DASH-002 — Opportunity Radar:** surface evidence-backed topics/videos/formats/traffic/search/audience/content gaps through existing Opportunity Intelligence.
+3. **IDEA-DASH-003 — Channel Pulse:** compact truthful channel-health instrument spanning views/watch time/subscribers/revenue/CTR/retention/cadence/momentum.
+4. **IDEA-DASH-004 — Anomaly Monitor:** detect and explain meaningful deviations using analytics-canon + specialist anomaly evidence.
+5. **IDEA-DASH-005 — Today / This Week Workspace:** prioritized creator operations view over projects, tasks, deadlines, comments and publishing plans.
+6. **IDEA-DASH-006 — AI Brain Briefing:** BrainRuntime-generated briefing grounded in current creator/channel/project evidence.
+7. **IDEA-DASH-007 — Content Pipeline Visualizer:** Project/ContentBuild projection across idea → research → script → production → edit → package → publish → measure → learn.
+8. **IDEA-DASH-008 — Goal & Forecast Tracker:** creator goals + measured trajectory, with forecasts clearly distinguished from measured fact.
+9. **IDEA-DASH-009 — Recent Changes / Activity Ledger:** project existing receipts/events/activity into one view; do not create another generic ledger.
+10. **IDEA-DASH-010 — Dashboard Composer:** saved creator-defined layouts/workspaces using the existing widget registry/layout persistence system.
+
+### Dashboard integration rule
+
+Promote an idea only after checking current widget overlap/consolidation candidates. New views register through the canonical Widget Registry, use shared primitives/shell/certification, support truthful preview/disconnected states, and consume owning capabilities rather than becoming backend owners. Preserve each \`IDEA-DASH-*\` ID in scoped tasks/PRs until shipped, merged, deferred or retired.
