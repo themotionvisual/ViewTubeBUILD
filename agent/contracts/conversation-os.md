@@ -44,3 +44,16 @@ Prefer Task Dossier + Mission + decisions + receipts + current code + owner docs
 ## Natural response
 
 Ordinary response should communicate result, evidence, blockers and useful recommendations. Do not force Herald tiers or twelve fixed headings.
+
+
+## Long conversation handoff
+
+When the thread becomes too large for safe continuation, changes owner/phase, or has substantial unfinished work:
+
+1. run `viewtube-conversation-handoff`;
+2. write `tasks/conversation-intake/<conversation-id>/handoff.md`;
+3. write the comprehensive `worklog.json`;
+4. continue from that package in the new conversation;
+5. run `viewtube-conversation-work-reconciliation` so every planned/completed/uncompleted item is valued, deduplicated and routed.
+
+Do not use a handoff document as a second Task Index.
