@@ -51,11 +51,19 @@
   border-block-end: 1px solid color-mix(in srgb, var(--widget-color) 38%, white);
 }
 .widget-video-select-menu.is-portalled .widget-video-select-search {
-  padding: 5px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   background: #fff;
 }
 .widget-video-select-menu.is-portalled .widget-video-select-search > .widget-search-input {
   box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
   border: 2px solid var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color) 52%, white));
   border-radius: var(--vt-primitive-radius, 6px);
   background: color-mix(in srgb, var(--widget-color) 8%, white);
