@@ -83,12 +83,12 @@ export const VerificationExplainerWidget: React.FC<
       <WidgetWorkflowMain className="about-vt">
         <WidgetScrollArea
           ariaLabel={page === "system" ? "VIEWTUBE system map" : "VIEWTUBE trust and data map"}
-          edge="inset"
+          edge="full"
           className="about-vt__scroll"
           contentClassName="about-vt__scroll-content"
         >
           {page === "system" ? (
-            <div className="about-vt__page is-system">
+            <div className="about-vt__page vt-widget-track-stack is-system">
               <WidgetSection edge="full" className="about-vt__intro">
                 <div className="about-vt__intro-copy">
                   <div className="about-vt__intro-row">
@@ -147,7 +147,7 @@ export const VerificationExplainerWidget: React.FC<
               </WidgetSection>
             </div>
           ) : (
-            <div className="about-vt__page is-trust">
+            <div className="about-vt__page vt-widget-track-stack is-trust">
               <WidgetSection edge="full" className="about-vt__intro is-trust-intro">
                 <div className="about-vt__intro-copy">
                   <div className="about-vt__intro-row">
