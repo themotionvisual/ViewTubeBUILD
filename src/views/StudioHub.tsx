@@ -9,6 +9,7 @@ import ScriptArchitect from "./ScriptArchitect"
 import ActionableTactics from "./ActionableTactics"
 import PreLaunchPriming from "../components/PreLaunchPriming"
 import VideoManager from "./VideoManager"
+import ConceptSceneStudio from "./ConceptSceneStudio"
 import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
 import { EndScreenTool } from "../components/EndScreenTool"
@@ -46,8 +47,11 @@ const StudioHub: React.FC = () => {
 
     {/* Natively Supported Tools */}
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
+    <ConceptSceneStudio collapsible isOpenInitial={false} paletteIndex={11} />
     <React.Suspense fallback={null}>
-     <VideoDirector collapsible isOpenInitial={false} paletteIndex={11} />
+     <div id="video-director" className="scroll-mt-24">
+      <VideoDirector collapsible isOpenInitial={false} paletteIndex={0} />
+     </div>
     </React.Suspense>
     <StudioPublishingCockpit />
     <VideoPublisher collapsible isOpenInitial={false} paletteIndex={1} />
