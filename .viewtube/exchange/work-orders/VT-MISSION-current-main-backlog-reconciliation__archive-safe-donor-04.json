@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "executionId": "VT-EXEC-current-main-backlog-reconciliation-04",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "d026e7a4c0b99314e205188139a0336a2b3df3ac",
+  "headRef": "docs/backlog-archive-safe-donor-wave1-2026-09-27",
+  "writers": [
+    {
+      "role": "viewtube-document-consolidation",
+      "paths": [
+        "archive/removed/**",
+        "tasks/documentation-backlog-integration/**"
+      ]
+    },
+    {
+      "role": "viewtube-convergence-governance",
+      "paths": [
+        "governance/convergence/plan-merges.json",
+        "governance/convergence/plan-families.json"
+      ]
+    }
+  ],
+  "reviewers": [
+    "viewtube-archivist",
+    "viewtube-verification-chancellor"
+  ],
+  "orderedSteps": [
+    "Select only donor sources with no unresolved active inbound references.",
+    "Copy source bytes unchanged to a mirrored Removed Archive path.",
+    "Verify archive blob identity before deleting active source.",
+    "Update consolidation manifest, plan-merge/plan-family lineage and archive index.",
+    "Delete active source only after references resolve to archive/current survivor.",
+    "Run governance and broken-reference checks."
+  ],
+  "testsRequired": [
+    "source/archive blob identity",
+    "source path absent after move",
+    "archive path present",
+    "consolidation manifest schema",
+    "source-governance and convergence checks"
+  ],
+  "releaseRequired": false,
+  "status": "in_progress"
+}
