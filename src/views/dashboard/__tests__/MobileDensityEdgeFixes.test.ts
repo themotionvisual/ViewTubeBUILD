@@ -17,8 +17,16 @@ const assetCss = readFileSync(new URL("../widgets/VideoAssetEngineWidget.css", i
 const legacy = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const flightCss = readFileSync(new URL("../widgets/FlightCheckWidget.css", import.meta.url), "utf8")
 const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
+const navigationCss = readFileSync(new URL("../../../components/navigation/adaptive-navigation.css", import.meta.url), "utf8")
 
 describe("mobile widget density and edge contracts", () => {
+  it("does not reserve a desktop scroll-track lane around the mobile dashboard", () => {
+    expect(navigationCss).toContain('.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main')
+    expect(navigationCss).toContain("padding: 20px 8px 300px")
+    expect(navigationCss).toContain("padding-inline: 8px")
+    expect(navigationCss).toContain("scrollbar-gutter: auto")
+  })
+
   it("does not reserve an invisible mobile scroll gutter and does not re-clamp cells in legacy CSS", () => {
     expect(scrollbar).toContain("@media (pointer: coarse), (max-width: 767px)")
     expect(scrollbar).toContain("padding-inline: 0")
@@ -68,6 +76,8 @@ describe("mobile widget density and edge contracts", () => {
     expect(about).not.toContain(".about-vt__intro,\n.about-vt__handoff")
     expect(oracle).not.toContain(".daily-oracle-v2__source-strip,\n.daily-oracle-v2__footer")
     expect(oracle).not.toContain("text-overflow: ellipsis")
+    expect(scrollbar).toContain(".vt-widget-track-stack")
+    expect(scrollbar).toContain(".vt-widget-track-stack > :is(")
   })
 
   it("lets header toggle labels wrap instead of collide", () => {
