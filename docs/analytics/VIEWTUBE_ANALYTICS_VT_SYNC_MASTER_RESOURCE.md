@@ -203,3 +203,24 @@ Analytics consolidation is complete when:
 - controller/mark-scale migration no longer depends on compatibility title matching;
 - Brain/Intelligence evidence cites canonical datasets rather than copied metric stores;
 - historical migration docs can be read without being mistaken for present state.
+
+
+## 10. Analytics page feature opportunity intake — 2026-09-27
+
+**Canonical catalog:** \`docs/architecture/PRODUCT_ARCHITECTURE.md#analytics-opportunities\`  
+**Status:** OPPORTUNITY / FUTURE DEVELOPMENT INPUT.
+
+1. **IDEA-AN-001 — Analytics Explorer:** flexible query workspace constrained by real metric/dimension/window/report capability.
+2. **IDEA-AN-002 — Performance Decomposition:** explain measurable contributors to change without presenting correlation as causation.
+3. **IDEA-AN-003 — Audience Journey Map:** visualize supported discovery/watch/continuation/subscription/return/playlist transitions and mark unavailable links explicitly.
+4. **IDEA-AN-004 — Video Lifecycle Analyzer:** compare launch/growth/plateau/revival/long-tail shapes with truthful window semantics.
+5. **IDEA-AN-005 — Retention Intelligence Lab:** hooks, dips, spikes, rewatch, abandonment, chapters, duration patterns and recurring structures.
+6. **IDEA-AN-006 — Traffic Intelligence:** deep source exploration across supported browse/suggested/search/Shorts/external/playlists/channel/notification/end-screen families.
+7. **IDEA-AN-007 — Content Pattern Discovery:** correlation discovery across content/packaging/format/timing traits with explicit causal limits.
+8. **IDEA-AN-008 — Comparative Cohorts:** creator-defined compatible cohorts by topic, format, duration, thresholds, period and other governed dimensions.
+9. **IDEA-AN-009 — Experiment Analytics:** hypothesis/exposure/outcome/limitations view for packaging, workflow, publishing and content experiments.
+10. **IDEA-AN-010 — Analytics-to-Brain Learning Pipeline:** convert validated findings into structured evidence/learning candidates rather than silent model memory.
+
+### Analytics integration rule
+
+All ten ideas read through VT-SYNC + analytics-canon and the Analytics Capability Registry/contracts. No idea may infer arbitrary dimension × metric compatibility, treat missing as zero, substitute upload date for metric windows, or create a parallel analytics truth store. Brain-facing outputs remain evidence-linked and scope/freshness aware.
