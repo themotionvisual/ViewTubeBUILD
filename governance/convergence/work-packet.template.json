@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "viewtube.work-packet.v1",
+  "packetId": "VT-WORK-...",
+  "title": "",
+  "intent": "",
+  "capabilityIds": [],
+  "planFamilyId": null,
+  "existingWorkChecked": [],
+  "priorArtVerdict": "NEW",
+  "convergenceDecision": "CREATE_REVIEW",
+  "taskIds": [],
+  "missionId": null,
+  "branch": null,
+  "pullRequest": null,
+  "codePaths": [],
+  "authorityRefs": [],
+  "decisionRefs": [],
+  "ideaRefs": [],
+  "acceptance": [],
+  "evidenceRefs": [],
+  "blockers": [],
+  "nextAction": ""
+}
