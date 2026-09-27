@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import ResourceLibrary from "./ResourceLibrary"
 
 describe("Resource Library production reader", () => {
-  it("renders the first canonical Markdown resource through Toolbox document modules", () => {
+  it("renders the creator-first recommendations guide through Toolbox document modules", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter
         initialEntries={[
@@ -17,14 +17,15 @@ describe("Resource Library production reader", () => {
     )
 
     expect(html).toContain("RESOURCE LIBRARY")
-    expect(html).toContain("How YouTube Recommendations and Discovery Work")
-    expect(html).toContain("Surface Comparison Matrix")
+    expect(html).toContain("How YouTube Finds Viewers for Your Videos")
+    expect(html).toContain("The Creator Mental Model")
+    expect(html).toContain("Diagnose a Video in ViewTube")
     expect(html).toContain("vt-resource-table")
     expect(html).toContain("vt-resource-checklist")
     expect(html).toContain("vt-resource-flow")
   })
 
-  it("renders the metrics glossary with tables, checklists and process visuals", () => {
+  it("renders the creator-first analytics guide with practical analytics modules", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter
         initialEntries={[
@@ -35,9 +36,9 @@ describe("Resource Library production reader", () => {
       </MemoryRouter>,
     )
 
-    expect(html).toContain("YouTube Metrics and Dimensions Master Glossary")
-    expect(html).toContain("Analytics Surface Architecture")
-    expect(html).toContain("Cross-API Naming Map")
+    expect(html).toContain("How to Read YouTube Analytics")
+    expect(html).toContain("Metrics, Dimensions, Filters and Time Windows")
+    expect(html).toContain("Answer Creator Questions by Combining Data")
     expect(html).toContain("vt-resource-table")
     expect(html).toContain("vt-resource-checklist")
     expect(html).toContain("vt-resource-flow")
