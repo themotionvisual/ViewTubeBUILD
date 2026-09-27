@@ -129,14 +129,14 @@ That is much more useful than simply opening a dashboard and staring at “views
 
 Most creator analytics fit into a simple journey:
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     A[People Encounter the Video] --> B[Some Choose It]
     B --> C[They Watch]
     C --> D[They React and Continue or Leave]
     D --> E[Some Return or Subscribe]
     E --> F[Some Viewing Produces Revenue]
-\`\`\`
+```
 
 Different metrics help you understand each stage.
 
