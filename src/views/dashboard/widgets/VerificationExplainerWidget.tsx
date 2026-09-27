@@ -204,7 +204,7 @@ export const VerificationExplainerWidget: React.FC<
         </WidgetScrollArea>
       </WidgetWorkflowMain>
 
-      <WidgetFooter className="about-vt__footer">
+      <WidgetFooter className="about-vt__footer vt-widget-zone-full">
         <WidgetSizedButton
           height={24}
           textFit="adaptive"
