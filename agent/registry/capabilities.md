@@ -9,7 +9,7 @@ A future capability-registry generator should target the Conversation OS / Crown
 
 | Surface | State | Notes |
 |---|---|---|
-| Skills | ✅ **in use** | 21 repo · 60 external · built-ins |
+| Skills | ✅ **in use** | 23 repo · 60 external · built-ins |
 | MCP servers | ✅ **in use** | 8 connected |
 | CI workflows | ✅ **in use** | 4 |
 | Scripts | ⚠️ **partial** | 28 present; 2 npm entries point at missing files |
@@ -31,7 +31,7 @@ rather than self-reported.
 | Coordination | `viewtube-crown` · `viewtube-king-emperor-bridge` · `viewtube-conflict-arbiter` · `viewtube-task-artifact-bridge` |
 | Princes | `prince-brain` · `prince-citadel` · `prince-compass` · `prince-forge` · `prince-observatory` |
 | Discipline | `viewtube-skill-finder` · `viewtube-solution-finder` · `viewtube-docs-grill` · `viewtube-skill-authoring` · `viewtube-verification-chancellor` |
-| Domain | `viewtube-ai-system-governor` · `viewtube-youtube-editor-system` · `viewtube-widget-dashboard` · `viewtube-mobile-widget-system` · `viewtube-toolbox-builder` · `youtube-api-expert` |
+| Domain | `viewtube-ai-system-governor` · `viewtube-dashboard-widget-fullstack` · `viewtube-youtube-editor-system` · `viewtube-widget-dashboard` · `viewtube-mobile-widget-system` · `viewtube-toolbox-builder` · `viewtube-toolbox-subtoolbox-builder` · `youtube-api-expert` |
 
 **Orphaned** — `skills/viewtube-youtube-auth-api-stabilization/` is loaded by nothing.
 `skills/viewtube-toolbox-builder/` duplicates the `.claude/` copy byte-for-byte.
