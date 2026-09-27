@@ -34,7 +34,7 @@
 ## Evidence & Intelligence
 
 - [x] Inventory all analytics-canon consumers in Brain.
-- [ ] Define unified EvidenceRecord projection.
+- [ ] Implement unified EvidenceRecord projection. Contract drafted in `tasks/system-convergence/EVIDENCE-RECORD-DERIVED-SIGNAL-CONTRACT.md`.
 - [x] Map BrainAnalyticsEvidence.
 - [x] Map BrainStatisticsBridge.
 - [x] Map BrainAudienceBridge.
