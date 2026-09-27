@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "viewtube.code-ownership.v1",
+  "lastEdited": "2026-09-27",
+  "records": [
+    {
+      "id": "OWNER-CREATOR-CONTEXT",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT"
+      ],
+      "owner": "Creator Context & Knowledge",
+      "patterns": [
+        "src/services/brain/**",
+        "src/features/projects/**"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-EVIDENCE",
+      "capabilityIds": [
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "owner": "Evidence & Intelligence",
+      "patterns": [
+        "src/features/vt-sync-local/**",
+        "src/services/brain/**"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-PROJECT",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "owner": "Projects + ContentBuild",
+      "patterns": [
+        "src/features/projects/**",
+        "src/services/contentBuild*"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-ASSET",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "owner": "Asset Engine",
+      "patterns": [
+        "src/features/vault/**",
+        "src/services/asset*"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-OPERATIONS",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "owner": "Creator Operations & Generation",
+      "patterns": [
+        "src/services/brain/**",
+        "src/features/video-director/**",
+        "src/features/editor/**"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-OUTCOME",
+      "capabilityIds": [
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "owner": "Outcomes, Evaluation & Learning",
+      "patterns": [
+        "src/services/brain/**",
+        "src/services/analytics*"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-BRAIN",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE"
+      ],
+      "owner": "Brain Runtime",
+      "patterns": [
+        "src/services/brain/**",
+        "src/views/BrainHub*"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-ANALYTICS",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON"
+      ],
+      "owner": "VT-SYNC + analytics-canon",
+      "patterns": [
+        "src/features/vt-sync-local/**"
+      ],
+      "confidence": "VERIFIED"
+    },
+    {
+      "id": "OWNER-EDITOR",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER"
+      ],
+      "owner": "Editor + Remotion",
+      "patterns": [
+        "src/features/editor/**",
+        "src/server/vt-e1-render-server.mjs"
+      ],
+      "confidence": "VERIFIED"
+    },
+    {
+      "id": "OWNER-PUBLISH",
+      "capabilityIds": [
+        "CAP-PUBLISH"
+      ],
+      "owner": "Publisher",
+      "patterns": [
+        "src/services/youtube/**",
+        "src/views/*Publish*",
+        "src/features/*publish*"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-WIDGETS",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "owner": "Dashboard Widget System",
+      "patterns": [
+        "src/views/dashboard/**",
+        "src/components/dashboard/**"
+      ],
+      "confidence": "PARTIAL"
+    },
+    {
+      "id": "OWNER-DOCS",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "owner": "Documentation Governance",
+      "patterns": [
+        "docs/**",
+        ".claude/skills/viewtube-document-system/**"
+      ],
+      "confidence": "VERIFIED"
+    },
+    {
+      "id": "OWNER-VERIFY",
+      "capabilityIds": [
+        "CAP-VERIFICATION"
+      ],
+      "owner": "Verification",
+      "patterns": [
+        "scripts/**",
+        "src/**/*.test.*",
+        "server/**/*.test.mjs"
+      ],
+      "confidence": "PARTIAL"
+    }
+  ]
+}
