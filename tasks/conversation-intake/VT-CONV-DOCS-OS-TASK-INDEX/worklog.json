@@ -1,0 +1,674 @@
+{
+  "schemaVersion": "viewtube.conversation-work-log.v1",
+  "conversationId": "VT-CONV-DOCS-OS-TASK-INDEX",
+  "created": "2026-09-27",
+  "lastEdited": "2026-09-27",
+  "sourceHost": "ChatGPT",
+  "reviewStatus": "PARTIALLY_RECONCILED",
+  "items": [
+    {
+      "itemId": "VT-CWI-DOCS-001",
+      "title": "Documentation governance and authority graph",
+      "summary": "Create the global documentation authority/registry/archive system.",
+      "details": "Implemented Phase A governance foundation, machine registry, schemas, Removed Archive foundation and authority routing.",
+      "kind": "DOCUMENTATION",
+      "conversationState": "VERIFIED_IN_CONVERSATION",
+      "domains": [
+        "governance"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "surfaces": [],
+      "sourceRefs": [
+        "PR #462"
+      ],
+      "changedPaths": [
+        "docs/governance/DOCUMENTATION.md",
+        "docs/registry.json",
+        "archive/removed/"
+      ],
+      "branchPrRefs": [
+        "PR #462"
+      ],
+      "evidenceRefs": [
+        "merged PR #462"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "documentation governance",
+        "authority registry",
+        "removed archive"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Prevents duplicate authorities and lost planning across the entire application."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "Documentation Governance",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ATTACH_RECEIPT_EVIDENCE",
+      "targetRefs": [
+        "docs/governance/DOCUMENTATION.md",
+        "PR #462"
+      ],
+      "harvestedMaterial": [
+        "authority graph",
+        "machine registry",
+        "lossless archive rules"
+      ],
+      "reviewNotes": "Merged and current; no new parallel plan needed."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-002",
+      "title": "Product Completion Constitution, Product Architecture and Integrated Application Program",
+      "summary": "Replace ambiguous One Goal / Finish Program naming and responsibilities with bounded global authorities.",
+      "details": "Created stable global completion/product/program authorities and capability registry.",
+      "kind": "DOCUMENTATION",
+      "conversationState": "VERIFIED_IN_CONVERSATION",
+      "domains": [
+        "product-architecture",
+        "program"
+      ],
+      "capabilityIds": [],
+      "surfaces": [],
+      "sourceRefs": [
+        "PR #462"
+      ],
+      "changedPaths": [
+        "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "branchPrRefs": [
+        "PR #462"
+      ],
+      "evidenceRefs": [
+        "merged PR #462"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "one goal",
+        "finish program",
+        "product architecture",
+        "integrated application"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Creates the top-level model for what ViewTube is and how it converges."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "Global authorities",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ATTACH_RECEIPT_EVIDENCE",
+      "targetRefs": [
+        "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "completion doctrine",
+        "Master Tools",
+        "six-system convergence",
+        "cross-system workstreams"
+      ],
+      "reviewNotes": "Merged; historical sources remain donor/provenance."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-003",
+      "title": "Deep Research & Construction Master Source",
+      "summary": "Establish the exceptional uploaded research/construction plan as privileged strategic prior art.",
+      "details": "Preserved full source, registered MASTER_SOURCE tier and linked it into architecture/program/skills.",
+      "kind": "REFERENCE",
+      "conversationState": "VERIFIED_IN_CONVERSATION",
+      "domains": [
+        "product-architecture",
+        "research"
+      ],
+      "capabilityIds": [],
+      "surfaces": [],
+      "sourceRefs": [
+        "docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md",
+        "PR #462"
+      ],
+      "changedPaths": [
+        "docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md"
+      ],
+      "branchPrRefs": [
+        "PR #462"
+      ],
+      "evidenceRefs": [
+        "exact-match source verification",
+        "merged PR #462"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "master source",
+        "deep research",
+        "construction plan"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "Preserves unusually rich product/tool/research ideas as mandatory prior art without overriding current truth."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "Master Source tier",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ALREADY_TRACKED",
+      "targetRefs": [
+        "docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md"
+      ],
+      "harvestedMaterial": [
+        "master-tool ideas",
+        "AI/video/integration research",
+        "capability atlas"
+      ],
+      "reviewNotes": "Current Master Source; mine for future opportunities rather than duplicate it."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-004",
+      "title": "Conversation OS, Crown and Task Authority",
+      "summary": "Separate conversation continuity, mission coordination and canonical task mutation.",
+      "details": "Phase C replaced Herald as current protocol and narrowed each owner.",
+      "kind": "INTEGRATION",
+      "conversationState": "VERIFIED_IN_CONVERSATION",
+      "domains": [
+        "governance",
+        "agents",
+        "tasks"
+      ],
+      "capabilityIds": [],
+      "surfaces": [],
+      "sourceRefs": [
+        "PR #464"
+      ],
+      "changedPaths": [
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/CROWN.md",
+        "docs/governance/TASK_AUTHORITY.md"
+      ],
+      "branchPrRefs": [
+        "PR #464"
+      ],
+      "evidenceRefs": [
+        "merged PR #464"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "conversation os",
+        "crown",
+        "task authority",
+        "herald"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Provides one agent coordination model without multiplying ledgers."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "Governance authorities",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ATTACH_RECEIPT_EVIDENCE",
+      "targetRefs": [
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/CROWN.md",
+        "docs/governance/TASK_AUTHORITY.md"
+      ],
+      "harvestedMaterial": [
+        "Herald prior-art rules",
+        "mission/work-order split",
+        "evidence-gated task mutation"
+      ],
+      "reviewNotes": "Merged; Herald remains donor/compatibility only."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-005",
+      "title": "Brain and Prompt authority consolidation",
+      "summary": "Reduce overlapping AI management/runtime/prompt authorities.",
+      "details": "Created stable Brain and Prompt authorities and demoted AI-specific work-management ownership.",
+      "kind": "DOCUMENTATION",
+      "conversationState": "VERIFIED_IN_CONVERSATION",
+      "domains": [
+        "brain",
+        "prompts"
+      ],
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE"
+      ],
+      "surfaces": [
+        "Brain Hub",
+        "AI surfaces"
+      ],
+      "sourceRefs": [
+        "PR #481"
+      ],
+      "changedPaths": [
+        "docs/domains/BRAIN.md",
+        "docs/specifications/PROMPTS.md",
+        "docs/specifications/prompt-registry.json"
+      ],
+      "branchPrRefs": [
+        "PR #481"
+      ],
+      "evidenceRefs": [
+        "merged PR #481"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "similarityKeys": [
+        "brain runtime",
+        "prompt system",
+        "ai systems management"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Removes AI-specific duplicate governance and clarifies runtime ownership."
+      },
+      "relationship": "COMPLETED_ALREADY",
+      "suggestedDestination": "Brain domain authority / Prompt specification",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ATTACH_RECEIPT_EVIDENCE",
+      "targetRefs": [
+        "docs/domains/BRAIN.md",
+        "docs/specifications/PROMPTS.md"
+      ],
+      "harvestedMaterial": [
+        "runtime ownership",
+        "prompt families",
+        "context/evidence boundaries"
+      ],
+      "reviewNotes": "Merged; runtime implementation gaps remain separate application work."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-006",
+      "title": "Task Index VNext structured ledger and control room",
+      "summary": "Replace external monolithic HTML task database with repo-native structured canonical storage and generated UI.",
+      "details": "Conversation-local Phase E prototype selected the 1,542-task donor, designed sharded storage, Task Authority mutation rules and a read-only control room. Not yet committed to current main.",
+      "kind": "INTEGRATION",
+      "conversationState": "PARTIAL",
+      "domains": [
+        "tasks",
+        "governance",
+        "agents"
+      ],
+      "capabilityIds": [],
+      "surfaces": [
+        "developer control room"
+      ],
+      "sourceRefs": [
+        "legacy Task Index donors",
+        "docs/governance/TASK_AUTHORITY.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [
+        "task-index-vnext-phase-e-2026-09-27"
+      ],
+      "evidenceRefs": [
+        "conversation-local focused tests and screenshot checks; not repo-canonical"
+      ],
+      "dependencies": [
+        "current-main reconciliation",
+        "donor import",
+        "repo commit"
+      ],
+      "blockers": [
+        "local prototype has not been landed to GitHub"
+      ],
+      "similarityKeys": [
+        "task index",
+        "task authority",
+        "vt tasks",
+        "control room"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "CRITICAL",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "HIGH",
+        "rationale": "Task Authority cannot become fully operational until one repo-native canonical ledger/writer exists."
+      },
+      "relationship": "CONTINUATION",
+      "suggestedDestination": "Integrated Application Program / Task Index VNext",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ALREADY_TRACKED",
+      "targetRefs": [
+        "docs/programs/INTEGRATED_APPLICATION.md",
+        "docs/governance/TASK_AUTHORITY.md"
+      ],
+      "harvestedMaterial": [
+        "1,542-task superset donor",
+        "historical status as claim",
+        "sharded storage",
+        "evidence-gated DONE",
+        "read-only generated UI"
+      ],
+      "reviewNotes": "Resume immediately after this handoff-system PR; do not trust uncommitted local artifacts without revalidation."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-007",
+      "title": "Conversation Handoff and Work Reconciliation system",
+      "summary": "Create a cross-agent process for long-thread handoffs and comprehensive conversation work intake.",
+      "details": "Current branch adds specification, schemas, workflow, skills, templates, intake workspace and Conversation OS/Documentation wiring.",
+      "kind": "WORKFLOW",
+      "conversationState": "STARTED",
+      "domains": [
+        "governance",
+        "agents",
+        "documentation"
+      ],
+      "capabilityIds": [],
+      "surfaces": [],
+      "sourceRefs": [
+        "current conversation request"
+      ],
+      "changedPaths": [
+        "docs/governance/CONVERSATION_HANDOFFS.md",
+        "tasks/conversation-intake/",
+        ".claude/skills/viewtube-conversation-handoff/",
+        ".claude/skills/viewtube-conversation-work-reconciliation/"
+      ],
+      "branchPrRefs": [
+        "docs/conversation-handoff-reconciliation-2026-09-27"
+      ],
+      "evidenceRefs": [
+        "branch changes; PR pending"
+      ],
+      "dependencies": [
+        "branch verification",
+        "PR review"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "conversation handoff",
+        "work log",
+        "handoff document",
+        "plan reconciliation"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "Prevents long conversations from losing or duplicating development work."
+      },
+      "relationship": "EXPANDS",
+      "suggestedDestination": "Conversation OS specification",
+      "reviewStatus": "RECONCILED",
+      "disposition": "UPDATE_SPECIFICATION",
+      "targetRefs": [
+        "docs/governance/CONVERSATION_HANDOFFS.md",
+        "docs/governance/CONVERSATION_OS.md"
+      ],
+      "harvestedMaterial": [
+        "handoff triggers",
+        "work-log schema",
+        "valuation/dedupe/disposition workflow"
+      ],
+      "reviewNotes": "This intake package is the first live proof of the new system."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-008",
+      "title": "Migrate domain-specific handoff and update-log practices",
+      "summary": "Unify scattered Editor, Toolbox, Vault and other domain handoff/update-log conventions under the global conversation handoff system.",
+      "details": "Existing domain masters still contain their own update-log/handoff instructions; these should become projections or references to the global process where possible.",
+      "kind": "MIGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "editor",
+        "toolbox-ui",
+        "vault",
+        "widgets",
+        "documentation"
+      ],
+      "capabilityIds": [],
+      "surfaces": [],
+      "sourceRefs": [
+        "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md",
+        "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [
+        "repo search found scattered handoff/update-log conventions"
+      ],
+      "dependencies": [
+        "merge global handoff system first"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "domain handoff",
+        "update log",
+        "conversation log",
+        "editor handoff",
+        "toolbox handoff"
+      ],
+      "value": {
+        "creatorImpact": "MEDIUM",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "Prevents parallel handoff protocols from recreating documentation fragmentation."
+      },
+      "relationship": "EXPANDS",
+      "suggestedDestination": "Integrated Application Program / future Task Authority proposal",
+      "reviewStatus": "RECONCILED",
+      "disposition": "UPDATE_INTEGRATED_APPLICATION_PROGRAM",
+      "targetRefs": [
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "domain-specific handoff/update-log patterns to preserve during migration"
+      ],
+      "reviewNotes": "Do after this system is merged and proven."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-009",
+      "title": "Phase F global work reconciliation",
+      "summary": "Reconcile unfinished-work audits, Finish Program donors, domain plans and conversation backlogs into permanent canonical work.",
+      "details": "This is the planned follow-on after Task Index VNext exists.",
+      "kind": "MIGRATION",
+      "conversationState": "PLANNED",
+      "domains": [
+        "program",
+        "tasks",
+        "all-domains"
+      ],
+      "capabilityIds": [],
+      "surfaces": [],
+      "sourceRefs": [
+        "docs/programs/INTEGRATED_APPLICATION.md",
+        "100-item audit",
+        "Finish Program donors"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [],
+      "dependencies": [
+        "Task Index VNext"
+      ],
+      "blockers": [
+        "Task Index VNext not yet canonical"
+      ],
+      "similarityKeys": [
+        "unfinished work reconciliation",
+        "phase f",
+        "100 item audit",
+        "finish program"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Converts fragmented historical work sources into one deduped canonical work model."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "Integrated Application Program",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ALREADY_TRACKED",
+      "targetRefs": [
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "execution waves and donor reconciliation rules"
+      ],
+      "reviewNotes": "Do not start before Task Index writer is ready."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-010",
+      "title": "No-loss document/plan family consolidation and Removed Archive migration",
+      "summary": "Continue consolidating multi-version plans/docs/HTML while preserving unique content and moving obsolete sources into Removed Archive.",
+      "details": "The document system already defines the compiler/manifests; many domain families still need processing.",
+      "kind": "CLEANUP",
+      "conversationState": "PLANNED",
+      "domains": [
+        "documentation",
+        "all-domains"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "surfaces": [],
+      "sourceRefs": [
+        "docs/governance/DOCUMENTATION.md",
+        "archive/removed/"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [],
+      "dependencies": [
+        "domain-by-domain reconciliation"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "removed archive",
+        "document consolidation",
+        "plan merge",
+        "html versions"
+      ],
+      "value": {
+        "creatorImpact": "MEDIUM",
+        "systemLeverage": "HIGH",
+        "urgency": "MEDIUM",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Reduces search noise and competing plans without losing historical value."
+      },
+      "relationship": "ALREADY_TRACKED",
+      "suggestedDestination": "Documentation Governance / Integrated Application Program",
+      "reviewStatus": "RECONCILED",
+      "disposition": "ALREADY_TRACKED",
+      "targetRefs": [
+        "docs/governance/DOCUMENTATION.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ],
+      "harvestedMaterial": [
+        "lossless consolidation and archive rules"
+      ],
+      "reviewNotes": "Process in families after active authorities are stable."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-011",
+      "title": "Automated conversation-intake validation and dashboard",
+      "summary": "Add deterministic schema validation, unreconciled-package reporting and possibly a generated review dashboard.",
+      "details": "Useful extension after the file-based handoff/reconciliation process proves stable.",
+      "kind": "IDEA",
+      "conversationState": "DISCOVERED",
+      "domains": [
+        "documentation",
+        "agents",
+        "developer-experience"
+      ],
+      "capabilityIds": [],
+      "surfaces": [
+        "developer control room"
+      ],
+      "sourceRefs": [
+        "current handoff-system implementation"
+      ],
+      "changedPaths": [],
+      "branchPrRefs": [],
+      "evidenceRefs": [],
+      "dependencies": [
+        "prove base conversation intake workflow"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "conversation intake validator",
+        "handoff dashboard",
+        "reconciliation queue"
+      ],
+      "value": {
+        "creatorImpact": "LOW",
+        "systemLeverage": "HIGH",
+        "urgency": "LOW",
+        "reusePotential": "HIGH",
+        "confidence": "MEDIUM",
+        "estimatedEffort": "MEDIUM",
+        "implementationRisk": "LOW",
+        "rationale": "Would make unreconciled work visible and mechanically catch malformed packages, but should follow proven workflow use."
+      },
+      "relationship": "NEW",
+      "suggestedDestination": "Opportunity",
+      "reviewStatus": "RECONCILED",
+      "disposition": "CREATE_OPPORTUNITY",
+      "targetRefs": [
+        "future opportunity record"
+      ],
+      "harvestedMaterial": [
+        "schema validation",
+        "unreconciled queue",
+        "generated dashboard"
+      ],
+      "reviewNotes": "Do not turn into committed work yet."
+    }
+  ]
+}
