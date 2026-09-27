@@ -91,6 +91,7 @@ Inventory and hash:
 - handoffs;
 - resource/reference idea catalogs;
 - recent 80 page-feature opportunities;
+- registry-declared MASTER_SOURCE references, especially `docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md`;
 - stale root task plans;
 - Crown/Exchange mission and receipt records.
 
@@ -146,6 +147,7 @@ Do **not** copy task state into architecture.
 
 Acceptance:
 - one capability owner per accepted durable ability;
+- `docs/registry.json` updated in the same change whenever an authority/concern relationship changes;
 - opportunity ideas remain opportunities unless accepted;
 - no UI surface invents a duplicate capability.
 
@@ -183,6 +185,8 @@ harvest durable current behavior from active plans/handoffs and update the ownin
 
 Acceptance:
 - exact bounded concern has one authority;
+- each domain reconciliation records the exact main SHA actually inspected;
+- `docs/registry.json` changes in the same PR when metadata/supersession/relationships change;
 - task/status history stays out of architecture prose;
 - Last Audited Main SHA updates only after code reconciliation.
 
@@ -205,7 +209,7 @@ Examples likely to need explicit specs/decisions:
 ### Task 3.1 — Reconcile Finish Program BACKLOG-REGISTRY
 
 Use current main to:
-- remove completed foundation work;
+- remove completed foundation work from the **active unfinished projection while preserving identity/history/aliases**;
 - replace broad tasks with narrower remaining integration/certification tasks;
 - preserve aliases to historical IDs;
 - absorb only accepted nonduplicate items from the conversation/100-item audit/80 opportunities.
@@ -347,7 +351,8 @@ Success criteria:
 - registry has no competing ACTIVE concerns;
 - no broken internal links;
 - stale Settings and other completed plan workspaces are closed;
-- current-main audit is refreshed at the end.
+- current-main audit is refreshed at the end;
+- historical DONE/SUPERSEDED task identities remain queryable even when absent from the active unfinished projection.
 
 ## Parallelization
 
