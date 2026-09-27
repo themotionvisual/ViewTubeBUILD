@@ -257,7 +257,10 @@ export const runLongformOptimizationAnalysis = async (input: {
   })
 
   const result = await runBrainTask({
-    ...input.brainRuntime,
+    snapshot: input.brainRuntime.snapshot,
+    systemPrompt: input.brainRuntime.systemPrompt,
+    growthContext: input.brainRuntime.growthContext,
+    allowModel: input.brainRuntime.allowModel,
     surface: "longform-optimizer-widget",
     channelId: input.channelId || null,
     projectId: input.projectId || null,
