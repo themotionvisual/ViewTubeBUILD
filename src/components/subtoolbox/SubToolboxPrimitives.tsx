@@ -178,7 +178,8 @@ export const ToolboxHeaderToggle: React.FC<ToolboxHeaderToggleProps> = ({
   <div
     className={classes("vt-toolbox-header-toggle", level === "subtoolbox" && "is-subtoolbox", className)}
     data-vt-header-toggle={level}
-    style={{ ...style, ["--vt-header-toggle-count" as string]: Math.max(1, options.length) } as React.CSSProperties}
+    data-vt-header-toggle-primitive="v38-95"
+    style={style}
     role="group"
     {...props}
   >
