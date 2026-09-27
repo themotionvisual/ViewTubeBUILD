@@ -93,3 +93,29 @@ None in this first live intake review.
 ## Final next action
 
 Finish the Conversation Handoff & Work Reconciliation branch verification and PR, then resume Task Index VNext Phase E from the latest main using this package as the continuation source.
+
+
+## CI classification for PR #503
+
+GitHub release-gate run `36334830768` was inspected job-by-job.
+
+Passed:
+- production-build;
+- focused-contracts;
+- source-governance;
+- local-smoke.
+
+Failed but not introduced by this documentation/workflow branch:
+- `static-quality` fails during `npm run typecheck` in untouched application code including PublishingScheduleArchitect, CommentResponder, BrainRuntimePanel tests, CrownLiveBrain, Studio/Vault primitives, Editor design-library templates, Brain conversation tests and CreatorVaultOS.
+- `full-suite` fails in untouched application tests/services including Vault workspace/export tests, VT-SYNC manual import tests, analytics visual assertions, BrainHub/dashboard/widget tests and `assistantIntelligenceSystem` call paths.
+
+This PR changes governance/docs/skills/intake records only and does not modify the failing runtime/test source files.
+
+External deployment:
+- Vercel contexts remain blocked/failing, including an explicit build-rate-limit/plan-limit context.
+- GitHub production-build itself passed.
+
+Disposition:
+- classify static-quality/full-suite as inherited current-main application debt;
+- classify Vercel failures as external deployment-account constraints;
+- do not attribute them to the Conversation Handoff & Work Reconciliation system.
