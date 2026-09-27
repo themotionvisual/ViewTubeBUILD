@@ -156,7 +156,7 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
   const scope = contentContext
   const routeByDestination = {
    "storyboard-studio": "/storyboard-studio",
-   "video-director": "/studio#video-director",
+   "video-director": "/studio",
    "video-asset-engine": "/projects",
    "video-editor": "/editor",
   } as const
