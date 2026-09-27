@@ -140,19 +140,211 @@ const ConceptSceneStudio: React.FC<ConceptSceneStudioProps> = ({
  const updateBrief = <K extends keyof ConceptBrief>(key: K, value: ConceptBrief[K]) =>
   setBrief(current => ({ ...current, [key]: value }))
 
- const forgeConcepts = () => {
-  const next = createConceptCandidates(brief)
-  setConcepts(next)
-  setSelectedConceptId(next[0]?.id || null)
+ const resolveGenerationChannelId = () =>
+  contentContext?.build.channelId || (authState as { channelId?: string | null } | null)?.channelId || null
+
+ const forgeConcepts = async () => {
+  const fallback = createConceptCandidates(brief)
+  const channelId = resolveGenerationChannelId()
+  setConceptGenerating(true)
   setScenes([])
-  setHandoffStatus("Three creative directions forged. Choose one before building scenes.")
+  try {
+   if (!channelId) {
+    setConcepts(fallback)
+    setSelectedConceptId(fallback[0]?.id || null)
+    setHandoffStatus("Three local directions forged. Connect a channel or active ContentBuild to use governed Brain generation.")
+    return
+   }
+   const prepared = contentContext ? prepareGenerationRequest({
+    contentBuildId: contentContext.contentBuildId,
+    channelId,
+    projectId: contentContext.build.legacyProjectId || null,
+    toolId: "creator-canvas-os",
+    operation: "forge-concepts",
+    targetSlot: "concept",
+    mode: "new-option",
+    creatorIntent: `Forge three distinct creative directions for: ${brief.idea}`,
+    requestedSlots: ["concept", "script", "storyboard"],
+    constraints: { brief },
+    outputSpec: { candidateCount: 3, structured: true },
+   }) : null
+   const generated = await generateConceptDirections({
+    context: { channelId },
+    brief: { ...brief },
+    ...(contentContext?.build.legacyProjectId ? { projectId: contentContext.build.legacyProjectId } : {}),
+   })
+   const output = generated.record.output
+   const conceptsFromBrain: ConceptDirection[] | null = output?.concepts?.length === 3
+    ? output.concepts.map((concept, index) => ({ ...concept, id: concept.id?.trim() || `concept-ai-${index + 1}` }))
+    : null
+   const resolved = conceptsFromBrain || fallback
+   setConcepts(resolved)
+   setSelectedConceptId(resolved[0]?.id || null)
+
+   if (prepared && conceptsFromBrain) {
+    const group = createAssetVariantGroup({
+     contentBuildId: prepared.request.contentBuildId,
+     slot: "concept",
+     label: "Concept Forge directions",
+     sourceToolId: "creator-canvas-os",
+     metadata: { requestId: prepared.request.id, traceId: generated.trace.id },
+    })
+    const created = conceptsFromBrain.map((concept, index) => {
+     const asset = createVersionedAsset({
+      sourceToolId: "creator-canvas-os",
+      sourceKind: "super-tool",
+      payloadKind: "json",
+      name: concept.label,
+      summary: concept.angle,
+      kind: "json",
+      artifactKind: "json",
+      payload: concept,
+      tags: ["concept-forge", "creative-direction", `candidate-${index + 1}`],
+      slot: "concept",
+      label: concept.label,
+      context: {
+       contentBuildId: prepared.request.contentBuildId,
+       channelId,
+       projectId: prepared.request.projectId,
+       projectName: contentContext?.build.legacyProjectName || null,
+       stage: "concept",
+       traceId: generated.trace.id,
+       evidence: generated.record.evidenceRefs.map(id => ({ id })),
+       provenance: [generated.record.id, prepared.request.id],
+      },
+     })
+     addAssetVariant({
+      contentBuildId: prepared.request.contentBuildId,
+      groupId: group.id,
+      assetId: asset.asset.id,
+      versionId: asset.version?.id || null,
+      label: concept.label,
+      score: concept.readiness,
+      sourceToolId: "creator-canvas-os",
+      metadata: { conceptId: concept.id, traceId: generated.trace.id },
+     })
+     return asset
+    })
+    recordToolReceipt({
+     request: prepared.request,
+     outputAssetIds: created.map(item => item.asset.id),
+     generationRecordId: generated.record.id,
+     versionIds: created.map(item => item.version?.id).filter((id): id is string => Boolean(id)),
+     variantGroupId: group.id,
+     traceId: generated.trace.id,
+     summary: "Generated three governed Concept Forge directions and attached them as ContentBuild variants.",
+     metadata: { providerPath: "governed-asset-generator", brainAssetRecordId: generated.record.id },
+    })
+    setHandoffStatus(`Three Brain-generated directions saved with variant lineage · ${generated.record.status.replaceAll("_", " ")}.`)
+   } else {
+    setHandoffStatus(conceptsFromBrain
+     ? `Three governed Brain directions forged · ${generated.record.status.replaceAll("_", " ")}.`
+     : "Brain generation was incomplete; local production-safe concept directions were restored.")
+   }
+  } catch (error) {
+   console.warn("[ConceptSceneStudio] Concept generation fell back to local directions.", error)
+   setConcepts(fallback)
+   setSelectedConceptId(fallback[0]?.id || null)
+   setHandoffStatus("Brain generation was unavailable, so local production-safe concept directions were restored.")
+  } finally {
+   setConceptGenerating(false)
+  }
  }
 
- const buildScenes = () => {
+ const buildScenes = async () => {
   if (!selectedConcept) return
-  const next = createScenesFromConcept(selectedConcept, brief, sceneCount)
-  setScenes(next)
-  setHandoffStatus(`${next.length} editable production scenes created from ${selectedConcept.label}.`)
+  const fallback = createScenesFromConcept(selectedConcept, brief, sceneCount)
+  const channelId = resolveGenerationChannelId()
+  const scriptBeats = scriptBeatsText.split(/\\n+/).map(beat => beat.trim()).filter(Boolean)
+  setSceneGenerating(true)
+  try {
+   if (!channelId) {
+    setScenes(fallback)
+    setHandoffStatus(`${fallback.length} local production scenes created from ${selectedConcept.label}.`)
+    return
+   }
+   const prepared = contentContext ? prepareGenerationRequest({
+    contentBuildId: contentContext.contentBuildId,
+    channelId,
+    projectId: contentContext.build.legacyProjectId || null,
+    toolId: "creator-canvas-os",
+    operation: "design-scenes",
+    targetSlot: "storyboard",
+    mode: "new-version",
+    creatorIntent: `Design ${sceneCount} production scenes for ${selectedConcept.label}.`,
+    requestedSlots: ["concept", "script", "storyboard"],
+    constraints: { brief, selectedConcept, scriptBeats },
+    outputSpec: { sceneCount, includesMotionBrief: true, includesAssetNeeds: true },
+   }) : null
+   const generated = await generateScenePlan({
+    context: { channelId },
+    brief: { ...brief },
+    selectedConcept: { ...selectedConcept },
+    sceneCount,
+    scriptBeats,
+    ...(contentContext?.build.legacyProjectId ? { projectId: contentContext.build.legacyProjectId } : {}),
+   })
+   const output = generated.record.output
+   const validRoles: ProductionScene["role"][] = ["HOOK","SETUP","PROOF","ESCALATION","PIVOT","PAYOFF"]
+   const scenesFromBrain: ProductionScene[] | null = output?.scenes?.length === sceneCount
+    ? output.scenes.map((scene, index) => ({
+       ...scene,
+       id: scene.id?.trim() || `scene-ai-${index + 1}`,
+       order: index + 1,
+       role: validRoles.includes(scene.role as ProductionScene["role"])
+        ? scene.role as ProductionScene["role"]
+        : index === 0 ? "HOOK" : index === output.scenes.length - 1 ? "PAYOFF" : "PROOF",
+      }))
+    : null
+   const resolved = scenesFromBrain || fallback
+   setScenes(resolved)
+
+   if (prepared && scenesFromBrain) {
+    const created = createVersionedAsset({
+     sourceToolId: "creator-canvas-os",
+     sourceKind: "super-tool",
+     payloadKind: "storyboard",
+     name: `${selectedConcept.label} scene blueprint`,
+     summary: `${resolved.length} governed production scenes with shot, motion, asset and continuity briefs.`,
+     kind: "json",
+     artifactKind: "json",
+     payload: { selectedConceptId: selectedConcept.id, scenes: resolved, notes: output?.notes || [] },
+     tags: ["scene-design", "storyboard", "production-blueprint"],
+     slot: "storyboard",
+     label: "Scene Design Studio blueprint",
+     context: {
+      contentBuildId: prepared.request.contentBuildId,
+      channelId,
+      projectId: prepared.request.projectId,
+      projectName: contentContext?.build.legacyProjectName || null,
+      stage: "visual-plan",
+      traceId: generated.trace.id,
+      evidence: generated.record.evidenceRefs.map(id => ({ id })),
+      provenance: [generated.record.id, prepared.request.id, selectedConcept.id],
+     },
+    })
+    recordToolReceipt({
+     request: prepared.request,
+     outputAssetIds: [created.asset.id],
+     generationRecordId: generated.record.id,
+     versionIds: created.version?.id ? [created.version.id] : [],
+     traceId: generated.trace.id,
+     summary: `Generated and attached ${resolved.length} governed production scenes.`,
+     metadata: { providerPath: "governed-asset-generator", brainAssetRecordId: generated.record.id, scriptBeatCount: scriptBeats.length },
+    })
+    setHandoffStatus(`${resolved.length} Brain-generated scenes saved to the active ContentBuild · ${generated.record.status.replaceAll("_", " ")}.`)
+   } else {
+    setHandoffStatus(scenesFromBrain
+     ? `${resolved.length} governed Brain scenes created from ${selectedConcept.label}.`
+     : "Brain scene generation was incomplete; the local production-safe blueprint was restored.")
+   }
+  } catch (error) {
+   console.warn("[ConceptSceneStudio] Scene generation fell back to local blueprint.", error)
+   setScenes(fallback)
+   setHandoffStatus("Brain scene generation was unavailable, so the local production-safe blueprint was restored.")
+  } finally {
+   setSceneGenerating(false)
+  }
  }
 
  const updateScene = <K extends keyof ProductionScene>(id: string, key: K, value: ProductionScene[K]) =>
