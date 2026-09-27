@@ -47,5 +47,10 @@
   },
   "risk": "low",
   "rollback": "Revert only this mission's documentation/Royal Exchange records; do not alter source donor artifacts or canonical Task Index state.",
-  "state": "planned"
+  "state": "in_progress",
+  "sourceRefs": [
+    "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/handoff.md",
+    "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/worklog.json",
+    "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/review.md"
+  ]
 }
