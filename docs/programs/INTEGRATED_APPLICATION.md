@@ -7,7 +7,7 @@
 **Concern:** permanent cross-system convergence, integration seams, dependencies, and critical-path completion  
 **Owner:** Integrated Application Program  
 **Registry ID:** DOC-PROGRAM-INTEGRATED  
-**Last Audited Main SHA:** ee02fdbd1af2be30e81de7955dad188999a03ac4  
+**Last Audited Main SHA:** 76519e3d81f33df4a3084f49a369f5edbb1ee937  
 **Supersedes:** docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md after migration certification  
 **Consolidates:** system convergence program relationships while preserving its detailed classification/task sources  
 **Related Authorities:** docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md; docs/architecture/PRODUCT_ARCHITECTURE.md; Task Index
@@ -114,3 +114,70 @@ This program treats those ideas as an **integration intake**, not a second task 
 - record \`IDEA-*\` IDs in plans/PRs until promoted, merged, deferred, retired or shipped.
 
 Cross-page ideas should be implemented as shared capability extensions whenever possible. In particular, Command Center/Briefing/Intelligence features should reuse BrainRuntime and Evidence & Intelligence; pipeline/project features should reuse Project/ContentBuild; asset features should reuse Asset Engine/Vault; analytics features should reuse VT-SYNC/analytics-canon; and activity/learning features should project existing operations/outcomes rather than create another ledger.
+
+
+## Current-main backlog reconciliation plan
+
+**Reconciliation baseline:** `76519e3d81f33df4a3084f49a369f5edbb1ee937` on 2026-09-27.  
+**Mission:** `VT-MISSION-current-main-backlog-reconciliation`  
+**Rule:** current main + focused tests/runtime evidence eliminate obsolete backlog claims before any item is promoted into Task Authority. Historical plans, conversation memory, old audits, branches and prototypes remain donor/evidence inputs, not competing status ledgers.
+
+### Completed or absorbed work removed from the active implementation backlog
+
+The following older plan items are no longer greenfield work and must not be re-created as new tasks merely because they still appear in dated audits or conversation summaries:
+
+- **Projects reassembly and project creation:** current Projects is already organized around Project Builder, Project Board/Calendar and Storyboard Studio. Shared project selection, New Project creation, ContentBuild initialization, project tasks/goals, publishing-package projection and board-to-builder opening exist.
+- **Projects duplicate level-0 shell/title implementation bug:** current source has explicit shell-ownership governance, embedded tools suppress their own level-0 chrome, and the Projects shell contract is covered by `ProjectsShellGovernance.test.ts`. Production screenshot verification remains a certification concern, not a request to rebuild the hierarchy.
+- **Project ↔ ContentBuild / Video Package foundations:** durable ContentBuild identity, Project bridging, revision protection, versions/VariantGroups, Video Package synchronization, `GenerationRequest` and `ToolReceipt` foundations exist. Remaining work is continuity/certification at later lifecycle seams.
+- **Approved publish contract and transaction binding:** `ApprovedPublishSnapshot` exists and `PublishTransaction` persists/binds the approved snapshot, uses an idempotency key, protects the final-render upload identity and persists YouTube identity as steps complete. Remove the old claim that the snapshot contract/runtime binding is absent. Retain durable server authority, remote reconciliation and failure/recovery certification as open work.
+- **Brain runtime foundation:** shared `BrainRuntime` exists. Remaining Brain work is context/evidence/outcome/evaluation/learning convergence, surface integration and certification rather than creation of another Brain.
+- **Resource Library base product:** `/resources`, the Resource Library UI, document renderer and contract coverage exist. Retain catalog/content/integration expansion; remove “create Resource Library page” as greenfield work.
+- **Workspace/mobile preference controls:** compact mobile top bar, navigation auto-hide, edge swipe, thumb-zone shortcuts, orientation/page-position preservation, sticky module headers, keyboard restoration, toolbox-state memory, desktop keyboard navigation and quick-switcher preferences already have a canonical Settings surface. Retain runtime/mobile certification and any missing behavior, not duplicate settings construction.
+- **Remotion 100-asset library:** the registered library contains and validates exactly 50 static + 50 motion assets with deterministic motion utilities, ratio support, gallery/contact-sheet/renderer integration and editor adapter. Remove the original “build 100 assets” item; retain only discovered quality/integration defects.
+- **Video Director greenfield build:** the production Video Director surface, category schemas, project/recipe/scope stores, provider routing/job client and contract tests exist. Retain provider/runtime/mobile certification and specific capability gaps instead of rebuilding the tool.
+- **Conversation/agent governance foundation:** Documentation Governance, Conversation & Improvement OS, Crown, Task Authority, Verification and Royal Exchange are active. Herald contracts are superseded migration donors. Do not create a second conversation/task/status system.
+- **Page feature ideation intake:** the 80 page-surface opportunities are already preserved under stable `IDEA-*` IDs in Product Architecture and routed through this program. Do not duplicate them into another idea backlog.
+
+### Surviving open work routed by canonical owner
+
+| Work family | Keep as open | Canonical routing |
+| --- | --- | --- |
+| Projects UI | Convert lifecycle lanes/cards/filters where appropriate to canonical Subtoolbox primitives; finish New Project as a true Subtoolbox-style popover; define a Project Details projection/popover without reintroducing a second Project store/editor; certify current single-shell composition on mobile/desktop | Projects Domain Authority + Toolbox UI + Task Authority candidate |
+| Project/Content lifecycle | Cross-surface identity continuity, completion/abandonment outcomes, later-stage asset/package/outcome continuity | Projects/ContentBuild Domain Authority + Integrated Program |
+| Publishing | durable non-browser authority for approved snapshots/transactions, remote YouTube reconciliation, retry/recovery certification, post-publish identity and outcome writers | Publisher/ContentBuild/YouTube owners + Integrated Program |
+| Brain / intelligence | evidence trace/explorer, editable knowledge, project-aware context, Opportunity evidence, unified outcomes/evaluation, governed learning, prompt/runtime reachability | Brain Domain Authority + Prompt Specification + Integrated Program |
+| Analytics | metric comparability enforcement, dataset/dimension completeness, geography/retention/import joins, provenance/missingness UX, responsive Data Visual certification | Analytics Domain Authority |
+| Toolbox/UI | remaining primitive migration, CSS ownership cleanup, responsive/accessibility/screenshot certification, portal/focus/dropdown correctness | Toolbox UI Domain Authority + Verification |
+| Dashboard/widgets | Top-cohort certification, renderer/registry cleanup, CSS ownership, persistence migrations, evidence-backed opportunity/anomaly/operations surfaces | Widget Domain Authority |
+| Vault / Asset Engine | remaining production lanes, import dedupe/provenance, media player/Quick Look, asset-slot and lineage closure, ContentBuild handoffs | Asset Engine Domain Authority + Vault handoff |
+| Editor | canonical final-render asset, preview/final parity, four-layout/mobile certification, render progress/recovery, shared media/transcript/marker compounds | Editor Domain Authority |
+| Video Manager / packaging | AI-assisted update workflow, optional title/thumbnail experiments, dirty/rollback/retry semantics, cross-surface parity and measured outcome linkage | Studio/Publishing/Brain owners |
+| Auth / diagnostics | canonical auth/session/readiness errors, route regression closure, permanent diagnostics/copy-bug-report, authenticated mobile verification | Auth Domain Authority + Verification |
+| Resource/Guide | expand curated creator resources, reference catalog and Guide projections as creator-visible capabilities ship | Resource Library handoff + User Guide authority |
+| Documentation/agents | Task Index VNext, Removed Archive, no-loss consolidation manifests, stale-doc cleanup, branch/PR donor ledger, public agent readiness and governed receipts | Documentation Governance + Task Authority + Crown |
+
+### Source disposition
+
+Use the following sources as reconciliation inputs, not live status authorities:
+
+- `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` — DONOR/REVIEW until every unique item is harvested.
+- `docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md` — AUDIT snapshot; item status must be rechecked against current main before promotion.
+- `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` and `tasks/viewtube-finish-program/**` — superseded/donor execution sources; preserve aliases and unique acceptance criteria.
+- Conversation-derived backlog summaries — evidence/intake only; route accepted durable work through the owning authority and Task Authority.
+- Old branches/PRs/prototypes — donor/evidence only unless current-main reconciliation proves a missing capability.
+
+### Execution waves
+
+1. **Inventory and dedupe.** Build one source manifest across the unfinished-work master, 100-item audit, Finish Program/backlog, active domain plans/handoffs, recent conversation backlog, active missions/PRs and relevant donor branches.
+2. **Current-main proof pass.** For every candidate, classify `DONE_IN_CODE`, `IMPLEMENTED_NEEDS_VERIFICATION`, `PARTIAL`, `OPEN`, `SUPERSEDED`, `DUPLICATE`, `DONOR_ONLY` or `IDEA_ONLY`. A current-main symbol is not enough for DONE when runtime/visual/external evidence is required.
+3. **Route surviving work.** Put cross-system dependencies here; bounded truth in the Domain Authority/Specification; exact work as Task Authority mutation proposals; durable tradeoffs in Decision records; evidence in Receipts; useful historical material in References/Donors.
+4. **Task reconciliation.** Resolve the actual canonical Task Index VNext writer before mutation. Dedupe surviving candidates against permanent VT IDs, preserve historical aliases and propose lifecycle/maturity/evidence changes through Task Authority. Until the writer is positively resolved, remain read/reconcile/propose only.
+5. **No-loss archive wave.** After harvested material, inbound-reference checks and runtime reachability checks, move superseded sources to `archive/removed/` with consolidation manifests. Never delete unique material because a newer document exists.
+6. **Verification wave.** Reclassify implemented-but-unverified work using the Verification authority: focused tests/build for code, screenshot analysis for visible UI, authenticated runtime for external account/API behavior, deployment evidence for release claims.
+7. **Automation.** Add deterministic reports for stale authority metadata, orphan task/document links, supersession chains, donor sources awaiting harvest and merged implementation lacking verification receipts. Generated reports remain projections, not a second task ledger.
+
+### Immediate reconciliation priorities
+
+The first Task Authority proposal batch should be limited to high-confidence surviving work after dedupe: publishing durability/recovery; post-publish identity/outcomes; Project page Subtoolbox/popover visual correction; application-wide responsive/visual certification; auth/diagnostics reliability; outcome/evaluation/learning closure; analytics comparability/provenance; and documentation/Task Index migration.
+
+Do **not** reopen completed greenfield programs listed above. Do **not** promote every `IDEA-*` opportunity to a task. Do **not** archive the September donor/audit sources until their unique acceptance criteria, references and unresolved work have been harvested.
