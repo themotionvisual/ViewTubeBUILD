@@ -1,0 +1,297 @@
+{
+  "schemaVersion": "viewtube.task-index-manifest.v1",
+  "authority": "tasks/index/index.json + tasks/index/shards/*.json",
+  "generatedAt": "2026-09-27",
+  "idNamespace": "vt-",
+  "nextTaskId": "vt-2940",
+  "migrationState": "legacy-import-unreconciled",
+  "truthRule": "Task identity is canonical. Imported status is historical CLAIMED context only until Task Authority reconciliation establishes canonical lifecycle/evidence.",
+  "sourceDonor": {
+    "name": "ViewTube-Task-Index(5).html",
+    "sha256": "8f40d451973bea5679b68b314b6a4d4f9c69fa2bb960a5ea4d397b54c080c47b",
+    "role": "historical donor / identity source"
+  },
+  "taskCount": 1542,
+  "modules": [
+    {
+      "id": "recovery-source",
+      "title": "RECOVERY + SOURCE HEALTH",
+      "subtitle": "Recover the best code, remove dead weight, and keep one trustworthy source tree.",
+      "order": 0,
+      "shard": "shards/recovery-source.json",
+      "taskCount": 51
+    },
+    {
+      "id": "reliability-qa",
+      "title": "RELIABILITY + PERFORMANCE + QA",
+      "subtitle": "Prevent corruption, regressions, hangs, duplicate work, and unstable releases.",
+      "order": 1,
+      "shard": "shards/reliability-qa.json",
+      "taskCount": 95
+    },
+    {
+      "id": "security-privacy",
+      "title": "SECURITY + PRIVACY + DATA PORTABILITY",
+      "subtitle": "Protect user data, permissions, exports, backups, and account boundaries.",
+      "order": 2,
+      "shard": "shards/security-privacy.json",
+      "taskCount": 14
+    },
+    {
+      "id": "brand-design",
+      "title": "BRAND + DESIGN + UI SYSTEM",
+      "subtitle": "Standardize ViewTube branding, colors, components, icons, typography, and domains.",
+      "order": 3,
+      "shard": "shards/brand-design.json",
+      "taskCount": 64
+    },
+    {
+      "id": "navigation-shell",
+      "title": "NAVIGATION + APPLICATION SHELL",
+      "subtitle": "Make every production destination easy to find, understand, and resume.",
+      "order": 4,
+      "shard": "shards/navigation-shell.json",
+      "taskCount": 39
+    },
+    {
+      "id": "account-membership",
+      "title": "ACCOUNTS + MEMBERSHIPS + BILLING",
+      "subtitle": "Unify authentication, channel connection, entitlements, credits, plans, and billing.",
+      "order": 5,
+      "shard": "shards/account-membership.json",
+      "taskCount": 60
+    },
+    {
+      "id": "data-foundation",
+      "title": "DATA SYNC + ANALYTICS MODEL + TABLES",
+      "subtitle": "Keep API, CSV, canonical rows, tables, freshness, and sync state accurate and explainable.",
+      "order": 6,
+      "shard": "shards/data-foundation.json",
+      "taskCount": 87
+    },
+    {
+      "id": "audience-analytics",
+      "title": "AUDIENCE + TRAFFIC + EXTERNAL ANALYTICS",
+      "subtitle": "Expand discovery, geography, audience, traffic-source, and external-channel intelligence.",
+      "order": 7,
+      "shard": "shards/audience-analytics.json",
+      "taskCount": 31
+    },
+    {
+      "id": "visual-analytics",
+      "title": "VISUAL ANALYTICS + DATA VISUALS",
+      "subtitle": "Protect native visual language while improving controllers, tooltips, insights, animation, and comparison.",
+      "order": 8,
+      "shard": "shards/visual-analytics.json",
+      "taskCount": 212
+    },
+    {
+      "id": "analytics-command",
+      "title": "ADVANCED ANALYTICS + COMMAND CENTER",
+      "subtitle": "Turn deep-cut video metrics into useful dashboards, scorecards, diagnostics, and actions.",
+      "order": 9,
+      "shard": "shards/analytics-command.json",
+      "taskCount": 66
+    },
+    {
+      "id": "recovery-integration-finalization",
+      "title": "RECOVERY + INTEGRATION FINALIZATION",
+      "subtitle": "Secure the recovered analytics work first, repair data/auth/performance regressions, and establish authoritative branches before further consolidation.",
+      "order": 10,
+      "shard": "shards/recovery-integration-finalization.json",
+      "taskCount": 30
+    },
+    {
+      "id": "canonical-ui-system-consolidation",
+      "title": "CANONICAL UI SYSTEM CONSOLIDATION",
+      "subtitle": "Turn the strongest standalone and experimental UI work into one reusable React design system, production component catalog, and canonical ViewTube specification.",
+      "order": 11,
+      "shard": "shards/canonical-ui-system-consolidation.json",
+      "taskCount": 50
+    },
+    {
+      "id": "dashboard",
+      "title": "DASHBOARD + WIDGETS",
+      "subtitle": "Build a customizable creator command center from the strongest production-ready widgets.",
+      "order": 12,
+      "shard": "shards/dashboard.json",
+      "taskCount": 34
+    },
+    {
+      "id": "projects-workflows",
+      "title": "PROJECTS + WORKFLOW AUTOMATION",
+      "subtitle": "Connect ideas, tasks, Kanban, calendar, assets, workflows, and publishing into one project system.",
+      "order": 13,
+      "shard": "shards/projects-workflows.json",
+      "taskCount": 79
+    },
+    {
+      "id": "studio-tools",
+      "title": "STUDIO HUB + CREATOR TOOLS",
+      "subtitle": "Standardize and connect the Studio Hub toolboxes, subtoolboxes, generators, and handoffs.",
+      "order": 14,
+      "shard": "shards/studio-tools.json",
+      "taskCount": 60
+    },
+    {
+      "id": "vault-resource",
+      "title": "VAULT + RESOURCE LIBRARY",
+      "subtitle": "Organize reusable creator knowledge, references, guides, templates, and saved assets.",
+      "order": 15,
+      "shard": "shards/vault-resource.json",
+      "taskCount": 19
+    },
+    {
+      "id": "community",
+      "title": "AUDIENCE LOOP + COMMUNITY",
+      "subtitle": "Turn comments, audience signals, replies, community posts, and superfans into a repeatable loop.",
+      "order": 16,
+      "shard": "shards/community.json",
+      "taskCount": 23
+    },
+    {
+      "id": "publishing",
+      "title": "PACKAGING + LAUNCH + PUBLISHING",
+      "subtitle": "Unify packaging, metadata, launch planning, scheduling, publishing, and approval.",
+      "order": 17,
+      "shard": "shards/publishing.json",
+      "taskCount": 19
+    },
+    {
+      "id": "brain-intelligence",
+      "title": "AI BRAIN + INTELLIGENCE",
+      "subtitle": "Ground the Brain in evidence, memory, reflection, strategy, executive reporting, and measurable outcomes.",
+      "order": 18,
+      "shard": "shards/brain-intelligence.json",
+      "taskCount": 57
+    },
+    {
+      "id": "onboarding",
+      "title": "ONBOARDING + CREATOR COMPANION",
+      "subtitle": "Make first use understandable, rewarding, personalized, and easy to continue.",
+      "order": 19,
+      "shard": "shards/onboarding.json",
+      "taskCount": 19
+    },
+    {
+      "id": "video-editor",
+      "title": "VIDEO EDITOR + MEDIA TOOLS",
+      "subtitle": "Finish the editor, timeline, Shorts extraction, assets, audio, templates, captions, and export.",
+      "order": 20,
+      "shard": "shards/video-editor.json",
+      "taskCount": 71
+    },
+    {
+      "id": "mobile",
+      "title": "MOBILE EXPERIENCE",
+      "subtitle": "Make ViewTube fast, stable, touch-friendly, orientation-aware, and genuinely useful on phones.",
+      "order": 21,
+      "shard": "shards/mobile.json",
+      "taskCount": 42
+    },
+    {
+      "id": "product-ux",
+      "title": "PRODUCT UX + HELP + CONTINUITY",
+      "subtitle": "Polish states, persistence, help, feedback, accessibility, and cross-page continuity.",
+      "order": 22,
+      "shard": "shards/product-ux.json",
+      "taskCount": 100
+    },
+    {
+      "id": "youtube-companion",
+      "title": "YOUTUBE STUDIO COMPANION",
+      "subtitle": "Use ViewTube alongside YouTube Studio without duplicating or misrepresenting unavailable data.",
+      "order": 23,
+      "shard": "shards/youtube-companion.json",
+      "taskCount": 12
+    },
+    {
+      "id": "observability",
+      "title": "TELEMETRY + ADMIN + DIAGNOSTICS",
+      "subtitle": "Make app health, failures, usage, builds, services, and support issues observable.",
+      "order": 24,
+      "shard": "shards/observability.json",
+      "taskCount": 20
+    },
+    {
+      "id": "growth-demo",
+      "title": "DEMO + GROWTH + PARTNERSHIPS",
+      "subtitle": "Create convincing demo states, launch assets, reviewer workflows, referrals, and partnership infrastructure.",
+      "order": 25,
+      "shard": "shards/growth-demo.json",
+      "taskCount": 54
+    },
+    {
+      "id": "final",
+      "title": "FINAL CONSOLIDATION + RELEASE",
+      "subtitle": "Resolve remaining overlap, certify production systems, clean archives, and prepare canonical releases.",
+      "order": 26,
+      "shard": "shards/final.json",
+      "taskCount": 17
+    },
+    {
+      "id": "task-index",
+      "title": "TASK INDEX AUTOMATION",
+      "subtitle": "Keep this roadmap concise, evidence-backed, grouped, searchable, and increasingly self-maintaining.",
+      "order": 27,
+      "shard": "shards/task-index.json",
+      "taskCount": 47
+    },
+    {
+      "id": "conversation-discover",
+      "title": "CONVERSATION SYSTEMS — DISCOVER + OPPORTUNITY",
+      "subtitle": "Turn search, comments, the catalog, audience behavior, and public discovery signals into clear content opportunities.",
+      "order": 28,
+      "shard": "shards/conversation-discover.json",
+      "taskCount": 9
+    },
+    {
+      "id": "conversation-decide",
+      "title": "CONVERSATION SYSTEMS — DECIDE + CHANNEL COMMAND",
+      "subtitle": "Convert analytics into a short ranked queue of strategic actions instead of another passive dashboard.",
+      "order": 29,
+      "shard": "shards/conversation-decide.json",
+      "taskCount": 8
+    },
+    {
+      "id": "conversation-create-produce",
+      "title": "CONVERSATION SYSTEMS — CREATE + PRODUCE",
+      "subtitle": "Move ideas through angle, narrative, evidence, scenes, assets, captions, repurposing, and final production handoff.",
+      "order": 30,
+      "shard": "shards/conversation-create-produce.json",
+      "taskCount": 12
+    },
+    {
+      "id": "conversation-publish-network",
+      "title": "CONVERSATION SYSTEMS — PUBLISH + GROW THE NETWORK",
+      "subtitle": "Improve packaging, launch execution, session depth, playlists, recommendations, and traffic between the creator's own videos.",
+      "order": 31,
+      "shard": "shards/conversation-publish-network.json",
+      "taskCount": 9
+    },
+    {
+      "id": "conversation-priming",
+      "title": "CONVERSATION SYSTEMS — PRE-PUBLICATION PRIMING",
+      "subtitle": "Warm the right audience and topic signals before launch, then hand accumulated context into publishing and launch analytics.",
+      "order": 32,
+      "shard": "shards/conversation-priming.json",
+      "taskCount": 12
+    },
+    {
+      "id": "conversation-prototype-production",
+      "title": "CONVERSATION SYSTEMS — PROTOTYPE TO PRODUCTION",
+      "subtitle": "Keep the strongest prototype interactions while standardizing real data, context passing, persistence, and production ownership.",
+      "order": 33,
+      "shard": "shards/conversation-prototype-production.json",
+      "taskCount": 11
+    },
+    {
+      "id": "conversation-retention-experiments",
+      "title": "CONVERSATION SYSTEMS — RETENTION AUTOPSY + EXPERIMENTS",
+      "subtitle": "Turn retention curves into diagnosed problems, evidence-backed hypotheses, interventions, and measurable learning loops.",
+      "order": 34,
+      "shard": "shards/conversation-retention-experiments.json",
+      "taskCount": 9
+    }
+  ]
+}

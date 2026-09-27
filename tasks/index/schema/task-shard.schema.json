@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewtube://schemas/task-shard-v1",
+  "title": "ViewTube Task Index VNext Shard",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "shardId",
+    "module",
+    "tasks"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "viewtube.task-shard.v1"
+    },
+    "shardId": {
+      "type": "string"
+    },
+    "tasks": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": true
+}
