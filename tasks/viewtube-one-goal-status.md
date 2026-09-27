@@ -1,14 +1,14 @@
 # ViewTube One-Goal Status Ledger
 
-**Authority:** `docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md`  
-**Rule:** update this ledger after every meaningful implementation/verification slice. Do not mark DONE without evidence.
+**Transition projection:** exact task lifecycle authority is `docs/governance/TASK_AUTHORITY.md`; completion doctrine is `docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md`. This ledger remains a temporary human-readable projection until Task Index VNext canonical storage/writer is established.  
+**Rule:** update this projection after meaningful implementation/verification slices. Do not mark DONE without evidence.
 
 | ID | Workstream | Task | Priority | Status | Depends on | Evidence / next action |
 |---|---|---|---|---|---|---|
 | VT-001 | Analytics | Define typed MetricComparabilityPolicy | P0 | DONE | — | Canonical policy now lives in analytics-canon with legacy compatibility re-export; 7/7 policy tests passed during Evidence convergence and VT-023 consumes it in Algorithm evaluation. |
 | VT-002 | Publishing | Define ApprovedPublishSnapshot schema/hash | P0 | VERIFYING | — | PR #420 merged; immutable schema/hash + tamper tests are on main. Branch CI was obscured by Vercel build-rate limits; durable persistence remains VT-014. |
-| VT-003 | Brain | Resolve active Project/ContentBuild context uniformly | P0 | VERIFYING | — | BrainRuntime surfaces now supply active Project + ContentBuild identity through one bounded project-context adapter; focused tests added. |nded active-Project context for Brain Hub/Next Best Action via shared dashboard adapter; finish uniform BrainRuntime/ContentBuild supply outside dashboard. |
-| VT-004 | Brain | Build canonical Opportunity evidence feed | P0 | VERIFYING | VT-003 | Canonical Brain evidence pack now deterministically produces provenance/confidence-bounded Opportunity evidence and joins Anomaly + Opportunity + Channel + Project in Algorithm Intelligence. |nce-backed Opportunity Radar, but PR #413 still records canonical shared Opportunity Evidence input as remaining. Build one reusable evidence feed for runtime + widgets. |
+| VT-003 | Brain | Resolve active Project/ContentBuild context uniformly | P0 | VERIFYING | — | BrainRuntime surfaces supply active Project + ContentBuild identity through the bounded `BrainProjectContext` adapter with focused tests. Remaining gate: prove uniform supply across non-dashboard BrainRuntime consumers before DONE. |
+| VT-004 | Brain | Build canonical Opportunity evidence feed | P0 | VERIFYING | VT-003 | Canonical Brain evidence deterministically produces provenance/confidence-bounded Opportunity evidence and joins Anomaly + Opportunity + Channel + Project in Algorithm Intelligence. Remaining gate: certify the shared production feed across runtime/widget consumers. |
 | VT-005 | Reliability | Define cross-system correlation/idempotency envelope | P0 | READY | — | use existing event contracts; avoid second event store |
 | VT-006 | Outcomes | Map producer families to existing ledgers/events | P0 | READY | VT-005 | Publisher/Project/Comment/Editor/Experiment |
 | VT-007 | Outcomes | Publisher outcome writers | P1 | NOT_STARTED | VT-006 | preserve publish transaction/contentBuild identity |
