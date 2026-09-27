@@ -118,6 +118,47 @@
   grid-column: shadow-start / shadow-end;
 }
 
+/* Nested full-width stack for widgets that need a page wrapper inside a full
+   scroll area. The wrapper itself owns the full track, then recreates the same
+   FULL / SHADOW / INSET lines for its children. This prevents "full" sections
+   nested one level down from being trapped inside the ordinary inset column. */
+:where(.dashboard-barrier) .widget-scroll-area.is-full .widget-scroll-content > .vt-widget-track-stack {
+  grid-column: full-start / full-end;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns:
+    [full-start] var(--vt-widget-edge-safe, 4px)
+    [shadow-start] max(0px, calc(var(--vt-widget-body-inset, var(--widget-content-inset)) - var(--vt-widget-edge-safe, 4px)))
+    [inset-start] minmax(0, 1fr)
+    [inset-end] max(0px, calc(var(--vt-widget-body-inset, var(--widget-content-inset)) - var(--vt-widget-edge-safe, 4px)))
+    [shadow-end] var(--vt-widget-edge-safe, 4px)
+    [full-end];
+  grid-auto-rows: max-content;
+  align-content: start;
+}
+:where(.dashboard-barrier) .vt-widget-track-stack > * {
+  grid-column: inset-start / inset-end;
+  min-width: 0;
+}
+:where(.dashboard-barrier) .vt-widget-track-stack > :is(
+  .widget-section.is-full,
+  .widget-divider.is-full,
+  .vt-full-bleed,
+  .vt-widget-zone-full,
+  .vt-full-bleed-top,
+  .vt-full-bleed-bottom
+) {
+  grid-column: full-start / full-end;
+}
+:where(.dashboard-barrier) .vt-widget-track-stack > :is(
+  .vt-widget-zone-shadow-safe,
+  .vt-widget-shadow-safe
+) {
+  grid-column: shadow-start / shadow-end;
+}
+
 :where(.dashboard-barrier) .widget-scroll-area.is-both .widget-scroll-content {
   width: max-content;
   min-width: 100%;
