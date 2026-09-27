@@ -19,6 +19,7 @@ import {
  buildOpportunityEvidenceFromBrainPack,
 } from "./OpportunityEvidenceAdapter"
 import type { OpportunityEvidence } from "./OpportunityIntelligence"
+import { projectCanonicalEvidenceRecords, type EvidenceRecord } from "./EvidenceRecord"
 
 export const EVIDENCE_INTELLIGENCE_VERSION = "vt-evidence-intelligence-v1" as const
 
@@ -33,6 +34,7 @@ export interface EvidenceIntelligenceEnvelope {
  version: typeof EVIDENCE_INTELLIGENCE_VERSION
  channelId: string | null
  canonicalEvidence: CanonicalIntelligenceEvidenceBundle
+ evidenceRecords: EvidenceRecord[]
  evidenceQuality: BrainEvidenceQualityReport
  scopeUsable: boolean
  statisticsIntelligence: StatisticsIntelligenceSnapshot | null
@@ -66,6 +68,7 @@ export interface EvidenceIntelligenceResolverDependencies {
   evidencePack: AIBrainEvidencePack
   limit?: number
  }) => OpportunityEvidence[]
+ projectEvidence: (bundle: CanonicalIntelligenceEvidenceBundle) => EvidenceRecord[]
 }
 
 const DEFAULT_DEPENDENCIES: EvidenceIntelligenceResolverDependencies = {
@@ -74,6 +77,7 @@ const DEFAULT_DEPENDENCIES: EvidenceIntelligenceResolverDependencies = {
  buildStatistics: buildStatisticsIntelligence,
  buildAudience: buildAudienceIntelligence,
  buildOpportunities: buildOpportunityEvidenceFromBrainPack,
+ projectEvidence: projectCanonicalEvidenceRecords,
 }
 
 /**
@@ -96,6 +100,9 @@ export const resolveEvidenceIntelligence = (
   expectedChannelId: input.channelId,
  })
  const scopeUsable = evidenceQuality.scopeMatch !== "mismatch"
+ const evidenceRecords = scopeUsable
+  ? dependencies.projectEvidence(canonicalEvidence)
+  : []
  const statisticsIntelligence = scopeUsable
   ? dependencies.buildStatistics(canonicalEvidence)
   : null
@@ -114,6 +121,7 @@ export const resolveEvidenceIntelligence = (
   version: EVIDENCE_INTELLIGENCE_VERSION,
   channelId,
   canonicalEvidence,
+  evidenceRecords,
   evidenceQuality,
   scopeUsable,
   statisticsIntelligence,
