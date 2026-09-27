@@ -255,18 +255,18 @@
     },
     {
       "id": "IDEA-GOV-011",
-      "title": "Conversation Work Harvester",
-      "summary": "Extract durable completed/unfinished work from substantial conversations.",
-      "category": "Conversation & Intake",
-      "subcategory": "Conversation Harvest",
+      "title": "Bidirectional Code ↔ Document Links",
+      "summary": "Documents point to code owners, and important code modules link back to their governing capability/specification.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Code / Document Links",
       "capabilityIds": [
         "CAP-DOCUMENT-GOVERNANCE"
       ],
-      "targetType": "WORKFLOW",
-      "targetId": "CONVERSATION-INTAKE",
+      "targetType": "GOVERNANCE",
+      "targetId": "CODE-DOC-LINKS",
       "similarityKeys": [
-        "conversation work harvester",
-        "conversation harvest"
+        "bidirectional code ↔ document links",
+        "code / document links"
       ],
       "sourceRefs": [
         "ideas/lists/governance/document-governance-improvements.md"
@@ -279,18 +279,18 @@
     },
     {
       "id": "IDEA-GOV-012",
-      "title": "Cross-Conversation Similarity Review",
-      "summary": "Detect overlapping work across conversation intake packages.",
-      "category": "Conversation & Intake",
-      "subcategory": "Similarity",
+      "title": "Change Impact Graph",
+      "summary": "Given a changed file, identify affected capabilities, plans, tasks, docs, tests, UI surfaces and integrations.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Impact Analysis",
       "capabilityIds": [
         "CAP-DOCUMENT-GOVERNANCE"
       ],
       "targetType": "GOVERNANCE",
-      "targetId": "CONVERGENCE",
+      "targetId": "CHANGE-IMPACT",
       "similarityKeys": [
-        "cross-conversation similarity review",
-        "similarity"
+        "change impact graph",
+        "impact analysis"
       ],
       "sourceRefs": [
         "ideas/lists/governance/document-governance-improvements.md"
@@ -303,18 +303,18 @@
     },
     {
       "id": "IDEA-GOV-013",
-      "title": "Plan-to-Task Compiler",
-      "summary": "Turn accepted plan sections into Task Authority mutation proposals.",
-      "category": "Conversation & Intake",
-      "subcategory": "Task Promotion",
+      "title": "Unified Before Building Gate",
+      "summary": "Before implementation begins, resolve capability owner, prior art, current code, existing tasks, active PRs and related prototypes.",
+      "category": "Capability & Plan Convergence",
+      "subcategory": "Build Gate",
       "capabilityIds": [
         "CAP-DOCUMENT-GOVERNANCE"
       ],
       "targetType": "WORKFLOW",
-      "targetId": "TASK-AUTHORITY",
+      "targetId": "BEFORE-BUILD",
       "similarityKeys": [
-        "plan-to-task compiler",
-        "task promotion"
+        "unified before building gate",
+        "build gate"
       ],
       "sourceRefs": [
         "ideas/lists/governance/document-governance-improvements.md"
@@ -327,104 +327,8 @@
     },
     {
       "id": "IDEA-GOV-014",
-      "title": "Task-to-Plan Backlinks",
-      "summary": "Link tasks back to their originating plan/program/specification.",
-      "category": "Conversation & Intake",
-      "subcategory": "Backlinks",
-      "capabilityIds": [
-        "CAP-DOCUMENT-GOVERNANCE"
-      ],
-      "targetType": "GOVERNANCE",
-      "targetId": "TASK-AUTHORITY",
-      "similarityKeys": [
-        "task-to-plan backlinks",
-        "backlinks"
-      ],
-      "sourceRefs": [
-        "ideas/lists/governance/document-governance-improvements.md"
-      ],
-      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
-      "status": "UNREVIEWED",
-      "relatedPlanFamilyIds": [
-        "PLAN-FAMILY-DOCS-AGENTS"
-      ]
-    },
-    {
-      "id": "IDEA-GOV-015",
-      "title": "Task Completion Feedback Into Plans",
-      "summary": "Project verified task completion back into plan maturity automatically.",
-      "category": "Conversation & Intake",
-      "subcategory": "Progress Projection",
-      "capabilityIds": [
-        "CAP-DOCUMENT-GOVERNANCE"
-      ],
-      "targetType": "GOVERNANCE",
-      "targetId": "TASK-AUTHORITY",
-      "similarityKeys": [
-        "task completion feedback into plans",
-        "progress projection"
-      ],
-      "sourceRefs": [
-        "ideas/lists/governance/document-governance-improvements.md"
-      ],
-      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
-      "status": "UNREVIEWED",
-      "relatedPlanFamilyIds": [
-        "PLAN-FAMILY-DOCS-AGENTS"
-      ]
-    },
-    {
-      "id": "IDEA-GOV-016",
-      "title": "Plan Maturity Model",
-      "summary": "Track architecture/backend/frontend/integration/tests/runtime/responsive/docs/release maturity.",
-      "category": "Conversation & Intake",
-      "subcategory": "Maturity",
-      "capabilityIds": [
-        "CAP-DOCUMENT-GOVERNANCE"
-      ],
-      "targetType": "GOVERNANCE",
-      "targetId": "PLAN-MATURITY",
-      "similarityKeys": [
-        "plan maturity model",
-        "maturity"
-      ],
-      "sourceRefs": [
-        "ideas/lists/governance/document-governance-improvements.md"
-      ],
-      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
-      "status": "UNREVIEWED",
-      "relatedPlanFamilyIds": [
-        "PLAN-FAMILY-DOCS-AGENTS"
-      ]
-    },
-    {
-      "id": "IDEA-GOV-017",
-      "title": "Feature Cluster Documents",
-      "summary": "Use one living cluster document for many related improvements.",
-      "category": "Conversation & Intake",
-      "subcategory": "Plan Consolidation",
-      "capabilityIds": [
-        "CAP-DOCUMENT-GOVERNANCE"
-      ],
-      "targetType": "GOVERNANCE",
-      "targetId": "PLAN-FAMILIES",
-      "similarityKeys": [
-        "feature cluster documents",
-        "plan consolidation"
-      ],
-      "sourceRefs": [
-        "ideas/lists/governance/document-governance-improvements.md"
-      ],
-      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
-      "status": "UNREVIEWED",
-      "relatedPlanFamilyIds": [
-        "PLAN-FAMILY-DOCS-AGENTS"
-      ]
-    },
-    {
-      "id": "IDEA-GOV-018",
       "title": "Convergence Inbox",
-      "summary": "Route ideas/bugs/audits/research/prototypes into one review queue.",
+      "summary": "Route new ideas from conversations, audits, research, bugs, prototypes and agents into one review queue instead of immediately creating documents/tasks.",
       "category": "Conversation & Intake",
       "subcategory": "Intake",
       "capabilityIds": [
@@ -446,19 +350,115 @@
       ]
     },
     {
-      "id": "IDEA-GOV-019",
-      "title": "Task Completion Feedback Into Capability Health",
-      "summary": "Reflect verified work in capability health rather than raw task percentages.",
-      "category": "Task & Plan State",
-      "subcategory": "Capability Health",
+      "id": "IDEA-GOV-015",
+      "title": "Conversation Work Harvester",
+      "summary": "At the end of substantial conversations, extract completed work, incomplete work, decisions, bugs, opportunities, rejected directions and ideas into governed intake.",
+      "category": "Conversation & Intake",
+      "subcategory": "Conversation Harvest",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "CONVERSATION-INTAKE",
+      "similarityKeys": [
+        "conversation work harvester",
+        "conversation harvest"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-016",
+      "title": "Cross-Conversation Similarity Review",
+      "summary": "Compare new conversation work against prior conversation-intake packages to detect duplicate plans/tasks.",
+      "category": "Conversation & Intake",
+      "subcategory": "Similarity",
       "capabilityIds": [
         "CAP-DOCUMENT-GOVERNANCE"
       ],
       "targetType": "GOVERNANCE",
-      "targetId": "CAPABILITY-COVERAGE",
+      "targetId": "CONVERGENCE",
       "similarityKeys": [
-        "task completion feedback into capability health",
-        "capability health"
+        "cross-conversation similarity review",
+        "similarity"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-017",
+      "title": "Plan-to-Task Compiler",
+      "summary": "Convert accepted plan sections into Task Authority mutation proposals while preserving plan/capability/acceptance/dependency links.",
+      "category": "Conversation & Intake",
+      "subcategory": "Task Promotion",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "TASK-AUTHORITY",
+      "similarityKeys": [
+        "plan-to-task compiler",
+        "task promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-018",
+      "title": "Task-to-Plan Backlinks",
+      "summary": "Every task should know which plan/program/specification created or justifies it.",
+      "category": "Conversation & Intake",
+      "subcategory": "Backlinks",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "TASK-AUTHORITY",
+      "similarityKeys": [
+        "task-to-plan backlinks",
+        "backlinks"
+      ],
+      "sourceRefs": [
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "sourceListId": "IDEA-LIST-GOVERNANCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": [
+        "PLAN-FAMILY-DOCS-AGENTS"
+      ]
+    },
+    {
+      "id": "IDEA-GOV-019",
+      "title": "Task Completion Feedback Into Plans",
+      "summary": "When tasks become verified DONE, update owning plan maturity/progress projections instead of copying status prose.",
+      "category": "Task & Plan State",
+      "subcategory": "Progress Projection",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "GOVERNANCE",
+      "targetId": "TASK-AUTHORITY",
+      "similarityKeys": [
+        "task completion feedback into plans",
+        "progress projection"
       ],
       "sourceRefs": [
         "ideas/lists/governance/document-governance-improvements.md"
@@ -471,18 +471,18 @@
     },
     {
       "id": "IDEA-GOV-020",
-      "title": "Plan Health Audit",
-      "summary": "Flag plans with no owner/tasks/acceptance/code links or heavy overlap.",
+      "title": "Plan Maturity Model",
+      "summary": "Track Architecture, Backend, Frontend, Integration, Tests, Runtime, Responsive, Documentation and Release maturity instead of vague almost-finished states.",
       "category": "Task & Plan State",
-      "subcategory": "Plan Health",
+      "subcategory": "Maturity",
       "capabilityIds": [
         "CAP-DOCUMENT-GOVERNANCE"
       ],
       "targetType": "GOVERNANCE",
-      "targetId": "PLAN-FAMILIES",
+      "targetId": "PLAN-MATURITY",
       "similarityKeys": [
-        "plan health audit",
-        "plan health"
+        "plan maturity model",
+        "maturity"
       ],
       "sourceRefs": [
         "ideas/lists/governance/document-governance-improvements.md"
@@ -495,18 +495,18 @@
     },
     {
       "id": "IDEA-GOV-021",
-      "title": "Feature Cluster Status Projection",
-      "summary": "Generate cluster-level status from canonical tasks/evidence.",
+      "title": "Feature Cluster Documents",
+      "summary": "For systems with many related improvements, maintain one compact living feature-cluster document instead of many micro-plans.",
       "category": "Task & Plan State",
-      "subcategory": "Status Projection",
+      "subcategory": "Plan Consolidation",
       "capabilityIds": [
         "CAP-DOCUMENT-GOVERNANCE"
       ],
       "targetType": "GOVERNANCE",
       "targetId": "PLAN-FAMILIES",
       "similarityKeys": [
-        "feature cluster status projection",
-        "status projection"
+        "feature cluster documents",
+        "plan consolidation"
       ],
       "sourceRefs": [
         "ideas/lists/governance/document-governance-improvements.md"
@@ -1003,8 +1003,8 @@
     },
     {
       "id": "IDEA-GOV-042",
-      "title": "Plan Health Audit Automation",
-      "summary": "Automatically detect stale/unowned/unlinked/duplicate plans.",
+      "title": "Plan Health Audit",
+      "summary": "Flag plans with no active tasks, no owner, no acceptance criteria, no code links, staleness or substantial overlap with another plan.",
       "category": "Verification & Health",
       "subcategory": "Plan Health",
       "capabilityIds": [
@@ -1014,7 +1014,7 @@
       "targetType": "GOVERNANCE",
       "targetId": "PLAN-FAMILIES",
       "similarityKeys": [
-        "plan health audit automation",
+        "plan health audit",
         "plan health"
       ],
       "sourceRefs": [
