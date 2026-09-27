@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "executionId": "VT-EXEC-current-main-backlog-reconciliation-02",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "4c18a8de6c97c4d172df6528ff483fa6a08c4e5c",
+  "headRef": "docs/current-conversation-backlog-reconciliation-2026-09-27",
+  "writers": [
+    {
+      "role": "viewtube-conversation-work-reconciliation",
+      "paths": [
+        "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/**"
+      ]
+    },
+    {
+      "role": "viewtube-document-system",
+      "paths": [
+        "tasks/documentation-backlog-integration/**",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ]
+    },
+    {
+      "role": "viewtube-crown",
+      "paths": [
+        ".viewtube/exchange/**"
+      ]
+    }
+  ],
+  "reviewers": [
+    "viewtube-archivist",
+    "viewtube-verification-chancellor"
+  ],
+  "orderedSteps": [
+    "Register and reconcile the current conversation package without creating a second task ledger.",
+    "Refresh current-main reconciliation from the old 76519e3d baseline to 4c18a8de.",
+    "Remove newly completed items such as VT-001 and VT-023 from active unfinished interpretation while preserving identity/history.",
+    "Correct stale projection text where current evidence is already authoritative.",
+    "Continue proposal-only task dedupe until Task Index VNext writer/storage is positively resolved.",
+    "Harvest donor/audit sources by plan family before Removed Archive moves."
+  ],
+  "testsRequired": [
+    "conversation work-log schema validation",
+    "conversation intake link/index inspection",
+    "exchange JSON parse/schema sanity",
+    "current-main evidence spot checks"
+  ],
+  "releaseRequired": false,
+  "status": "in_progress"
+}
