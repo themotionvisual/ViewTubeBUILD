@@ -190,7 +190,7 @@ export const WidgetFooter: React.FC<{
   style?: React.CSSProperties
   children: React.ReactNode
 }> = ({ surface = "white", divider = true, className = "", style, children }) => (
-  <footer className={`widget-footer is-${surface} ${divider ? "has-divider" : "without-divider"} ${className}`.trim()} style={style}>{children}</footer>
+  <footer className={`widget-footer vt-widget-zone-full is-${surface} ${divider ? "has-divider" : "without-divider"} ${className}`.trim()} style={style}>{children}</footer>
 )
 
 /**
