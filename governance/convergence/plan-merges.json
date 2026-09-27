@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "viewtube.plan-merges.v1",
+  "lastEdited": "2026-09-27",
+  "records": [
+    {
+      "id": "PLAN-MERGE-0001",
+      "sources": [
+        "docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md"
+      ],
+      "survivor": "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md",
+      "harvested": [
+        "global completion doctrine",
+        "product-wide invariants"
+      ],
+      "disposition": "SUPERSEDED_SOURCE_PRESERVED"
+    },
+    {
+      "id": "PLAN-MERGE-0002",
+      "sources": [
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
+      ],
+      "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
+      "harvested": [
+        "cross-system workstreams",
+        "completion seams",
+        "integration ordering"
+      ],
+      "disposition": "SUPERSEDED_SOURCE_PRESERVED"
+    },
+    {
+      "id": "PLAN-MERGE-0003",
+      "sources": [
+        "agent/contracts/herald-in.md",
+        "agent/contracts/herald-out.md",
+        "agent/contracts/herald-workflow.md"
+      ],
+      "survivor": "docs/governance/CONVERSATION_OS.md",
+      "harvested": [
+        "prior-art reconciliation",
+        "evidence classification",
+        "resumability"
+      ],
+      "disposition": "SPLIT_ACROSS_CONVERSATION_OS_CROWN_TASK_AUTHORITY"
+    },
+    {
+      "id": "PLAN-MERGE-0004",
+      "sources": [
+        "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+        "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+        "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md"
+      ],
+      "survivor": "docs/domains/BRAIN.md",
+      "harvested": [
+        "runtime ownership",
+        "context/evidence boundaries",
+        "prompt/model architecture"
+      ],
+      "disposition": "BRAIN_AND_PROMPTS_SPLIT"
+    }
+  ]
+}
