@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "executionId": "VT-EXEC-current-main-backlog-reconciliation-01",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "76519e3d81f33df4a3084f49a369f5edbb1ee937",
+  "headRef": "docs/backlog-reconciliation-plan-v1",
+  "writers": [
+    {
+      "role": "viewtube-document-system",
+      "paths": [
+        "docs/programs/INTEGRATED_APPLICATION.md",
+        "docs/registry.json",
+        "docs/**",
+        "archive/removed/**"
+      ]
+    },
+    {
+      "role": "viewtube-task-authority",
+      "paths": [
+        "canonical Task Index writer once positively resolved"
+      ]
+    },
+    {
+      "role": "viewtube-crown",
+      "paths": [
+        ".viewtube/exchange/**"
+      ]
+    }
+  ],
+  "reviewers": [
+    "viewtube-archivist",
+    "viewtube-verification-chancellor"
+  ],
+  "orderedSteps": [
+    "Inventory conversation backlog, unfinished-work master, 100-item audit, Finish Program sources, domain plans/handoffs, active missions/PRs and donor branches.",
+    "Re-audit every candidate against current main and focused executable evidence.",
+    "Eliminate completed, superseded and duplicate implementation claims from active intake while preserving provenance.",
+    "Route surviving cross-system work to Integrated Application and bounded work to its Domain Authority/Specification.",
+    "Resolve canonical Task Index VNext writer, then submit deduplicated Task Authority mutation proposals with acceptance/evidence.",
+    "Create no-loss consolidation manifests and move superseded sources to Removed Archive only after donor harvest.",
+    "Run documentation/link/schema verification and task-specific runtime/visual verification for implementation claims."
+  ],
+  "testsRequired": [
+    "documentation registry/schema validation",
+    "Crown exchange validation",
+    "supersession/link audit",
+    "current-main evidence spot checks"
+  ],
+  "releaseRequired": false,
+  "status": "planned"
+}
