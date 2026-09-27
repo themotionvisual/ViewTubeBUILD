@@ -1646,8 +1646,8 @@
 }
 
 .widget-picker-swatch {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 5px;
   background: var(--picker-spectrum);
@@ -2002,7 +2002,7 @@
   gap: 6px;
   padding: 0 12px 0 10px;
   color: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 999;
   letter-spacing: 0;
 }
@@ -2044,7 +2044,7 @@
 :where(.dashboard-barrier) .widget-split-button.is-small svg,
 :where(.dashboard-barrier) .vt-button.split.sm svg { width: 17px; height: 17px; }
 :where(.dashboard-barrier) .widget-split-button.is-large svg,
-:where(.dashboard-barrier) .vt-button.split.lg svg { width: 25px; height: 25px; }
+:where(.dashboard-barrier) .vt-button.split.lg svg { width: 27px; height: 27px; }
 
 /* CUSTOM RESIZER */
 :where(.dashboard-barrier) .vt-textarea {
