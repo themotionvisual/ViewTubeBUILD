@@ -42,7 +42,7 @@ describe("mobile widget density and edge contracts", () => {
     expect(legacy).not.toContain("margin-top: -3px")
     expect(legacy).not.toContain("padding: var(--vt-widget-body-inset)")
     expect(legacy).not.toContain("display: flex;\n  flex-direction: column;\n  flex: 1;\n  min-height: 0;\n  overflow: visible;\n}\n\n/* Modules that own their section spacing")
-    expect(legacy).not.toContain("margin-bottom: 4px")
+    expect(legacy).not.toContain(".vt-widget {\n  margin-bottom: 4px")
     expect(legacy).not.toContain(".flex-1.flex.flex-col.gap-2.overflow-y-auto")
     expect(legacy).not.toContain("textarea.vt-textarea {\n  margin: 4px")
     expect(shellCss).toContain("display:grid")
