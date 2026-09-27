@@ -17,6 +17,27 @@
       "title": "Current-Main Audit Expansion Opportunities",
       "sourceType": "historical-audit",
       "itemCount": 55
+    },
+    {
+      "id": "IDEA-LIST-WORKFLOWS-001",
+      "path": "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+      "title": "Cross-Tool Creator Workflow Ideas — 40 Recipes",
+      "sourceType": "conversation",
+      "itemCount": 40
+    },
+    {
+      "id": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "path": "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+      "title": "Toolbox, Widget and Workbench Ideas",
+      "sourceType": "conversation",
+      "itemCount": 32
+    },
+    {
+      "id": "IDEA-LIST-APP-CONVERGENCE-001",
+      "path": "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md",
+      "title": "Application Plan, Consolidation and Completion Ideas — 50 Items",
+      "sourceType": "conversation",
+      "itemCount": 50
     }
   ],
   "ideas": [
@@ -2617,6 +2638,2522 @@
         "PLAN-FAMILY-BRAIN-AI",
         "PLAN-FAMILY-PROJECTS"
       ]
+    },
+    {
+      "id": "IDEA-WF-001",
+      "title": "Idea to Published Longform",
+      "summary": "Move one evidence-backed opportunity through a complete long-form creator lifecycle.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "IDEA-TO-PUBLISHED-LONGFORM",
+      "similarityKeys": [
+        "idea to published longform",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-002",
+      "title": "Idea to Published Short",
+      "summary": "Convert a supported opportunity into a concise vertical video.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "IDEA-TO-PUBLISHED-SHORT",
+      "similarityKeys": [
+        "idea to published short",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-003",
+      "title": "Underperforming Upload Rescue",
+      "summary": "Diagnose and improve an existing upload without random simultaneous edits.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "UNDERPERFORMING-UPLOAD-RESCUE",
+      "similarityKeys": [
+        "underperforming upload rescue",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-004",
+      "title": "Thumbnail Refresh Experiment",
+      "summary": "Run a traceable packaging experiment on an existing video.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "THUMBNAIL-REFRESH-EXPERIMENT",
+      "similarityKeys": [
+        "thumbnail refresh experiment",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-005",
+      "title": "Title Refresh Experiment",
+      "summary": "Test a new framing strategy without losing the video's actual promise.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "TITLE-REFRESH-EXPERIMENT",
+      "similarityKeys": [
+        "title refresh experiment",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-006",
+      "title": "Retention Rescue",
+      "summary": "Turn retention evidence into reversible editing proposals.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "RETENTION-RESCUE",
+      "similarityKeys": [
+        "retention rescue",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-007",
+      "title": "Comment to New Video",
+      "summary": "Convert repeated audience demand into a planned content opportunity.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "COMMENT-TO-NEW-VIDEO",
+      "similarityKeys": [
+        "comment to new video",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-008",
+      "title": "Comment to Community Campaign",
+      "summary": "Test audience interest before committing to a larger production.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "COMMENT-TO-COMMUNITY-CAMPAIGN",
+      "similarityKeys": [
+        "comment to community campaign",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-009",
+      "title": "Search Gap to Video",
+      "summary": "Convert a credible search gap into a channel-fit project.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "SEARCH-GAP-TO-VIDEO",
+      "similarityKeys": [
+        "search gap to video",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-010",
+      "title": "High Performer to Sequel",
+      "summary": "Reuse a proven audience promise without cloning surface details.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "HIGH-PERFORMER-TO-SEQUEL",
+      "similarityKeys": [
+        "high performer to sequel",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-011",
+      "title": "Evergreen Revival",
+      "summary": "Refresh and redistribute an older asset when current evidence justifies it.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "EVERGREEN-REVIVAL",
+      "similarityKeys": [
+        "evergreen revival",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-012",
+      "title": "Longform to Shorts",
+      "summary": "Derive self-contained short-form assets from a source video.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "LONGFORM-TO-SHORTS",
+      "similarityKeys": [
+        "longform to shorts",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-013",
+      "title": "Editor Missing-Shot Recovery",
+      "summary": "Fill a concrete timeline gap without losing project continuity.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "EDITOR-MISSING-SHOT-RECOVERY",
+      "similarityKeys": [
+        "editor missing shot recovery",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-014",
+      "title": "Storyboard to Generated Sequence",
+      "summary": "Produce a visually coherent generated shot sequence.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "STORYBOARD-TO-GENERATED-SEQUENCE",
+      "similarityKeys": [
+        "storyboard to generated sequence",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-015",
+      "title": "Research to Historical Video",
+      "summary": "Build a source-backed history production workflow.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "RESEARCH-TO-HISTORICAL-VIDEO",
+      "similarityKeys": [
+        "research to historical video",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-016",
+      "title": "Script to Production Package",
+      "summary": "Convert an approved script into the minimum complete production asset set.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "SCRIPT-TO-PRODUCTION-PACKAGE",
+      "similarityKeys": [
+        "script to production package",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-017",
+      "title": "Missing Asset Finder Loop",
+      "summary": "Resolve package gaps through the cheapest valid source.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "MISSING-ASSET-FINDER-LOOP",
+      "similarityKeys": [
+        "missing asset finder loop",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-018",
+      "title": "Vault Reuse to New Project",
+      "summary": "Turn reusable archived material into a new coherent content project.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "VAULT-REUSE-TO-NEW-PROJECT",
+      "similarityKeys": [
+        "vault reuse to new project",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-019",
+      "title": "Project Package Readiness",
+      "summary": "Show only true blockers preventing a ContentBuild from publishing.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "PROJECT-PACKAGE-READINESS",
+      "similarityKeys": [
+        "project package readiness",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-020",
+      "title": "Pre-Launch Command",
+      "summary": "Coordinate a minimal launch sequence around a finished video.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "PRE-LAUNCH-COMMAND",
+      "similarityKeys": [
+        "pre launch command",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-021",
+      "title": "End-Screen Optimization",
+      "summary": "Improve the next-view path based on audience intent.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "END-SCREEN-OPTIMIZATION",
+      "similarityKeys": [
+        "end screen optimization",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-022",
+      "title": "Channel Session Builder",
+      "summary": "Build coherent video-to-video viewing routes.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "CHANNEL-SESSION-BUILDER",
+      "similarityKeys": [
+        "channel session builder",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-023",
+      "title": "Content Series Builder",
+      "summary": "Plan a multi-video series with a recognizable but non-repetitive system.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "CONTENT-SERIES-BUILDER",
+      "similarityKeys": [
+        "content series builder",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-024",
+      "title": "Calendar Gap Filler",
+      "summary": "Fill an open publishing slot with the most appropriate ready work.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "CALENDAR-GAP-FILLER",
+      "similarityKeys": [
+        "calendar gap filler",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-025",
+      "title": "Trend Reaction Workflow",
+      "summary": "Decide whether a current trend deserves accelerated production.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "TREND-REACTION-WORKFLOW",
+      "similarityKeys": [
+        "trend reaction workflow",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-026",
+      "title": "Audience Segment Video",
+      "summary": "Design content for a meaningful under-served segment.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "AUDIENCE-SEGMENT-VIDEO",
+      "similarityKeys": [
+        "audience segment video",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-027",
+      "title": "Localization Workflow",
+      "summary": "Localize a published or ready video while preserving creator meaning and terminology.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "LOCALIZATION-WORKFLOW",
+      "similarityKeys": [
+        "localization workflow",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-028",
+      "title": "Accessibility Completion",
+      "summary": "Catch accessibility defects before release.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "ACCESSIBILITY-COMPLETION",
+      "similarityKeys": [
+        "accessibility completion",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-029",
+      "title": "Comment Response Campaign",
+      "summary": "Process a large comment queue while preserving creator review and extracting useful audience signals.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "COMMENT-RESPONSE-CAMPAIGN",
+      "similarityKeys": [
+        "comment response campaign",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-030",
+      "title": "72-Hour Launch Review",
+      "summary": "Review early performance without panic edits.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "72-HOUR-LAUNCH-REVIEW",
+      "similarityKeys": [
+        "72 hour launch review",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-031",
+      "title": "Packaging Learning Loop",
+      "summary": "Turn measured package experiments into governed learning.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "PACKAGING-LEARNING-LOOP",
+      "similarityKeys": [
+        "packaging learning loop",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-032",
+      "title": "Hook Learning Loop",
+      "summary": "Learn from exact hooks rather than vague video-level success.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "HOOK-LEARNING-LOOP",
+      "similarityKeys": [
+        "hook learning loop",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-033",
+      "title": "Project Postmortem",
+      "summary": "Preserve what actually happened during a project and what can safely be learned.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "PROJECT-POSTMORTEM",
+      "similarityKeys": [
+        "project postmortem",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-034",
+      "title": "Experiment Design Workflow",
+      "summary": "Create the smallest experiment that can answer a creator question.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "EXPERIMENT-DESIGN-WORKFLOW",
+      "similarityKeys": [
+        "experiment design workflow",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-035",
+      "title": "Revenue Opportunity Investigation",
+      "summary": "Explore revenue differences without presenting correlation as guaranteed monetization.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "REVENUE-OPPORTUNITY-INVESTIGATION",
+      "similarityKeys": [
+        "revenue opportunity investigation",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-036",
+      "title": "Channel Strategy Sprint",
+      "summary": "Turn current channel evidence into a bounded multi-video production slate.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "CHANNEL-STRATEGY-SPRINT",
+      "similarityKeys": [
+        "channel strategy sprint",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-037",
+      "title": "Algorithm Explanation to Action",
+      "summary": "Convert creator education into one testable action.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "ALGORITHM-EXPLANATION-TO-ACTION",
+      "similarityKeys": [
+        "algorithm explanation to action",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-038",
+      "title": "System Doctor to Recovery",
+      "summary": "Route an app problem to its real owner instead of duplicating repair logic.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "SYSTEM-DOCTOR-TO-RECOVERY",
+      "similarityKeys": [
+        "system doctor to recovery",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-039",
+      "title": "Asset Rights Preflight",
+      "summary": "Prevent packages from publishing with unknown or insufficient asset rights.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "ASSET-RIGHTS-PREFLIGHT",
+      "similarityKeys": [
+        "asset rights preflight",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WF-040",
+      "title": "Full Creator Improvement Loop",
+      "summary": "Close the loop from recommendation to creation to measurement to governed learning.",
+      "category": "Creator Workflow Chains",
+      "subcategory": "Workflow Recipes",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "WORKFLOW",
+      "targetId": "FULL-CREATOR-IMPROVEMENT-LOOP",
+      "similarityKeys": [
+        "full creator improvement loop",
+        "cross tool workflow"
+      ],
+      "sourceRefs": [
+        "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-WORKFLOWS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-001",
+      "title": "UI Reference Studio Toolbox",
+      "summary": "Promote or consolidate UI Reference Library into UI Reference Studio Toolbox; Dashboard role: developer/reference launcher only.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "UI-REFERENCE-STUDIO-TOOLBOX",
+      "similarityKeys": [
+        "ui reference studio toolbox",
+        "ui reference library",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-002",
+      "title": "Video Director Toolbox",
+      "summary": "Promote or consolidate Video Director into Video Director Toolbox; Dashboard role: active job, preset, queue and Generate launcher.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "VIDEO-DIRECTOR-TOOLBOX",
+      "similarityKeys": [
+        "video director toolbox",
+        "video director",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-003",
+      "title": "Video Publisher Toolbox",
+      "summary": "Promote or consolidate Video Uploader / Publisher into Video Publisher Toolbox; Dashboard role: readiness/publish status + resume.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "VIDEO-PUBLISHER-TOOLBOX",
+      "similarityKeys": [
+        "video publisher toolbox",
+        "video uploader publisher",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-004",
+      "title": "Video Manager Toolbox",
+      "summary": "Promote or consolidate Video Manager into Video Manager Toolbox; Dashboard role: selected-video status + quick actions.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "VIDEO-MANAGER-TOOLBOX",
+      "similarityKeys": [
+        "video manager toolbox",
+        "video manager",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-005",
+      "title": "Video Performance Autopsy Toolbox",
+      "summary": "Promote or consolidate Video Autopsy into Video Performance Autopsy Toolbox; Dashboard role: headline diagnosis + strongest issue.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "VIDEO-PERFORMANCE-AUTOPSY-TOOLBOX",
+      "similarityKeys": [
+        "video performance autopsy toolbox",
+        "video autopsy",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-006",
+      "title": "Daily Creator Command Toolbox",
+      "summary": "Promote or consolidate Daily Oracle into Daily Creator Command Toolbox; Dashboard role: daily top action + compact evidence.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "DAILY-CREATOR-COMMAND-TOOLBOX",
+      "similarityKeys": [
+        "daily creator command toolbox",
+        "daily oracle",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-007",
+      "title": "Brain Hub Toolbox",
+      "summary": "Promote or consolidate Brain Hub into Brain Hub Toolbox; Dashboard role: ask/resume/status/evidence health.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "BRAIN-HUB-TOOLBOX",
+      "similarityKeys": [
+        "brain hub toolbox",
+        "brain hub",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-008",
+      "title": "Comment Operations Toolbox",
+      "summary": "Promote or consolidate Comment Responder into Comment Operations Toolbox; Dashboard role: queue count + priority replies.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "COMMENT-OPERATIONS-TOOLBOX",
+      "similarityKeys": [
+        "comment operations toolbox",
+        "comment responder",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-009",
+      "title": "Video Optimization Toolbox",
+      "summary": "Promote or consolidate Longform Optimization into Video Optimization Toolbox; Dashboard role: strongest optimization signal.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "VIDEO-OPTIMIZATION-TOOLBOX",
+      "similarityKeys": [
+        "video optimization toolbox",
+        "longform optimization",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-010",
+      "title": "Asset Engine Toolbox",
+      "summary": "Promote or consolidate Video Asset Engine into Asset Engine Toolbox; Dashboard role: package readiness + missing slot launcher.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "ASSET-ENGINE-TOOLBOX",
+      "similarityKeys": [
+        "asset engine toolbox",
+        "video asset engine",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-011",
+      "title": "Thumbnail Studio Toolbox",
+      "summary": "Promote or consolidate Thumbnail Lab / ThumbAI / A-B Thumbnail into Thumbnail Studio Toolbox; Dashboard role: selected variant + experiment status.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "THUMBNAIL-STUDIO-TOOLBOX",
+      "similarityKeys": [
+        "thumbnail studio toolbox",
+        "thumbnail lab thumbai a b thumbnail",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-012",
+      "title": "Dashboard Control Toolbox",
+      "summary": "Promote or consolidate Settings widget into Dashboard Control Toolbox; Dashboard role: compact switchboard.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "DASHBOARD-CONTROL-TOOLBOX",
+      "similarityKeys": [
+        "dashboard control toolbox",
+        "settings widget",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-013",
+      "title": "Metadata / SEO Workbench",
+      "summary": "Promote or consolidate Title Rewriter + Description Editor + Tag Generator + Hashtag Analyzer into Metadata / SEO Workbench; Dashboard role: package score/status + open workbench.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "METADATA-SEO-WORKBENCH",
+      "similarityKeys": [
+        "metadata seo workbench",
+        "title rewriter description editor tag generator hashtag analyzer",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-014",
+      "title": "Retention Lab",
+      "summary": "Promote or consolidate Retention Dip + Benchmark + Simulator into Retention Lab; Dashboard role: retention alert/summary.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "RETENTION-LAB",
+      "similarityKeys": [
+        "retention lab",
+        "retention dip benchmark simulator",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-015",
+      "title": "Keyword Intelligence",
+      "summary": "Promote or consolidate Keyword Engine + Keyword Overlap into Keyword Intelligence; Dashboard role: top opportunity/overlap alert.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "KEYWORD-INTELLIGENCE",
+      "similarityKeys": [
+        "keyword intelligence",
+        "keyword engine keyword overlap",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-016",
+      "title": "Publishing Calendar",
+      "summary": "Promote or consolidate Mini Calendar + Upload Scheduler into Publishing Calendar; Dashboard role: next slot + conflict/status.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "PUBLISHING-CALENDAR",
+      "similarityKeys": [
+        "publishing calendar",
+        "mini calendar upload scheduler",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-017",
+      "title": "Audience Intelligence",
+      "summary": "Promote or consolidate Audience Matrix + Device Matrix + Guest Ratio into Audience Intelligence; Dashboard role: top segment shift.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "AUDIENCE-INTELLIGENCE",
+      "similarityKeys": [
+        "audience intelligence",
+        "audience matrix device matrix guest ratio",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-018",
+      "title": "Discovery & Distribution",
+      "summary": "Promote or consolidate Traffic Sources + Playback Origins + Sharing DNA + Bridge Efficiency into Discovery & Distribution; Dashboard role: current discovery mix.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "DISCOVERY-DISTRIBUTION",
+      "similarityKeys": [
+        "discovery distribution",
+        "traffic sources playback origins sharing dna bridge efficiency",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-019",
+      "title": "Monetization Intelligence",
+      "summary": "Promote or consolidate Revenue Tracker + Revenue Momentum + Ad Stack + CPM Geography + Premium Pulse into Monetization Intelligence; Dashboard role: revenue pulse.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "MONETIZATION-INTELLIGENCE",
+      "similarityKeys": [
+        "monetization intelligence",
+        "revenue tracker revenue momentum ad stack cpm geography premium pulse",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-TWB-020",
+      "title": "Opportunity Intelligence Workbench",
+      "summary": "Promote or consolidate Opportunity Radar into Opportunity Intelligence Workbench; Dashboard role: spatial opportunity map + open action.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Promotion Candidates",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "FEATURE",
+      "targetId": "OPPORTUNITY-INTELLIGENCE-WORKBENCH",
+      "similarityKeys": [
+        "opportunity intelligence workbench",
+        "opportunity radar",
+        "toolbox promotion"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-001",
+      "title": "Legacy Global Documentation Removal Wave",
+      "summary": "Move superseded global authorities into archive/removed only after donor harvest, inbound-link audit, hashes and successor mapping.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "ARCHIVE / REMOVE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "LEGACY-GLOBAL-DOCUMENTATION-REMOVAL-WAVE",
+      "similarityKeys": [
+        "legacy global documentation removal wave",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-002",
+      "title": "Generated Human Documentation Registry",
+      "summary": "Generate the readable documentation registry from docs/registry.json instead of hand-maintaining parallel registry truth.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "GENERATED-HUMAN-DOCUMENTATION-REGISTRY",
+      "similarityKeys": [
+        "generated human documentation registry",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-003",
+      "title": "Unified Backlog Source Manifest",
+      "summary": "Hash and classify every audit, plan, handoff, conversation backlog, donor branch and task source before more planning is created.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "UNIFIED-BACKLOG-SOURCE-MANIFEST",
+      "similarityKeys": [
+        "unified backlog source manifest",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-004",
+      "title": "100-Item Audit Reconciliation",
+      "summary": "Harvest still-valid requirements from the 100-item audit into current authorities and demote the audit to evidence.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "100-ITEM-AUDIT-RECONCILIATION",
+      "similarityKeys": [
+        "100 item audit reconciliation",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-005",
+      "title": "2026-09-11 Unfinished Work Reconciliation",
+      "summary": "Harvest remaining valid requirements from the older unfinished-work master and retire its parallel backlog role.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "2026-09-11-UNFINISHED-WORK-RECONCILIATION",
+      "similarityKeys": [
+        "2026 09 11 unfinished work reconciliation",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-006",
+      "title": "Finish Program Migration",
+      "summary": "Reconcile surviving Finish Program items into Integrated Application/Task Authority and archive the predecessor.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "UPDATE → ARCHIVE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "FINISH-PROGRAM-MIGRATION",
+      "similarityKeys": [
+        "finish program migration",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-007",
+      "title": "System Convergence Donor Harvest",
+      "summary": "Harvest unique convergence rules into Product Architecture, Integrated Application and scoped specifications.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "SYSTEM-CONVERGENCE-DONOR-HARVEST",
+      "similarityKeys": [
+        "system convergence donor harvest",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-008",
+      "title": "Crown + Herald + Conversation Predecessor Cleanup",
+      "summary": "Harvest superseded coordination contracts and retire duplicate predecessor documents.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE / RETIRE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "CROWN-HERALD-CONVERSATION-PREDECESSOR-CLEANUP",
+      "similarityKeys": [
+        "crown herald conversation predecessor cleanup",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-009",
+      "title": "Brain + Prompt Phase-D Documentation Cleanup",
+      "summary": "Retire superseded AI/prompt phase documents after no-loss harvest into current Brain/Prompt authorities.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE / ARCHIVE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "BRAIN-PROMPT-PHASE-D-DOCUMENTATION-CLEANUP",
+      "similarityKeys": [
+        "brain prompt phase d documentation cleanup",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-010",
+      "title": "Settings Workspace Completion Receipt",
+      "summary": "Close stale Settings plan/todo projections with a no-loss completion receipt and current evidence.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "UPDATE / CLOSE",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "SETTINGS-WORKSPACE-COMPLETION-RECEIPT",
+      "similarityKeys": [
+        "settings workspace completion receipt",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-011",
+      "title": "Handoff Document Family Consolidation",
+      "summary": "Consolidate Toolbox, Resource Library, Editor, Vault and Brain handoff families into living authorities plus governed handoff records.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "HANDOFF-DOCUMENT-FAMILY-CONSOLIDATION",
+      "similarityKeys": [
+        "handoff document family consolidation",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-012",
+      "title": "Documentation CI/Governance Automation",
+      "summary": "Add stale-plan, unregistered-doc, duplicate-active-concern, broken-ref, metadata, supersession and archive-manifest checks.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "DOCUMENTATION-CI-GOVERNANCE-AUTOMATION",
+      "similarityKeys": [
+        "documentation ci governance automation",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-013",
+      "title": "Task Index VNext Authority",
+      "summary": "Resolve canonical Task Index writer/storage, aliases, projections and freshness checks.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "RESEARCH + IMPLEMENT",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "TASK-INDEX-VNEXT-AUTHORITY",
+      "similarityKeys": [
+        "task index vnext authority",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-014",
+      "title": "Production Caller & Reachability Census",
+      "summary": "Finish production-caller inventory for overlapping context/evidence/AI/asset/operation subsystems before deletion or consolidation.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PRODUCTION-CALLER-REACHABILITY-CENSUS",
+      "similarityKeys": [
+        "production caller reachability census",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-015",
+      "title": "Creator Context Final Migration",
+      "summary": "Move remaining Sidebar/Brain Hub context assembly through CreatorContextResolver and complete no-project/ContentBuild fixtures.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "UPDATE",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "CREATOR-CONTEXT-FINAL-MIGRATION",
+      "similarityKeys": [
+        "creator context final migration",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-016",
+      "title": "Evidence-ID Continuity",
+      "summary": "Prove evidence IDs survive analytics → specialists → Brain → UI → outcomes.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CERTIFY",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "EVIDENCE-ID-CONTINUITY",
+      "similarityKeys": [
+        "evidence id continuity",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-017",
+      "title": "Algorithm Intelligence Ledger Cleanup",
+      "summary": "Audit helper/ledger sprawl after metric-comparability work and consolidate redundant evaluation paths.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT / OPTIMIZE",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "ALGORITHM-INTELLIGENCE-LEDGER-CLEANUP",
+      "similarityKeys": [
+        "algorithm intelligence ledger cleanup",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-018",
+      "title": "One-Write-Owner Matrix",
+      "summary": "Define exact mutable ownership for Project, ContentBuild, VideoPackage and PublishingPackage fields.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "ONE-WRITE-OWNER-MATRIX",
+      "similarityKeys": [
+        "one write owner matrix",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-019",
+      "title": "Asset Engine + Vault Identity & Lineage Contract",
+      "summary": "Unify shared asset identity and version/variant/derivative lineage across Project, Vault, Editor, Publisher and generation.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE / CERTIFY",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "ASSET-ENGINE-VAULT-IDENTITY-LINEAGE-CONTRACT",
+      "similarityKeys": [
+        "asset engine vault identity lineage contract",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-020",
+      "title": "OperationRecord v1",
+      "summary": "Converge reasoning, research, generation, transform, render, handoff and external execution around shared operation identity.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "OPERATIONRECORD-V1",
+      "similarityKeys": [
+        "operationrecord v1",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-021",
+      "title": "ActionPacket / ToolReceipt / GenerationRecord Convergence",
+      "summary": "Keep specialist projections while stopping overlapping histories from becoming separate truth stores.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "ACTIONPACKET-TOOLRECEIPT-GENERATIONRECORD-CONVERGENCE",
+      "similarityKeys": [
+        "actionpacket toolreceipt generationrecord convergence",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-022",
+      "title": "Outcome Producer Identity Contract",
+      "summary": "Standardize producer ID, source operation, project/video identity, timestamp, evidence and idempotency semantics.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "OUTCOME-PRODUCER-IDENTITY-CONTRACT",
+      "similarityKeys": [
+        "outcome producer identity contract",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-023",
+      "title": "Outcome Coverage Matrix",
+      "summary": "Map Publisher, Projects, Editor, Community, experiments, packaging, Brain and asset generators to canonical outcomes.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "OUTCOME-COVERAGE-MATRIX",
+      "similarityKeys": [
+        "outcome coverage matrix",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-024",
+      "title": "Evaluation-Target Coverage",
+      "summary": "Verify consequential actions declare measurable evaluation targets/checkpoints using canonical comparability semantics.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "UPDATE",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "EVALUATION-TARGET-COVERAGE",
+      "similarityKeys": [
+        "evaluation target coverage",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-025",
+      "title": "Governed Learning Promotion",
+      "summary": "Complete reinforce/hold/reject/supersede, contradiction handling, decay/review and no-direct-model-write guarantees.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "OPTIMIZE",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "GOVERNED-LEARNING-PROMOTION",
+      "similarityKeys": [
+        "governed learning promotion",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-026",
+      "title": "Brain Hub Product UI",
+      "summary": "Organize Brain Hub into Overview, Systems, Agents & Runs, Prompts, Plans, Evidence & Traces, Knowledge & Learning, Audit and Health.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "RESTRUCTURE",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "BRAIN-HUB-PRODUCT-UI",
+      "similarityKeys": [
+        "brain hub product ui",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-027",
+      "title": "Prompt Production Reachability",
+      "summary": "Inventory every prompt constant, alias and caller and classify live, compatibility-only and dead paths.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PROMPT-PRODUCTION-REACHABILITY",
+      "similarityKeys": [
+        "prompt production reachability",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-028",
+      "title": "Prompt Families + Context Recipes",
+      "summary": "Give reachable prompts canonical family/version/schema/context recipes and propagate prompt/model provenance.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE / UPDATE",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PROMPT-FAMILIES-CONTEXT-RECIPES",
+      "similarityKeys": [
+        "prompt families context recipes",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-029",
+      "title": "Prompt Evaluation Program",
+      "summary": "Build rich/sparse/empty/stale/disabled/conflicting fixtures, quality baselines, validators and regression thresholds.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PROMPT-EVALUATION-PROGRAM",
+      "similarityKeys": [
+        "prompt evaluation program",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-030",
+      "title": "Project-Grounded RAG",
+      "summary": "Add project-grounded retrieval behind the canonical Context Resolver without a second memory store.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "RESEARCH / PLAN",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PROJECT-GROUNDED-RAG",
+      "similarityKeys": [
+        "project grounded rag",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-031",
+      "title": "Media Provider Gateway",
+      "summary": "Route Veo/image/video generation through governed generation, Asset Engine/Vault, provenance, queue, cancel and retry contracts.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "RESEARCH + BUILD",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "MEDIA-PROVIDER-GATEWAY",
+      "similarityKeys": [
+        "media provider gateway",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-032",
+      "title": "Legacy Direct Provider Cleanup",
+      "summary": "Inventory direct provider callers, harvest useful prompts/schemas/tests/error handling, migrate, then quarantine after zero reachability.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT / REMOVE",
+      "capabilityIds": [
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "LEGACY-DIRECT-PROVIDER-CLEANUP",
+      "similarityKeys": [
+        "legacy direct provider cleanup",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-033",
+      "title": "Vault Intake Intelligence",
+      "summary": "Complete suggested tags/vision, arbitrary local-media transcript support and proxy derivative generation.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "FINISH",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "VAULT-INTAKE-INTELLIGENCE",
+      "similarityKeys": [
+        "vault intake intelligence",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-034",
+      "title": "Vault Dense Creator UX",
+      "summary": "Replace persistent workspace/navigator/operations chrome with contextual toolbar, selection bar, drawers/popovers and media-first cards.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "RESTRUCTURE",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "VAULT-DENSE-CREATOR-UX",
+      "similarityKeys": [
+        "vault dense creator ux",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-035",
+      "title": "Vault ↔ Projects Creator Lane",
+      "summary": "Complete project stage/priority/due date/promise/storyboard/title/checklist/script/asset/stat projections.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CONNECT",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "VAULT-PROJECTS-CREATOR-LANE",
+      "similarityKeys": [
+        "vault projects creator lane",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-036",
+      "title": "Vault ↔ Editor Media Operations",
+      "summary": "Audit VT_E1 then define derivative-vs-overwrite, protected-asset rules and verified transform gaps.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT / CONNECT",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "VAULT-EDITOR-MEDIA-OPERATIONS",
+      "similarityKeys": [
+        "vault editor media operations",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-037",
+      "title": "Publishing Durability & Recovery",
+      "summary": "Move remaining publishing authority toward durable persistence, remote reconciliation, retry/recovery and crash-safe idempotency.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "FINISH",
+      "capabilityIds": [
+        "CAP-PUBLISH",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PUBLISHING-DURABILITY-RECOVERY",
+      "similarityKeys": [
+        "publishing durability recovery",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-038",
+      "title": "Publish → Analytics → Outcome Loop",
+      "summary": "Preserve ContentBuild/video/package identity after publish and connect measured performance to exact approved assets/variants.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CONNECT",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PUBLISH-ANALYTICS-OUTCOME-LOOP",
+      "similarityKeys": [
+        "publish analytics outcome loop",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-039",
+      "title": "Cross-Surface Handoff Identity",
+      "summary": "Test Project/ContentBuild/video/asset/evidence continuity through Dashboard, Studio, Vault, Editor, Publisher and Brain.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CERTIFY",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "CROSS-SURFACE-HANDOFF-IDENTITY",
+      "similarityKeys": [
+        "cross surface handoff identity",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-040",
+      "title": "VT-SYNC Controller + Progress",
+      "summary": "Complete combined status/controller accuracy, batch selection, windows, queue/finish states and trustworthy counts.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "FINISH / RESTRUCTURE",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "VT-SYNC-CONTROLLER-PROGRESS",
+      "similarityKeys": [
+        "vt sync controller progress",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-041",
+      "title": "Analytics Coverage & Provenance",
+      "summary": "Reconcile dataset/window ownership, traffic details, geography, retention, CSV augmentation, missingness and provenance.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT / UPDATE",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "ANALYTICS-COVERAGE-PROVENANCE",
+      "similarityKeys": [
+        "analytics coverage provenance",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-042",
+      "title": "Dashboard Workbench Consolidation",
+      "summary": "Consolidate overlapping widgets into domain workbenches instead of continuing widget multiplication.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "MERGE / RESTRUCTURE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "DASHBOARD-WORKBENCH-CONSOLIDATION",
+      "similarityKeys": [
+        "dashboard workbench consolidation",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-043",
+      "title": "10-Widget Production Cohort",
+      "summary": "Select and certify the supported cohort across responsive sizes, states and interactions.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CERTIFY",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "10-WIDGET-PRODUCTION-COHORT",
+      "similarityKeys": [
+        "10 widget production cohort",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-044",
+      "title": "Universal Widget Empty/Preview Contract",
+      "summary": "Give every widget intentional loading/empty/disconnected/sample presentation without fake live data.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "UNIVERSAL-WIDGET-EMPTY-PREVIEW-CONTRACT",
+      "similarityKeys": [
+        "universal widget empty preview contract",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-045",
+      "title": "Widget Handoff Capability Metadata",
+      "summary": "Extend widget/tool registries with accepts, produces, suggestedHandoffs and context requirements.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "WIDGET-HANDOFF-CAPABILITY-METADATA",
+      "similarityKeys": [
+        "widget handoff capability metadata",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-046",
+      "title": "Toolbox CSS & Primitive Ownership Finalization",
+      "summary": "Finish canonical geometry ownership and remove feature-local overrides only after parity and screenshots.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "OPTIMIZE / REMOVE",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "TOOLBOX-CSS-PRIMITIVE-OWNERSHIP-FINALIZATION",
+      "similarityKeys": [
+        "toolbox css primitive ownership finalization",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-047",
+      "title": "Editor Completion Program",
+      "summary": "Complete desktop/mobile parity, four-layout certification, typed Brain proposals, generation queue, Video Director integration and final-render assets.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "FINISH",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "EDITOR-COMPLETION-PROGRAM",
+      "similarityKeys": [
+        "editor completion program",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-048",
+      "title": "Auth + Diagnostics Reliability",
+      "summary": "Certify sign-in/session restoration, API routes, account proxy, mobile failures and always-accessible diagnostics.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "AUDIT / STABILIZE",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "AUTH-DIAGNOSTICS-RELIABILITY",
+      "similarityKeys": [
+        "auth diagnostics reliability",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-049",
+      "title": "Public Agent Readiness",
+      "summary": "Add llms.txt strategy, sitemap, canonical/meta/OG/JSON-LD, public text/Markdown surfaces and rescan readiness.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CREATE / FINISH",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PUBLIC-AGENT-READINESS",
+      "similarityKeys": [
+        "public agent readiness",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-APP-050",
+      "title": "Settings Final Visual & Accessibility Closeout",
+      "summary": "Finish responsive, keyboard/focus/destructive/error certification and remove legacy visual authority after parity.",
+      "category": "Application Convergence & Completion",
+      "subcategory": "CERTIFY / CLEAN",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "SETTINGS-FINAL-VISUAL-ACCESSIBILITY-CLOSEOUT",
+      "similarityKeys": [
+        "settings final visual accessibility closeout",
+        "application convergence"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md"
+      ],
+      "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
     }
   ]
 }
