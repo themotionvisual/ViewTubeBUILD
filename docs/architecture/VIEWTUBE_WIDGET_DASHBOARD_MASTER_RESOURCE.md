@@ -1170,6 +1170,12 @@ At PR #456 head `e27b43c7b4746b3312283372593db2fd1d24064c`:
 
 Do not reopen the old asymmetric reclaim or negative-margin/shadow-clearance geometry as a local widget fix. Any regression must be corrected at the canonical shell/primitive owner first.
 
+### 2026-09-26 interior white-lane ownership correction — PR #490
+
+Field QA confirmed that the legacy `toolboxWidgetSystem.css` still contained unlayered shell geometry that outranked the newer layered `widgetShellOwnership.css` contract at runtime. The stale rules applied `margin-top:-3px` to `.vt-widget-content`, added `padding:var(--vt-widget-body-inset)` to `.vt-widget-body`, forced the body back to a flex column, and re-owned flush/inset sizing. This prevented the canonical FULL / SHADOW-SAFE / INSET grid from becoming the actual layout owner and manifested as white interior lanes, early-ending full-width surfaces, and apparently clipped module edges.
+
+The correction removes that legacy geometry ownership. `widgetShellOwnership.css` is now the single owner of widget interior grid geometry and zero body padding; normal controls still use the intentional INSET track, while full-bleed bands/rails can reach the real structural edge without negative-margin compensation. A RED regression test in `MobileDensityEdgeFixes.test.ts` proved the stale margin/padding rule existed before the fix and now guards against its return.
+
 ### 2026-09-26 editable-field parity follow-up — PR #487
 
 Community Post is the interaction donor for dashboard editable surfaces. The shared primitive system now owns the same state language instead of allowing newer primitive layers to downgrade it:
