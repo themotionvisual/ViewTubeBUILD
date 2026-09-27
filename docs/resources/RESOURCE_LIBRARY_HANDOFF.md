@@ -1,10 +1,10 @@
 # ViewTube Resource Library Handoff
 
 **Production date:** 2026-09-26  
-**Last edited:** 2026-09-26  
+**Last edited:** 2026-09-27  
 **Status:** Active living handoff  
 **Owner:** ViewTube Resource Library / Docs / Creator Education  
-**Current series progress:** 2 of 15 creator reference documents authored and registered  
+**Current series progress:** 3 of 15 creator reference documents authored and registered  
 **Primary route:** /resources
 
 ---
@@ -45,12 +45,12 @@ The Resource Library is now a real production feature on current main.
 |---|---|---|---|---|
 | 1 | How YouTube Finds Viewers for Your Videos | youtube-recommendations-discovery | YouTube Strategy | Published |
 | 2 | How to Read YouTube Analytics | youtube-metrics-dimensions-glossary | Analytics | Published |
+| 3 | Shorts vs Long-Form: Different Systems, Different Signals | shorts-vs-long-form-signals | YouTube Strategy | Published |
 
-Both seed resources were rewritten on 2026-09-26 around a creator-first editorial contract. Resource #1 now teaches the recommendation system through audience fit, discovery surfaces, packaging, watch behavior, satisfaction, catalog relationships and a ViewTube diagnosis workflow. Resource #2 now teaches metrics, dimensions, filters, time windows, traffic sources, audience, retention, revenue, comparisons and question-driven analysis. API/backend detail remains only as optional advanced reference.
+Both seed resources were rewritten on 2026-09-26 around a creator-first editorial contract. Resource #1 now teaches the recommendation system through audience fit, discovery surfaces, packaging, watch behavior, satisfaction, catalog relationships and a ViewTube diagnosis workflow. Resource #2 now teaches metrics, dimensions, filters, time windows, traffic sources, audience, retention, revenue, comparisons and question-driven analysis. Resource #3 was added on 2026-09-27 and applies the same contract to Shorts vs long-form, including the August 24, 2026 view-definition change, format-specific choice/watch signals, cross-format audience behavior, and ViewTube diagnosis flows. API/backend detail remains only as optional advanced reference.
 
 ### Remaining first-series resources
 
-3. Shorts vs Long-Form: Different Systems, Different Signals  
 4. Publishing Best Practices and Preflight Checklist  
 5. Thumbnail and Title Packaging Handbook  
 6. Audience Retention and Watch Behavior Guide  
@@ -64,7 +64,7 @@ Both seed resources were rewritten on 2026-09-26 around a creator-first editoria
 14. Copyright, Rights, Reuse and AI-Generated Media Reference  
 15. Reading Analytics Correctly: Scope, Windows, Missingness and Statistical Traps
 
-The next logical content task is **Resource #3: Shorts vs Long-Form: Different Systems, Different Signals**.
+The next logical content task is **Resource #4: Publishing Best Practices and Preflight Checklist**.
 
 ---
 
@@ -863,9 +863,9 @@ The next content ingestion should be:
 
 **#3 — Shorts vs Long-Form: Different Systems, Different Signals**
 
-Recommended execution:
+Completed execution pattern for Resource #3:
 
-1. Receive or retrieve the completed research.
+1. Retrieve current official guidance.
 2. Audit factual claims and citations.
 3. Normalize it using the **creator-first** canonical Resource template.
 4. Open with the creator mental model and practical Shorts-vs-long-form differences before any platform/API detail.
@@ -893,3 +893,12 @@ Recommended execution:
 - Improve shared rendering primitives instead of creating one-off document styling.
 - Keep every resource searchable, versioned, source-grounded, and maintainable.
 - The first 15 documents are the seed collection, not the limit of the system.
+
+
+---
+
+## Next Resource #4
+
+**Publishing Best Practices and Preflight Checklist** is now the next recommended creator-facing resource.
+
+It should continue the creator-first contract and focus on a practical before-publish / publish / after-publish workflow rather than platform implementation details. It should connect directly to ViewTube Publisher, Projects, Packaging Intelligence, checks for titles/thumbnails/descriptions/chapters/playlists/end screens, scheduling, visibility, copyright checks, and post-publish monitoring.
