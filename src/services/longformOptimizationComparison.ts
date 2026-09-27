@@ -59,7 +59,6 @@ export interface LongformDailyComparisonWindow {
   completeThrough: string
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000
 
 const dateOnly = (value: Date) => value.toISOString().slice(0, 10)
 
