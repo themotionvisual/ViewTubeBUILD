@@ -25,6 +25,13 @@ import {
 } from "../WidgetPrimitives"
 import type { DashboardData } from "../useDashboardData"
 import type { CommonWidgetProps } from "../types"
+import { useBrain } from "../../../context/useBrain"
+import { hasGeminiKey } from "../../../services/gemini"
+import {
+  buildAIBrainContextSnapshot,
+  buildAIBrainSystemPrompt,
+} from "../../../services/aiBrainCommandInterface"
+import { buildCreatorGrowthContext } from "../../../services/aiBrainConversationStore"
 import {
   createLongformOptimizationHandoff,
   listLongformOptimizationHistory,
@@ -171,6 +178,7 @@ const ToggleLabel: React.FC<{
 export const LongformOptimizationWidget: React.FC<
   CommonWidgetProps & { data: DashboardData; onNavigate?: (to: string) => void }
 > = ({ data, onNavigate, ...common }) => {
+  const { brain, authState, channelConnection, getBrainMemory } = useBrain()
   const [page, setPage] = useState<Page>("report")
   const [selectedVideoId, setSelectedVideoId] = useState("")
   const [titleAbc, setTitleAbc] = useState(true)
@@ -211,10 +219,21 @@ export const LongformOptimizationWidget: React.FC<
   }, [analysisVideoId, selectedVideoId])
 
   const selected = ranked.find((video) => video.videoId === selectedVideoId) || ranked[0] || null
-  const channelId = selected
-    ? data.videoAssets.find((asset) => asset.videoId === selected.videoId)?.channelId || null
-    : null
-  const projectId = data.brain?.activeProjectId || null
+  const channelId = authState.channelId
+    || (selected ? data.videoAssets.find((asset) => asset.videoId === selected.videoId)?.channelId : null)
+    || null
+  const projectId = null
+  const brainSnapshot = useMemo(() => buildAIBrainContextSnapshot({
+    brain,
+    authState,
+    channelConnection,
+    brainMemory: getBrainMemory(),
+    recentConversationTurns: [],
+  }), [authState, brain, channelConnection, getBrainMemory])
+  const growthContext = useMemo(
+    () => buildCreatorGrowthContext(brainSnapshot, [], []),
+    [brainSnapshot],
+  )
 
   const videoOptions = ranked.map((video, index) => ({
     value: video.videoId,
@@ -246,6 +265,18 @@ export const LongformOptimizationWidget: React.FC<
         projectId,
         video: selected,
         experiment: { titleAbc, thumbnailAbc },
+        brainRuntime: {
+          snapshot: brainSnapshot,
+          systemPrompt: buildAIBrainSystemPrompt({
+            brain,
+            authState,
+            channelConnection,
+            brainMemory: getBrainMemory(),
+            recentConversationTurns: [],
+          }) + "\n\nLONGFORM OPTIMIZER POLICY\nTreat current YouTube/VT-SYNC evidence, Channel Profile/Knowledge, ContentBuild lineage, Asset Engine context and creator controls as bounded context. Do not invent missing transcript or thumbnail-vision evidence. External YouTube mutations remain approval-gated outside this widget.",
+          growthContext,
+          allowModel: hasGeminiKey(),
+        },
       })
       setAnalysis(next)
       setAnalysisVideoId(selected.videoId)
