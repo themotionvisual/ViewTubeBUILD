@@ -60,6 +60,7 @@
 
 .about-vt__intro {
   position: relative;
+  padding-inline: var(--widget-content-inset);
   display: grid;
   grid-template-columns: minmax(180px, .98fr) minmax(0, 1.3fr);
   align-items: center;
@@ -302,6 +303,7 @@
 
 .about-vt__handoff {
   display: grid;
+  padding-inline: var(--widget-content-inset);
   grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
