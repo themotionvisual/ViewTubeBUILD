@@ -54,6 +54,7 @@
 
 .daily-oracle-v2__source-strip {
   display: grid;
+  padding-inline: var(--widget-content-inset);
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 6px;
