@@ -51,6 +51,8 @@ export type AssetType =
  | "timestamps"
  | "education_questions"
  | "thumbnail_concept"
+ | "concept_direction"
+ | "scene_plan"
 
 /**
  * The shared constitution. Deliberately small: rules that belong to a single asset type
