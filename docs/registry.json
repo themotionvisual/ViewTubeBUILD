@@ -338,6 +338,24 @@
       "relatedAuthorities": [
         "docs/specifications/PROMPTS.md"
       ]
+    },
+    {
+      "id": "DOC-GOV-CONVERSATION-HANDOFFS",
+      "path": "docs/governance/CONVERSATION_HANDOFFS.md",
+      "class": "SPECIFICATION",
+      "status": "ACTIVE",
+      "concern": "conversation-handoff-work-reconciliation",
+      "owner": "Conversation & Improvement OS + Documentation Governance",
+      "productionDate": "2026-09-27",
+      "lastEdited": "2026-09-27",
+      "lastAuditedMainSha": "faa07ed085173f5764db72054f17583ce9a3cb38",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/DOCUMENTATION.md",
+        "docs/governance/TASK_AUTHORITY.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ]
     }
   ],
   "legacyGlobalSources": [
