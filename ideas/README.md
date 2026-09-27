@@ -35,3 +35,14 @@ Source lists are provenance. They may overlap.
 New idea list → preserve source list → extract idea records → similarity review → merge duplicates while preserving all source refs → route by capability/tool/system/feature/function → update Master Ideas.
 
 Ideas do not become tasks automatically.
+
+
+## Registered source lists
+
+The machine source-of-truth is `ideas/registry.json#sourceLists`. Current registered lists on this branch:
+
+- `IDEA-LIST-GOVERNANCE-001` — documentation-governance improvement ideas.
+- `IDEA-LIST-AUDIT-EXPANSION-001` — current-main audit expansion opportunities.
+- `IDEA-LIST-PAGE-FEATURES-001` — 80 page-surface feature ideas plus five product-architecture consolidation layers from the 2026-09-27 conversation.
+
+Do not copy these lists into a second registry. Preserve each source list, normalize/dedupe in `registry.json`, and regenerate `MASTER_IDEAS.md`.
