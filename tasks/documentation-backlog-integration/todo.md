@@ -1,5 +1,17 @@
 # Documentation Backlog Integration — To Do
 
+## Execution progress — current conversation intake wave
+
+- [x] Refreshed reconciliation evidence from `76519e3d…` to `4c18a8de…`.
+- [x] Confirmed Task Index VNext writer/storage is still unresolved on current main; remain proposal-only.
+- [x] Captured and reconciled the current conversation as `VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27`.
+- [x] Grouped all remembered 410 source items into canonical capability/plan-family work items rather than 410 task records.
+- [x] Preserved completed foundations as evidence/anti-duplication facts.
+- [x] Recorded VT-001 and VT-023 as DONE in the reconciliation evidence.
+- [x] Ensured the 80 page-surface ideas remain opportunity/intake records rather than automatic tasks.
+- [ ] Finish leaf-level dedupe against permanent VT identities after Task Index VNext is available.
+- [ ] Complete donor-family inventory/hash manifests before any Removed Archive moves.
+
 Source:
 - `CAPABILITY-MAP.md`
 - `CURRENT-MAIN-RECONCILIATION.md`

@@ -1,6 +1,6 @@
 ---
 name: viewtube-ai-system-governor
-description: Govern, streamline, audit, extend and optimize ViewTube Brain/AI architecture, specialist intelligence, evidence/context, prompts, model routing, creator generation, outcomes/evaluation/learning, AI tools and Brain-facing UI without creating overlapping owners.
+description: Govern, streamline, audit, extend and optimize integrated ViewTube Brain/AI, YouTube, analytics, ContentBuild, asset, editor, dashboard, toolbox, widget, settings, sync, and UI features without creating overlapping owners. Use when designing, researching, implementing, consolidating, auditing, or verifying ViewTube tools, workflows, capabilities, YouTube integrations, editor functions, or cross-system product changes.
 ---
 
 # ViewTube AI System Governor
@@ -131,3 +131,56 @@ Load only as needed:
 - [references/prompt-and-model-governance.md](references/prompt-and-model-governance.md)
 - [references/donor-migration.md](references/donor-migration.md)
 - historical management/claims references only for migration provenance; Conversation OS/Crown/Task Authority now own those functions.
+
+## Integrated feature and capability development
+
+Use this section when the request involves a new tool, workflow, dashboard widget, toolbox module, editor capability, YouTube action, AI function, or cross-system consolidation.
+
+### Re-audit before planning
+
+Confirm the repository path, branch/ref, commit, worktree, package scripts, and environment. Inventory the request's domain and adjacent domains. Read the relevant living authorities from `references/source-of-truth-map.md`. Search source for existing routes, registries, hooks, services, schemas, widgets, primitives, and tests. Trace current data flow from user entry to persistence, render, publish, and learning. Record current behavior and gaps; do not infer implementation from documents alone.
+
+### Frame the capability
+
+Write a compact capability contract covering the user goal/persona; entry surfaces and natural-language intent; canonical owners; inputs, outputs, identity keys, and schemas; evidence/context; permissions and external side effects; sync/async behavior, job lifecycle, cancellation/retry; asset/project/editor/publish connections; responsive/accessibility requirements; acceptance criteria; non-goals; and migration targets. Ask only questions that change architecture, permissions, product behavior, or destructive impact. Otherwise choose the smallest reversible assumption and record it.
+
+### Use one integrated identity chain
+
+Prefer the sequence `goal → evidence → brief → project/ContentBuild → Brain proposal → approval → typed operation/job/API → asset/provenance → editor/timeline/widget/dashboard → quality gate → package/publish → outcome → learning`. Keep one identity across the chain. Do not introduce parallel project, analytics, memory, asset, prompt, auth, job, or learning stores.
+
+### Route AI, generation, and YouTube correctly
+
+Route reasoning through BrainRuntime/BrainModelGateway with bounded context and structured schemas. UI surfaces must not call providers directly. Route asynchronous media generation through Video Director; register generated outputs in Asset Engine/Vault before durable project/editor use; record prompt/model/reference/seed/policy/output provenance; keep proposals separate from mutations; and meter expensive work through the canonical usage path.
+
+For YouTube, use the server-owned typed session/API path. Validate scope, capability, channel/content-owner context, quota, payload, rate limits, concurrency, idempotency, and recovery server-side. Preserve remote IDs, exact approved variants, request IDs, and audit events. Distinguish reconnect-required, permission, quota, invalid-request, no-data, and provider-failure states. Never add browser token storage, direct browser Google calls, generic arbitrary URL proxies, or widget-specific auth.
+
+### Standard end-to-end workflow
+
+1. Enter from a goal launcher or existing surface.
+2. Resolve context and canonical evidence.
+3. Select or create the Project/ContentBuild.
+4. Produce a structured proposal with provenance and confidence.
+5. Show the approval boundary and preview/diff.
+6. Execute a typed operation, API call, or recoverable job.
+7. Register assets and lineage.
+8. Connect the result to editor, timeline, widget, dashboard, settings, sync, data visuals, tables, or chat as appropriate.
+9. Run quality gates and deterministic preview/final output checks.
+10. Package/export/publish only after explicit readiness.
+11. Capture outcomes and evaluate them.
+12. Update the relevant living authority, registry, status ledger, and handoff log.
+
+### Build the UI through canonical systems
+
+Classify the surface as page, Studio Hub, Toolbox, Subtoolbox, dashboard widget, editor sidecar, settings, or chat handoff. Reuse the existing primitive and registry. Preserve canonical shell geometry, typography, tokens, spacing, motion, responsive rules, and state semantics. Implement connected, disconnected, loading/progress, empty, partial/unsupported, error/retry, permission/quota-blocked, and success/next-action states. Keep disconnected, empty, error, and missing UI distinct. Support keyboard, screen readers, touch, narrow widget widths, long content, and reduced motion. Update the UI Reference Library and certification ledger when a system-level primitive changes.
+
+Do not copy large CSS blocks, invent a parallel widget shell, hard-code feature inventories, create feature-local intelligence state, or promote standalone HTML/screenshots into production authority.
+
+### Plan by canonical owner
+
+Separate implementation into bounded slices for Brain/context/evidence; project/ContentBuild schema; assets/provenance; typed API/YouTube integration; operation/job store and worker; editor/render parity; dashboard/widget/toolbox surface; settings/permissions; data visualization/table/sync; tests/observability/docs. Name files and existing contracts before adding new ones. Prefer a vertical slice that proves the whole user goal over broad scaffolding.
+
+### Verify before handoff
+
+Run the narrowest relevant checks first, followed by broader gates: schema/type/unit tests; capability and permission tests; project/asset/provenance round trips; provider/job idempotency, retry, cancel, and recovery; editor preview/final render parity; widget/toolbox contracts and visual certification; API integration; build, smoke, responsive, accessibility, privacy, and security checks. Report passed, failed, blocked, and pre-existing debt separately. Never claim visual, runtime, preview, or deployment evidence that was not actually verified.
+
+Use `references/feature-planning-template.md` for substantial feature briefs, `references/ui-certification-checklist.md` for UI surfaces, `references/youtube-integration-checklist.md` for YouTube/AI integrations, `references/source-of-truth-map.md` for authority discovery, and `scripts/scan_viewtube_authorities.py` for a compact repository inventory. Use `templates/integrated-feature-brief.md` when creating a reusable plan artifact.
