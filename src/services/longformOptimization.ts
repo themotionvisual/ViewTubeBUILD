@@ -104,6 +104,17 @@ export interface LongformOptimizationAnalysis {
   recommendationEvent: AlgorithmIntelligenceEvent | null
 }
 
+export interface LongformOptimizationHandoffPayload {
+  videoId: string
+  currentMetadata: LongformOptimizationContext["currentMetadata"]
+  transcript: string | null
+  thumbnail: LongformOptimizationContext["thumbnail"]
+  analytics: LongformOptimizationContext["analytics"]
+  experiment: LongformExperimentChoice
+  missingEvidence: string[]
+  recommendation: CreatorBrainResponse
+}
+
 const finite = (value: number | null | undefined) => Number.isFinite(Number(value)) ? Number(value) : 0
 const nullableFinite = (value: number | null | undefined) => Number.isFinite(Number(value)) ? Number(value) : null
 
@@ -329,22 +340,23 @@ export const createLongformOptimizationHandoff = (input: {
   analysis: LongformOptimizationAnalysis
 }) => {
   const payloadKind = input.targetToolId === "video-manager" ? "metadata" as const : "analysis" as const
+  const payload: LongformOptimizationHandoffPayload = {
+    videoId: input.analysis.context.videoId,
+    currentMetadata: input.analysis.context.currentMetadata,
+    transcript: input.analysis.context.transcript,
+    thumbnail: input.analysis.context.thumbnail,
+    analytics: input.analysis.context.analytics,
+    experiment: input.analysis.context.experiment,
+    missingEvidence: input.analysis.context.missingEvidence,
+    recommendation: input.analysis.response,
+  }
   const packet = createViewTubeActionPacket({
     sourceToolId: "longform-optimizer",
     sourceKind: "widget",
     payloadKind,
     title: `${input.analysis.context.currentMetadata.title} optimization handoff`,
     summary: input.analysis.response.keyInsight || input.analysis.response.body,
-    payload: {
-      videoId: input.analysis.context.videoId,
-      currentMetadata: input.analysis.context.currentMetadata,
-      transcript: input.analysis.context.transcript,
-      thumbnail: input.analysis.context.thumbnail,
-      analytics: input.analysis.context.analytics,
-      experiment: input.analysis.context.experiment,
-      missingEvidence: input.analysis.context.missingEvidence,
-      recommendation: input.analysis.response,
-    },
+    payload,
     contentBuildId: input.analysis.contentBuildId,
     projectId: input.projectId || null,
     channelId: input.channelId || null,
