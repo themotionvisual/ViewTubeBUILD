@@ -72,6 +72,33 @@ describe("ContentBuild repository", () => {
   ]))
  })
 
+ it("keeps repeated non-final selection idempotent while preserving explicit finalization", () => {
+  createContentBuild({ id: "cb-selection" })
+
+  setContentBuildSelection("cb-selection", "thumbnail", "thumb-a", {
+   toolId: "project-builder",
+   actorType: "creator",
+  })
+  setContentBuildSelection("cb-selection", "thumbnail", "thumb-a", {
+   toolId: "video-package",
+   actorType: "sync",
+  })
+
+  const selectedEvents = listContentBuildEvents("cb-selection")
+   .filter(event => event.eventType === "asset.selected" && event.entityId === "thumbnail")
+  expect(selectedEvents).toHaveLength(1)
+
+  setContentBuildSelection("cb-selection", "thumbnail", "thumb-a", {
+   toolId: "thumbnail-studio",
+   actorType: "creator",
+   final: true,
+  })
+
+  const events = listContentBuildEvents("cb-selection")
+  expect(events.filter(event => event.eventType === "asset.selected" && event.entityId === "thumbnail")).toHaveLength(1)
+  expect(events.filter(event => event.eventType === "asset.finalized" && event.entityId === "thumbnail")).toHaveLength(1)
+ })
+
  it("binds the same build to a published YouTube identity", () => {
   createContentBuild({ id: "cb-003", channelId: "channel-a" })
   const next = bindYouTubeVideo({
