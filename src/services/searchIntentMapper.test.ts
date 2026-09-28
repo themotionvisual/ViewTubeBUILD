@@ -31,7 +31,7 @@ describe("Search Intent Mapper backend", () => {
     observedAt: "2026-09-26",
    },
    {
-    term: "napoleon austerlitz strategy",
+    term: "how napoleon won austerlitz",
     views: 80,
     source: "youtube_analytics_v2:search_terms",
     observedAt: "2026-09-26",
@@ -52,7 +52,7 @@ describe("Search Intent Mapper backend", () => {
 
   const result = buildSearchIntentClusters(rows, [
    { videoId: "waterloo", title: "Why Napoleon Lost Waterloo" },
-   { videoId: "austerlitz", title: "Napoleon Austerlitz Strategy", tags: ["austerlitz", "strategy"] },
+   { videoId: "austerlitz", title: "How Napoleon Won Austerlitz", tags: ["austerlitz", "strategy"] },
   ])
 
   expect(result.map((cluster) => cluster.intent)).toEqual(["EXPLAIN", "COMPARE", "DISCOVER"])
