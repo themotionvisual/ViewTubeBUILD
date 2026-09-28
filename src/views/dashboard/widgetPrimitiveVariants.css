@@ -147,6 +147,12 @@
   background: color-mix(in srgb, var(--widget-color, #34cdea) 74%, white);
 }
 
+.widget-split-button.is-left-split.vt-sized-control .widget-split-button-icon svg {
+  width:max(20px,min(var(--vt-primitive-icon,24px),calc(var(--vt-primitive-height,32px) * .72)));
+  height:max(20px,min(var(--vt-primitive-icon,24px),calc(var(--vt-primitive-height,32px) * .72)));
+  stroke-width:2.5;
+}
+
 .widget-split-button.is-left-split .widget-split-button-label {
   min-width: 0;
   display: flex;
