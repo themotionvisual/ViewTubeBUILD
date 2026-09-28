@@ -129,10 +129,10 @@
 .vt-publishing-command__manual-list{
   flex:1 1 auto;
   min-height:0;
-  width:calc(100% + (2 * var(--widget-content-inset)));
-  max-width:none;
-  margin-inline:calc(-1 * var(--widget-content-inset));
-  padding-inline:var(--widget-content-inset);
+  width:100%;
+  max-width:100%;
+  margin-inline:0;
+  padding-inline:0;
   box-sizing:border-box;
   border:2px solid color-mix(in srgb,var(--widget-border) 28%,transparent);
   border-radius:8px;
