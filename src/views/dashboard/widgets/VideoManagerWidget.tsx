@@ -30,7 +30,7 @@ import {
   WidgetMediaUploadFrame,
   WidgetSizedButton,
   WidgetSizedSelect,
-  WidgetSplitButton,
+  WidgetLeftSplitButton,
   WidgetTag,
   WidgetVideoSelect,
   WidgetWorkflowMain,
@@ -521,9 +521,10 @@ export const VideoManagerWidget = ({ data, ...common }: WidgetProps) => {
             {tabs.map((tab) => (
               <WidgetSizedButton
                 key={tab.id}
-                height={24}
+                height={32}
                 textFit="adaptive"
                 tone={page === tab.id ? "primary" : "default"}
+                className="video-manager-page-button"
                 aria-pressed={page === tab.id}
                 disabled={!selectedAsset}
                 onClick={() => setPage(tab.id)}
@@ -532,10 +533,10 @@ export const VideoManagerWidget = ({ data, ...common }: WidgetProps) => {
               </WidgetSizedButton>
             ))}
           </nav>
-          <WidgetSplitButton type="button" tone="primary" width="full" icon={<Save />} disabled={saving || !selectedAsset || dirtyFields.length === 0} onClick={() => void save()}>
+          <WidgetLeftSplitButton type="button" tone="primary" height={38} textFit="adaptive" multiline width="full" icon={<Save />} disabled={saving || !selectedAsset || dirtyFields.length === 0} onClick={() => void save()}>
             {saving ? "Saving…" : saved ? "Saved" : dirtyFields.length ? `Save ${dirtyFields.length} change${dirtyFields.length === 1 ? "" : "s"}` : "No changes"}
-          </WidgetSplitButton>
-          <WidgetIconButton icon={<RotateCcw />} label="Revert changes" height={32} tone="secondary" disabled={!selectedAsset || dirtyFields.length === 0} onClick={reset} />
+          </WidgetLeftSplitButton>
+          <WidgetIconButton icon={<RotateCcw />} label="Revert changes" height={38} tone="secondary" disabled={!selectedAsset || dirtyFields.length === 0} onClick={reset} />
         </WidgetFooter>
       </div>
     </WidgetShell>
