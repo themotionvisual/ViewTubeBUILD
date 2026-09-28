@@ -1,10 +1,16 @@
 import fs from 'node:fs';
 const read=(p)=>JSON.parse(fs.readFileSync(p,'utf8'));
+const ideasRegistry=read('ideas/registry.json');
+const allIdeas=ideasRegistry.ideas||[];
+const masterIdeas=allIdeas.filter(i=>i.lifecycle!=='MERGED');
 const data={
   generatedAt:new Date().toISOString(),
   capabilities:read('governance/convergence/capability-coverage.json').capabilities||[],
   planFamilies:read('governance/convergence/plan-families.json').families||[],
-  ideas:read('ideas/registry.json').ideas||[],
+  ideas:masterIdeas,
+  ideaRecords:allIdeas,
+  ideaSourceItems:ideasRegistry.sourceItems||[],
+  ideaMergeRecords:ideasRegistry.mergeRecords||[],
   openQuestions:read('governance/convergence/open-questions.json').questions||[],
   workflows:read('governance/convergence/workflows.json').workflows||[],
   improvements:read('governance/convergence/improvements.json').recommendations||[],
@@ -18,6 +24,10 @@ const control={
     incompleteCapabilities:incomplete.length,
     planFamilies:data.planFamilies.length,
     ideas:data.ideas.length,
+    ideaRecords:data.ideaRecords.length,
+    mergedIdeaAliases:data.ideaRecords.filter(i=>i.lifecycle==='MERGED').length,
+    ideaSourceItems:data.ideaSourceItems.length,
+    ideaMergeRecords:data.ideaMergeRecords.length,
     openQuestions:data.openQuestions.filter(x=>x.status!=='CLOSED').length,
     workflows:data.workflows.length,
     improvements:data.improvements.length,
