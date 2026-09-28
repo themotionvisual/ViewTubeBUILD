@@ -448,6 +448,36 @@ Added to the canonical widget primitive surface and UI Reference Library:
 
 UI Reference Library now includes a dedicated **COMPOUND** category with live examples of all four primitives. The widget skill names these as canonical compound workflow primitives so future widgets reuse them instead of recreating local variants.
 
+### Mobile field-QA correction wave — follow-up
+
+**Scope correction:** collapsed-widget control recovery was already fixed before this wave and was intentionally left unchanged.
+
+Implemented in the follow-up:
+- reclaimed the excess right-side phone canvas gap at `DashboardCanvas` ownership rather than widening individual widget bodies;
+- forced mobile `FULL` tracks to use a true zero edge-safe value so About VIEWTUBE and Daily Oracle full-bleed bands/dividers can reach the real body edge;
+- expanded portrait header-control allocation from 46% to 54% and preserved two-line labels instead of clipping;
+- promoted canonical `WidgetHeaderActionButton` controls to survive portrait alongside header toggles;
+- added `WidgetActionButton` to canonical widget-color shadow ownership so legacy black shadows cannot win;
+- migrated Publishing Command to the canonical named-track layout and removed its local negative-margin/width compensation;
+- capped manual Publishing Command task-list height so a small checklist no longer stretches through the entire widget;
+- retained package/video selection, canonical `WidgetCheckbox`, and Add Task behavior in Publishing Command;
+- promoted Video Asset Engine’s mobile asset rail to the canonical full-width track and removed its local width expansion math;
+- hardened the four-column Video Asset Engine mobile mode navigation against right-edge clipping;
+- migrated Video Uploader and Video Manager publish/save actions to the sized left-split primitive and matched their reset controls at 38px;
+- scaled left-split icon glyphs with control height and increased Video Manager section navigation to the readable 32px contract;
+- confirmed Video Director already uses `WidgetHeaderActionButton` with a Lucide icon; no emoji header action remains on current main;
+- confirmed Video Manager’s canonical `WidgetVideoSelect` is already represented in the UI Reference Library;
+- added the canonical `WidgetTextArea` to the UI Reference Library beside `WidgetTextInput`.
+
+Visual verification still required after the latest preview deployment:
+- phone left/right outer gutter equality;
+- About VIEWTUBE and Daily Oracle true edge-to-edge bands/dividers;
+- input focus glows/shadows at both interior edges;
+- Image Generator / Brain Hub header-toggle labels in portrait;
+- Video Asset Engine PACKAGE/PUBLISH/ASSETS/HANDOFF navigation and full-width asset rail;
+- Publishing Command compact manual checklist;
+- Uploader/Manager footer action height and typography parity.
+
 ## 6. Widget task backlog / to-do list
 
 ### P0 — System integrity
