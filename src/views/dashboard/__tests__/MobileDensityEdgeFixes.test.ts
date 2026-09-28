@@ -9,6 +9,7 @@ const about = readFileSync(new URL("../widgets/VerificationExplainerWidget.css",
 const oracle = readFileSync(new URL("../widgets/DailyOracleWidget.css", import.meta.url), "utf8")
 const imageSource = readFileSync(new URL("../widgets/ImageGeneratorWidget.tsx", import.meta.url), "utf8")
 const uploaderSource = readFileSync(new URL("../widgets/VideoUploaderWidget.tsx", import.meta.url), "utf8")
+const managerSource = readFileSync(new URL("../widgets/VideoManagerWidget.tsx", import.meta.url), "utf8")
 const settingsCss = readFileSync(new URL("../widgets/SettingsWidget.css", import.meta.url), "utf8")
 const directorCss = readFileSync(new URL("../widgets/video-director/videoDirectorWidget.css", import.meta.url), "utf8")
 const shellSource = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
@@ -128,9 +129,13 @@ describe("mobile widget density and edge contracts", () => {
     expect(flightSource).toContain("ADD TASK")
   })
 
-  it("uses canonical text field primitives in Video Uploader", () => {
+  it("uses canonical text fields and sized left-split publishing actions", () => {
     expect(uploaderSource).toContain("WidgetTextInput")
     expect(uploaderSource).toContain("WidgetTextArea")
+    expect(uploaderSource).toContain("WidgetLeftSplitButton")
+    expect(uploaderSource).toContain('height={38}')
+    expect(managerSource).toContain("WidgetLeftSplitButton")
+    expect(managerSource).toContain('className="video-manager-page-button"')
     expect(settingsCss).toContain("grid-template-columns:repeat(2,minmax(0,1fr))")
   })
 
