@@ -73,6 +73,7 @@ import {
   WidgetStepper,
   WidgetSplitCounter,
   WidgetTextInput,
+  WidgetTextArea,
   WidgetToggleSwitch,
   WidgetTinySpectrumIcon,
   WIDGET_TINY_ICON_SET,
@@ -359,6 +360,18 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     aria-label={`${tone} ${height}px text input`}
                   />
                 )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Text Areas", "Same default / focus contract as text inputs")}
+              <WidgetTextArea
+                tone="default"
+                value={textValue}
+                placeholder="Sample description"
+                onChange={(event) => setTextValue(event.currentTarget.value)}
+                aria-label="Default widget textarea"
+                rows={3}
               />
             </div>
 
