@@ -1,0 +1,232 @@
+:where(.dashboard-barrier) .superfan-card-widget {
+  container: superfan-card-widget / inline-size;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--widget-component-gap);
+  height: 100%;
+  min-height: 0;
+  color: var(--widget-ink);
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: var(--widget-component-gap);
+  align-items: stretch;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__summary > .widget-badge {
+  align-self: center;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__workspace {
+  display: grid;
+  grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.22fr);
+  gap: var(--widget-component-gap);
+  min-height: 0;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__ranking,
+:where(.dashboard-barrier) .superfan-card-widget__inspector {
+  min-height: 0;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__ranking-list {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__advocate {
+  display: grid;
+  grid-template-columns: 22px 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 3px 5px;
+  border: var(--widget-module-stroke) solid color-mix(in srgb, var(--widget-border) 62%, white);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 5%, white);
+  color: var(--widget-ink);
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__advocate:hover,
+:where(.dashboard-barrier) .superfan-card-widget__advocate[data-selected="true"] {
+  border-color: var(--widget-border);
+  background: color-mix(in srgb, var(--widget-color) 14%, white);
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__advocate:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--widget-color) 40%, transparent);
+  outline-offset: 2px;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__rank {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 18%, white);
+  font-size: var(--widget-type-label);
+  font-weight: 1000;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--widget-color) 24%, white);
+  font-size: var(--widget-type-body);
+  font-weight: 1000;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__advocate-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__advocate-copy strong,
+:where(.dashboard-barrier) .superfan-card-widget__advocate-copy small {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__advocate-copy strong {
+  font-size: var(--widget-type-label);
+  font-weight: 1000;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__advocate-copy small {
+  font-size: calc(var(--widget-type-label) * .86);
+  font-weight: 800;
+  opacity: .62;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__inspector .widget-module-frame-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--widget-component-gap);
+  min-height: 0;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__evidence-note {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-height: 0;
+  padding: 6px;
+  border: var(--widget-module-stroke) solid color-mix(in srgb, var(--widget-border) 58%, white);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 7%, white);
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__evidence-note strong,
+:where(.dashboard-barrier) .superfan-card-widget__evidence-note span {
+  font-size: var(--widget-type-label);
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__evidence-note span {
+  opacity: .58;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__evidence-note p {
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: var(--widget-type-label);
+  font-weight: 750;
+  line-height: 1.15;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__loading,
+:where(.dashboard-barrier) .superfan-card-widget__preview {
+  min-height: 0;
+  height: 100%;
+}
+
+:where(.dashboard-barrier) .superfan-card-widget__loading .widget-module-frame-body {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: var(--widget-type-label);
+  font-weight: 850;
+}
+
+@container superfan-card-widget (max-width: 620px) {
+  :where(.dashboard-barrier) .superfan-card-widget__summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__summary > .widget-badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__workspace {
+    grid-template-columns: minmax(10rem, .72fr) minmax(0, 1.28fr);
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__advocate {
+    grid-template-columns: 20px 26px minmax(0, 1fr);
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__advocate > .widget-badge {
+    display: none;
+  }
+}
+
+@container superfan-card-widget (max-width: 430px) {
+  :where(.dashboard-barrier) .superfan-card-widget__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(4.5rem, .72fr) minmax(0, 1.28fr);
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__ranking-list {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(10rem, 1fr);
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__ranking .vt-widget-scroll-viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  :where(.dashboard-barrier) .superfan-card-widget__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
