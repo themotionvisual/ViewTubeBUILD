@@ -14,8 +14,10 @@ const directorCss = readFileSync(new URL("../widgets/video-director/videoDirecto
 const shellSource = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
 const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
 const assetCss = readFileSync(new URL("../widgets/VideoAssetEngineWidget.css", import.meta.url), "utf8")
+const assetSource = readFileSync(new URL("../widgets/VideoAssetEngineWidget.tsx", import.meta.url), "utf8")
 const legacy = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const flightCss = readFileSync(new URL("../widgets/FlightCheckWidget.css", import.meta.url), "utf8")
+const flightSource = readFileSync(new URL("../widgets/FlightCheckWidget.tsx", import.meta.url), "utf8")
 const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
 const navigationCss = readFileSync(new URL("../../../components/navigation/adaptive-navigation.css", import.meta.url), "utf8")
 const canvasSource = readFileSync(new URL("../DashboardCanvas.tsx", import.meta.url), "utf8")
@@ -111,13 +113,19 @@ describe("mobile widget density and edge contracts", () => {
     expect(mobile).not.toContain(".vt-widget-full-bleed")
     expect(assetCss).toContain("vt-asset-engine-slot-panel")
     expect(assetCss).toContain("overflow:visible")
+    expect(assetCss).not.toContain("width:calc(100% + (2 * var(--widget-content-inset)))")
+    expect(assetSource).toContain("vt-widget-zone-full")
     expect(assetCss).toContain("grid-template-columns:repeat(4,minmax(0,1fr))")
   })
 
-  it("keeps Publishing Command full width and compact", () => {
+  it("keeps Publishing Command on canonical full-width tracks and compact task rows", () => {
     expect(flightCss).toContain(".vt-publishing-command__manual-list")
     expect(flightCss).toContain("min-height:28px")
-    expect(flightCss).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
+    expect(flightCss).not.toContain("width:calc(100% + (2 * var(--widget-content-inset)))")
+    expect(flightCss).not.toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
+    expect(flightSource).toContain("vt-widget-track-stack vt-widget-zone-full")
+    expect(flightSource).toContain("WidgetCheckbox")
+    expect(flightSource).toContain("ADD TASK")
   })
 
   it("uses canonical text field primitives in Video Uploader", () => {
