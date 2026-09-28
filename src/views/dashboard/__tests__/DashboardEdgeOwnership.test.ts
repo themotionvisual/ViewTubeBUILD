@@ -5,6 +5,8 @@ const barrier = readFileSync(new URL("../DashboardBarrier.tsx", import.meta.url)
 const shellCss = readFileSync(new URL("../widgetShellOwnership.css", import.meta.url), "utf8")
 const scrollCss = readFileSync(new URL("../widgetScrollbar.css", import.meta.url), "utf8")
 const shell = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
+const mobileCss = readFileSync(new URL("../widgetMobileContract.css", import.meta.url), "utf8")
+const canvas = readFileSync(new URL("../DashboardCanvas.tsx", import.meta.url), "utf8")
 
 describe("dashboard edge and collapsed-control ownership", () => {
   it("does not paint-contain the dashboard where shadows and glows need to escape", () => {
@@ -12,9 +14,13 @@ describe("dashboard edge and collapsed-control ownership", () => {
     expect(barrier).toContain('contain:"layout style"')
   })
 
-  it("does not widen mobile scroll content with fake shadow clearance", () => {
+  it("reclaims only the parent dashboard canvas on phones while scroll content stays canonical", () => {
     expect(scrollCss).not.toContain("width: calc(100% + (2 * var(--widget-shadow-clearance)))")
     expect(scrollCss).not.toContain("margin-inline: calc(-1 * var(--widget-shadow-clearance))")
+    expect(canvas).toContain("dashboard-canvas-inner")
+    expect(mobileCss).toContain("--vt-mobile-canvas-reclaim-right")
+    expect(mobileCss).toContain("width: calc(100% + var(--vt-mobile-canvas-reclaim-right))")
+    expect(mobileCss).toContain("--vt-widget-edge-safe: 0px")
   })
 
   it("keeps the mobile control deck outside the collapsing canvas", () => {
