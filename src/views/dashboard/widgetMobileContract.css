@@ -33,6 +33,13 @@
       margin-inline-end: calc(-1 * var(--vt-mobile-canvas-reclaim-right));
     }
 
+    /* On phones, FULL truly reaches the widget paint edge. Desktop keeps the
+       4px edge-safe track for offset shadows; touch layouts use SHADOW-SAFE
+       explicitly only where a component needs effect clearance. */
+    .dashboard-barrier .vt-widget-body {
+      --vt-widget-edge-safe: 0px !important;
+    }
+
 
     /* Portrait widget chrome: one top-right trigger replaces the crowded
        first-row control rail. Opening it reveals a colored second header row
