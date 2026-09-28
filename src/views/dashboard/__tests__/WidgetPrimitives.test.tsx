@@ -474,24 +474,23 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain("text-overflow: clip")
   })
 
-  it("keeps every VIDEO split bay square while scaling the label and chevron by control height", () => {
-    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
-    expect(variantsCss).not.toContain("--widget-video-split-bay: 40px")
+  it("keeps the VIDEO split bay mathematically square while fitting its label and chevron", () => {
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height, 32px) - (var(--vt-primitive-stroke, 2px) * 2))")
     expect(variantsCss).not.toContain("--widget-video-split-bay: 48px")
     expect(variantsCss).not.toContain("--widget-video-split-bay: 54px")
-    expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
-    expect(variantsCss).toContain("is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 10px")
-    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
-    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector svg { width: 14px; height: 14px; }")
+    expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 7px")
+    expect(variantsCss).toContain("is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 10px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }")
   })
 
   it("makes the video menu search and option rows truly edge-to-edge", () => {
     expect(extensionSource).toContain('className="widget-video-select-menu-search-row"')
-    expect(extensionSource).toContain('height={height} tone="primary"')
+    expect(extensionSource).toContain('height={height} tone="default"')
     expect(variantsCss).toContain(".widget-video-select.is-open > .widget-video-select-menu")
     expect(variantsCss).toContain("padding: 0")
-    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-menu-search-row")
-    expect(variantsCss).toContain("border-radius: 0")
+    expect(variantsCss).toContain(".widget-video-select-menu-search-row")
+    expect(variantsCss).not.toContain(".widget-video-select.is-open .widget-video-select-menu-search-row:focus-within {\n  border: 0")
     expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-option")
     expect(variantsCss).toContain("grid-template-columns: calc(var(--vt-primitive-height, 38px) * 1.7778)")
     expect(variantsCss).toContain(".widget-video-select-option-media")
@@ -653,7 +652,7 @@ describe("reference-library interaction recovery contracts", () => {
 
     expect(matrixCss).toContain(".widget-search-input:focus-within")
     expect(matrixCss).toContain("border-color: var(--widget-field-focus-border)")
-    expect(matrixCss).toContain("background: var(--widget-field-focus-fill)")
+    expect(matrixCss).toContain("background: #fff !important")
     expect(matrixCss).toContain("0 0 16px 2px var(--widget-field-focus-glow)")
     expect(matrixCss).toContain("caret-color: var(--widget-color, #34cdea)")
 
@@ -722,13 +721,15 @@ describe("reference-library video module and full-width primitive sizing", () =>
 })
 
 describe("reference library recovery completion", () => {
-  it("uses the approved family order and retires Navigation plus Metrics/States as standalone pages", () => {
-    expect(referenceSource).toContain('{ id: "header", label: "HEADER CONTROLS" }')
-    expect(referenceSource).not.toContain('{ id: "navigation", label: "NAV" }')
-    expect(referenceSource).not.toContain('{ id: "states", label: "STATES" }')
-    expect(referenceSource).toContain('activeCategory === "header"')
-    expect(referenceSource).not.toContain('activeCategory === "navigation"')
-    expect(referenceSource).not.toContain('activeCategory === "states"')
+  it("restores Navigation, Metrics/States and module-based header controls as sections 6 through 8", () => {
+    expect(referenceSource).toContain('{ id: "navigation", label: "NAV" }')
+    expect(referenceSource).toContain('{ id: "states", label: "STATES" }')
+    expect(referenceSource).toContain('{ id: "header-modules", label: "HEADER MODULES" }')
+    expect(referenceSource).not.toContain('{ id: "header", label: "HEADER CONTROLS" }')
+    expect(referenceSource).toContain('activeCategory === "navigation"')
+    expect(referenceSource).toContain('activeCategory === "states"')
+    expect(referenceSource).toContain('activeCategory === "header-modules"')
+    expect(referenceSource).not.toContain('sectionHeading("9. Header Controls"')
   })
 
   it("supports spectrum icon presentations at every canonical size tier", () => {
@@ -755,10 +756,10 @@ describe("reference library recovery completion", () => {
     expect(matrixCss).toContain("grid-column: full-start / full-end")
   })
 
-  it("lets the video menu expand beyond a narrow trigger while remaining viewport bounded", () => {
-    expect(extensionSource).toContain("VIDEO_MENU_MIN_WIDTH")
-    expect(extensionSource).toContain("Math.max(rect.width, VIDEO_MENU_MIN_WIDTH[height])")
-    expect(extensionSource).toContain("Math.min(preferredWidth, window.innerWidth - 16)")
+  it("keeps the video menu exactly aligned to the trigger width", () => {
+    expect(extensionSource).not.toContain("VIDEO_MENU_MIN_WIDTH")
+    expect(extensionSource).toContain("const width=rect.width")
+    expect(extensionSource).toContain("width:`${menuGeometry.width}px`")
   })
 
   it("offers small and large data-grid density from one canonical primitive", () => {
@@ -802,8 +803,11 @@ describe("video selector overlay geometry", () => {
     expect(variantsCss).toContain(".widget-reference-navigation > .widget-select-trigger")
   })
 
-  it("gives video labels and chevrons enough room at the standard heights", () => {
-    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
+  it("fits the VIDEO label and chevron inside the square rail while keeping menu titles readable", () => {
+    expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 7px")
+    expect(variantsCss).toContain("is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 10px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }")
     expect(variantsCss).toContain("is-height-38 .widget-video-select-option-copy strong {")
     expect(variantsCss).toContain("font-size: 15px")
   })

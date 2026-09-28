@@ -206,7 +206,7 @@
    state contract as canonical text inputs and textareas. */
 .widget-search-input:not(.is-tone-secondary) {
   border-color: var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color, #34cdea) 52%, white));
-  background: #fff;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 8%, white);
 }
 .widget-search-input > input {
   flex: 0 1 auto;
@@ -232,7 +232,7 @@
 .widget-search-input > input::-webkit-search-cancel-button { cursor: pointer; }
 .widget-search-input:focus-within {
   border-color: var(--widget-field-focus-border) !important;
-  background: var(--widget-field-focus-fill) !important;
+  background: #fff !important;
   box-shadow:
     0 0 0 3px var(--widget-field-focus-ring),
     0 0 16px 2px var(--widget-field-focus-glow);
@@ -479,8 +479,19 @@
 }
 
 .widget-toast[class*="is-spectrum-"] {
+  --widget-spectrum-ink: color-mix(in srgb, var(--widget-spectrum-fill) 62%, var(--vt-ink) 38%);
   --widget-toast-hue: var(--widget-spectrum-fill);
   --widget-toast-ink: var(--widget-spectrum-ink);
+  border-color: var(--widget-spectrum-ink);
+  color: var(--widget-spectrum-ink);
+}
+.widget-toast[class*="is-spectrum-"] :is(.widget-toast-icon,.widget-toast-dismiss) {
+  border-color: var(--widget-spectrum-ink);
+  color: var(--widget-spectrum-ink);
+}
+.widget-toast[class*="is-spectrum-"] svg {
+  color: var(--widget-spectrum-ink);
+  stroke: var(--widget-spectrum-ink);
 }
 
 /* ── Toast / alert ──────────────────────────────────────────────

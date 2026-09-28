@@ -83,6 +83,9 @@ import {
   WidgetRainbowDivider,
   WidgetModuleHeader,
   WidgetModuleFrame,
+  WidgetMetric,
+  WidgetStatePanel,
+  WidgetTextArea,
   WidgetVideoSelect,
   WidgetVideoMiniCard,
   WidgetSplitCounterBadge,
@@ -102,7 +105,9 @@ type ReferenceCategory =
   | "progress"
   | "tags"
   | "media"
-  | "header"
+  | "navigation"
+  | "states"
+  | "header-modules"
   | "matrix"
   | "compound"
   | "alerts"
@@ -116,7 +121,9 @@ const REFERENCE_CATEGORIES: ReadonlyArray<{ id: ReferenceCategory; label: string
   { id: "progress", label: "BARS" },
   { id: "tags", label: "TAGS" },
   { id: "media", label: "MEDIA" },
-  { id: "header", label: "HEADER CONTROLS" },
+  { id: "navigation", label: "NAV" },
+  { id: "states", label: "STATES" },
+  { id: "header-modules", label: "HEADER MODULES" },
   { id: "alerts", label: "ALERTS" },
 ]
 
@@ -226,6 +233,8 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [checkboxValue, setCheckboxValue] = useState(true)
   const [radioValue, setRadioValue] = useState("b")
   const [textValue, setTextValue] = useState("")
+  const [textAreaValue, setTextAreaValue] = useState("")
+  const [statePanelStatus, setStatePanelStatus] = useState<"loading" | "ready" | "empty" | "blocked" | "stale" | "error">("ready")
   const [tags, setTags] = useState(["viewtube", "analytics", "creator"])
   const [hasThumbnail, setHasThumbnail] = useState(false)
   const [matrixStepper, setMatrixStepper] = useState(10)
@@ -360,6 +369,23 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   />
                 )}
               />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Text Areas", "Same resting tint + white focus glow as text inputs")}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {(["default", "primary", "secondary"] as WidgetPrimitiveTone[]).map((tone) => (
+                  <WidgetTextArea
+                    key={tone}
+                    tone={tone}
+                    rows={3}
+                    value={textAreaValue}
+                    placeholder={`${tone} textarea`}
+                    onChange={(event) => setTextAreaValue(event.currentTarget.value)}
+                    aria-label={`${tone} text area`}
+                  />
+                ))}
+              </div>
             </div>
 
             <div className="widget-reference-family">
@@ -755,148 +781,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               </div>
             </div>
 
-            <div className="widget-reference-family">
-              {familyHeading("Widget Modules", "Navigation primitives manifested as real header controls")}
-              <div className="grid gap-3">
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<BarChart3 />}
-                      title="Channel Overview"
-                      subtitle="Time window"
-                      controls={
-                        <WidgetHeaderStepper
-                          label="Channel overview time window"
-                          value={moduleWindow}
-                          onPrevious={() => setModuleWindow("7 DAYS")}
-                          onNext={() => setModuleWindow("28 DAYS")}
-                        />
-                      }
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase">The canonical header stepper becomes the time-window controller used by an analytics widget.</p>
-                </WidgetModuleFrame>
 
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<Sparkles />}
-                      title="Header Action"
-                      subtitle="Single destination"
-                      controls={
-                        <WidgetHeaderActionButton
-                          icon={<ExternalLink />}
-                          label="Studio"
-                          onClick={() => undefined}
-                          aria-label="Open Studio example"
-                        />
-                      }
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase">Canonical header action for one destination or handoff; use instead of emoji links or ad-hoc header buttons.</p>
-                </WidgetModuleFrame>
-
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<Bell />}
-                      title="Comment Responder"
-                      subtitle="View + comment counter"
-                      controls={
-                        <span className="widget-module-header-nav-cluster">
-                          <WidgetHeaderToggle
-                            label="Comment responder view example"
-                            value={commentHeaderTab}
-                            items={[{ id: "unreplied", label: "NEW" }, { id: "history", label: "OLD" }]}
-                            onChange={setCommentHeaderTab}
-                          />
-                          <WidgetHeaderStepper
-                            label="Comment pagination example"
-                            value={`${commentHeaderPage} / 12`}
-                            canPrevious={commentHeaderPage > 1}
-                            canNext={commentHeaderPage < 12}
-                            onPrevious={() => setCommentHeaderPage((current) => Math.max(1, current - 1))}
-                            onNext={() => setCommentHeaderPage((current) => Math.min(12, current + 1))}
-                          />
-                        </span>
-                      }
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase">This mirrors the Comment Responder header: NEW/OLD mode plus the current comment counter.</p>
-                </WidgetModuleFrame>
-
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<Layers />}
-                      title="Publishing Workflow"
-                      subtitle="Step navigation"
-                      controls={
-                        <WidgetStepTabs
-                          label="Header publishing stages"
-                          value={stepTabValue}
-                          items={[
-                            { id: "meta", label: "DETAILS" },
-                            { id: "options", label: "OPTIONS" },
-                            { id: "review", label: "VERIFY" },
-                          ]}
-                          onChange={setStepTabValue}
-                        />
-                      }
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase">Step tabs can live directly in a widget header when the module itself has sequential pages.</p>
-                </WidgetModuleFrame>
-
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<Settings />}
-                      title="Auto Chapters"
-                      subtitle="Header switch"
-                      controls={<WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />}
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase">The navigation switch becomes a compact persistent header setting.</p>
-                </WidgetModuleFrame>
-
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<Check />}
-                      title="Embed Permission"
-                      subtitle="Header checkbox"
-                      controls={<WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />}
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase">A canonical choice control can expose a persistent binary publishing option from the header.</p>
-                </WidgetModuleFrame>
-
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<Sparkles />}
-                      title="Reply Mode"
-                      subtitle="Header radio group"
-                      controls={
-                        <span className="widget-module-header-nav-cluster is-choice-cluster">
-                          <WidgetChoice type="radio" name="module-reply-mode" value="a" label="AI" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
-                          <WidgetChoice type="radio" name="module-reply-mode" value="b" label="MANUAL" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
-                        </span>
-                      }
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase">Radio choices can become a compact header mode selector without adding another interior toolbar.</p>
-                </WidgetModuleFrame>
-              </div>
-            </div>
           </WidgetSection>
         )}
 
@@ -1062,7 +947,8 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
             <div className="widget-reference-family">
               {familyHeading("Editable Tags", "Useful tag editor retained from the retired Metrics/States page")}
-              <WidgetDisclosure title="Tags">
+              <div className="widget-reference-editable-tags">
+                <WidgetDisclosure title="Tags">
                 <div className="flex flex-wrap gap-1 p-2">
                   {tags.map((tag) => (
                     <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
@@ -1071,7 +957,8 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     <Plus size={12} />
                   </WidgetSizedButton>
                 </div>
-              </WidgetDisclosure>
+                </WidgetDisclosure>
+              </div>
             </div>
 
             <div className="widget-reference-family">
@@ -1197,52 +1084,29 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {activeCategory === "header" && (
+
+        {activeCategory === "navigation" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("9. Header Controls", "Stepper / intrinsic toggle / action / checkbox / radio")}
-            <div className="widget-reference-family">
-              {familyHeading("Header Toggle", "Different label lengths keep intrinsic selected widths")}
-              <WidgetHeaderToggle
-                label="Comment responder view example"
-                value={headerToggleValue}
-                items={[
-                  { id: "draft-1", label: "CHAT" },
-                  { id: "draft-2", label: "CONTROLS" },
-                  { id: "draft-3", label: "QUEUE" },
-                ]}
-                onChange={setHeaderToggleValue}
+            {sectionHeading("6. Navigation", "Toggles + steppers + tabs")}
+            <WidgetHeaderToggle
+              label="Project drafts"
+              value={headerToggleValue}
+              items={[
+                { id: "draft-1", label: "DRAFT 1" },
+                { id: "draft-2", label: "DRAFT 2" },
+                { id: "draft-3", label: "DRAFT 3" },
+              ]}
+              onChange={setHeaderToggleValue}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <WidgetHeaderStepper
+                label="Workflow step"
+                value={stepperValue}
+                onPrevious={() => setStepperValue("Step 1 of 4")}
+                onNext={() => setStepperValue("Step 2 of 4")}
               />
-            </div>
-            <div className="widget-reference-family">
-              {familyHeading("Header Stepper + Action", "Shared height, stroke, radius and baseline")}
-              <div className="flex flex-wrap gap-2 items-center">
-                <WidgetHeaderStepper
-                  label="Workflow step"
-                  value={stepperValue}
-                  onPrevious={() => setStepperValue("Step 1 of 4")}
-                  onNext={() => setStepperValue("Step 2 of 4")}
-                />
-                <WidgetHeaderActionButton
-                  icon={<Settings />}
-                  label="Settings"
-                  aria-label="Open settings"
-                  onClick={() => undefined}
-                />
-              </div>
-            </div>
-            <div className="widget-reference-family">
-              {familyHeading("Header Checkbox + Radio", "Same control lattice as toggle and stepper")}
-              <div className="flex flex-wrap gap-4 items-center">
-                <WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />
-                <WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />
-                <WidgetChoice type="radio" name="ref-radio" value="a" label="Option A" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
-                <WidgetChoice type="radio" name="ref-radio" value="b" label="Option B" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
-              </div>
-            </div>
-            <div className="widget-reference-family">
-              {familyHeading("Header Publishing Stages", "Header-compatible tabs remain a compound example")}
               <WidgetStepTabs
-                label="Header publishing stages"
+                label="Publishing stages"
                 value={stepTabValue}
                 items={[
                   { id: "meta", label: "DETAILS" },
@@ -1251,6 +1115,195 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 ]}
                 onChange={setStepTabValue}
               />
+            </div>
+            <div className="flex flex-wrap gap-4 items-center">
+              <WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />
+              <WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />
+              <WidgetChoice type="radio" name="ref-radio" value="a" label="Option A" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
+              <WidgetChoice type="radio" name="ref-radio" value="b" label="Option B" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
+            </div>
+          </WidgetSection>
+        )}
+
+        {activeCategory === "states" && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("7. Metrics + States", "Feedback system")}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <WidgetMetric label="LIFETIME VIEWS" value="1.42M" detail="+14.2%" tone="#34cdea" />
+              <WidgetMetric label="CLICK-THROUGH" value="8.90%" detail="High" tone="#b9f536" />
+              <WidgetMetric label="AVG DURATION" value="06:42" detail="62.5%" tone="#ea58e8" />
+              <WidgetMetric label="REVENUE" value="$4,820" detail="+8.5%" tone="#ffad59" />
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {(["loading", "ready", "empty", "blocked", "stale", "error"] as const).map((status) => (
+                <WidgetSizedButton
+                  key={status}
+                  height={24}
+                  tone={statePanelStatus === status ? "primary" : "default"}
+                  onClick={() => setStatePanelStatus(status)}
+                >
+                  {status}
+                </WidgetSizedButton>
+              ))}
+            </div>
+            <WidgetStatePanel
+              state={{
+                data: null,
+                status: statePanelStatus,
+                message: statePanelStatus === "ready" ? "Data synchronized with the canonical store." : undefined,
+                provenance: "VT-SYNC",
+                updatedAt: "Just now",
+                recoveryAction: statePanelStatus === "error" || statePanelStatus === "blocked" ? "Retry Connection" : undefined,
+              }}
+              onRecover={() => setStatePanelStatus("ready")}
+            />
+          </WidgetSection>
+        )}
+
+        {activeCategory === "header-modules" && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("8. Header Controls in Modules", "Real module headers, not detached specimens")}
+            <div className="widget-reference-family">
+              {familyHeading("Widget Modules", "Navigation primitives manifested as real header controls")}
+              <div className="grid gap-3">
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<BarChart3 />}
+                      title="Channel Overview"
+                      subtitle="Time window"
+                      controls={
+                        <WidgetHeaderStepper
+                          label="Channel overview time window"
+                          value={moduleWindow}
+                          onPrevious={() => setModuleWindow("7 DAYS")}
+                          onNext={() => setModuleWindow("28 DAYS")}
+                        />
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase">The canonical header stepper becomes the time-window controller used by an analytics widget.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Sparkles />}
+                      title="Header Action"
+                      subtitle="Single destination"
+                      controls={
+                        <WidgetHeaderActionButton
+                          icon={<ExternalLink />}
+                          label="Studio"
+                          onClick={() => undefined}
+                          aria-label="Open Studio example"
+                        />
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase">Canonical header action for one destination or handoff; use instead of emoji links or ad-hoc header buttons.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Bell />}
+                      title="Comment Responder"
+                      subtitle="View + comment counter"
+                      controls={
+                        <span className="widget-module-header-nav-cluster">
+                          <WidgetHeaderToggle
+                            label="Comment responder view example"
+                            value={commentHeaderTab}
+                            items={[{ id: "unreplied", label: "NEW" }, { id: "history", label: "OLD" }]}
+                            onChange={setCommentHeaderTab}
+                          />
+                          <WidgetHeaderStepper
+                            label="Comment pagination example"
+                            value={`${commentHeaderPage} / 12`}
+                            canPrevious={commentHeaderPage > 1}
+                            canNext={commentHeaderPage < 12}
+                            onPrevious={() => setCommentHeaderPage((current) => Math.max(1, current - 1))}
+                            onNext={() => setCommentHeaderPage((current) => Math.min(12, current + 1))}
+                          />
+                        </span>
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase">This mirrors the Comment Responder header: NEW/OLD mode plus the current comment counter.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Layers />}
+                      title="Publishing Workflow"
+                      subtitle="Step navigation"
+                      controls={
+                        <WidgetStepTabs
+                          label="Header publishing stages"
+                          value={stepTabValue}
+                          items={[
+                            { id: "meta", label: "DETAILS" },
+                            { id: "options", label: "OPTIONS" },
+                            { id: "review", label: "VERIFY" },
+                          ]}
+                          onChange={setStepTabValue}
+                        />
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase">Step tabs can live directly in a widget header when the module itself has sequential pages.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Settings />}
+                      title="Auto Chapters"
+                      subtitle="Header switch"
+                      controls={<WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase">The navigation switch becomes a compact persistent header setting.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Check />}
+                      title="Embed Permission"
+                      subtitle="Header checkbox"
+                      controls={<WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase">A canonical choice control can expose a persistent binary publishing option from the header.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Sparkles />}
+                      title="Reply Mode"
+                      subtitle="Header radio group"
+                      controls={
+                        <span className="widget-module-header-nav-cluster is-choice-cluster">
+                          <WidgetChoice type="radio" name="module-reply-mode" value="a" label="AI" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
+                          <WidgetChoice type="radio" name="module-reply-mode" value="b" label="MANUAL" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
+                        </span>
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase">Radio choices can become a compact header mode selector without adding another interior toolbar.</p>
+                </WidgetModuleFrame>
+              </div>
             </div>
           </WidgetSection>
         )}

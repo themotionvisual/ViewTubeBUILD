@@ -82,14 +82,16 @@
   caret-color: currentColor;
 }
 
-/* Match the Community Post input focus behavior exactly: widget-color
-   border, 18% widget-color tint, and no browser-native outline. */
+/* Canonical editable-field focus state: the resting tint clears to paper
+   while the widget hue moves outside the field as a bright ring + soft glow. */
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus,
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus-visible {
   outline: none;
-  border-color: var(--widget-color, #34cdea) !important;
-  background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color, #34cdea) 34%, transparent);
+  border-color: var(--widget-field-focus-border, var(--widget-color, #34cdea)) !important;
+  background: #fff !important;
+  box-shadow:
+    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 58%, transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 46%, transparent)) !important;
 }
 
 .widget-select-trigger.vt-sized-control:focus-visible,
@@ -237,12 +239,12 @@
 .widget-video-select-trigger.is-height-18 .widget-video-select-trigger-selector > span + span {
   border-block-start-width: 1px;
 }
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px; letter-spacing: .02em; }
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 10px; letter-spacing: .02em; }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px; letter-spacing: .025em; }
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector svg { width: 9px; height: 9px; }
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector svg { width: 14px; height: 14px; }
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 7px; letter-spacing: 0; }
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 8px; letter-spacing: 0; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 10px; letter-spacing: 0; }
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector svg { width: 8px; height: 8px; }
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector svg { width: 10px; height: 10px; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }
 
 
 .widget-video-select-trigger-copy {
@@ -1016,23 +1018,15 @@
   background: var(--vt-tone-bg, #fff);
 }
 
-.widget-video-select.is-open .widget-video-select-menu-search-row {
+.widget-video-select-menu-search-row {
   box-sizing: border-box;
   width: 100%;
   min-width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: color-mix(in srgb, var(--widget-color, #34cdea) 12%, #fff);
 }
-.widget-video-select.is-open .widget-video-select-menu-search-row:focus-within {
-  border: 0;
-  border-radius: 0;
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--widget-color, #34cdea) 62%, transparent);
-}
+/* Border, fill, divider, focus ring and glow are deliberately inherited from
+   the same WidgetSearchInput field contract used outside dropdown menus. */
 .widget-video-select.is-open .widget-video-select-menu-search-row .widget-search-input-icon {
   align-self: stretch;
   height: var(--vt-primitive-height, 38px);
@@ -1181,4 +1175,35 @@
     0 0 16px 2px var(--widget-field-focus-glow)!important;
   position:relative;
   z-index:2;
+}
+
+
+/* UI Reference Library uses the real disclosure/tag primitives but presents
+   the editable-tag specimen at micro scale so the catalogue does not turn one
+   compact primitive into a tall module. */
+.widget-reference-editable-tags .widget-control-disclosure summary {
+  height: 24px;
+  min-height: 24px;
+  padding-inline: 6px;
+  font-size: 10px;
+}
+.widget-reference-editable-tags .widget-control-disclosure summary svg {
+  width: 12px;
+  height: 12px;
+}
+.widget-reference-editable-tags .widget-control-disclosure-body {
+  gap: 4px;
+  padding: 5px;
+}
+.widget-reference-editable-tags .widget-tag-chip {
+  min-height: 18px;
+  padding: 1px 2px 1px 5px;
+  font-size: 8px;
+}
+.widget-reference-editable-tags .widget-tag-chip-remove {
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  min-height: 14px;
+  flex-basis: 14px;
 }

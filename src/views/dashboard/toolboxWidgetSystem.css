@@ -1778,7 +1778,7 @@
   min-height: var(--widget-control-height);
   border: 2px solid var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color, #34cdea) 52%, white));
   border-radius: 6px;
-  background: #fff;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 8%, white);
   font-size: 12px; font-weight: 700; font-family: inherit;
   color: var(--widget-border);
   font-weight: 950;
@@ -1803,10 +1803,10 @@
 :where(.dashboard-barrier) .vt-textarea { resize: vertical; }
 :where(.dashboard-barrier) .vt-input:focus, :where(.dashboard-barrier) .vt-textarea:focus {
   border-color: var(--widget-field-focus-border, var(--widget-color, #34cdea));
-  background: var(--widget-field-focus-fill, color-mix(in srgb, var(--widget-color, #34cdea) 18%, white));
+  background: var(--widget-field-focus-fill, #fff);
   box-shadow:
-    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 35%, transparent)),
-    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 55%, transparent));
+    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 58%, transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 46%, transparent));
 }
 
 /* Fixed-height text fields use the same unobtrusive widget-color scroll rail. */
@@ -4192,11 +4192,12 @@ stroke-width: 2px;
 
 input.vt-input:focus,
 textarea.vt-input:focus {
-  background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
-  
-  /* Optional: ensure the transition is smooth */
+  background: #fff !important;
+  border-color: var(--widget-field-focus-border, var(--widget-color, #34cdea)) !important;
+  box-shadow:
+    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 58%, transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 46%, transparent)) !important;
   transition: background-color 0.2s ease;
-
 }
 
 /* Legacy shadow-clearance margin/padding hacks removed.
@@ -7790,4 +7791,87 @@ textarea.vt-input:focus {
     min-width: 38px;
     padding-inline: 3px;
   }
+}
+
+
+/* Final canonical media-upload frame ownership.
+   The primitive exposes two reviewable media canvases rather than a short
+   button-like strip: square for compact assets and 16:9 for video/large media.
+   The optional action sits inside the frame corner so it does not add a second
+   row of vertical chrome. */
+:where(.dashboard-barrier) .widget-media-upload {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-aspect-square .widget-media-upload-frame {
+  aspect-ratio: 1 / 1;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-aspect-video .widget-media-upload-frame {
+  aspect-ratio: 16 / 9;
+}
+:where(.dashboard-barrier) .widget-media-upload .widget-media-upload-frame {
+  min-height: 0;
+  height: auto;
+  border-radius: var(--widget-control-radius, 8px);
+}
+:where(.dashboard-barrier) .widget-media-upload.has-action .widget-media-upload-action {
+  position: absolute;
+  z-index: 4;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+  width: auto;
+  min-width: 0;
+  max-width: calc(100% - 16px);
+  height: 24px !important;
+  min-height: 24px !important;
+  padding-inline: 7px !important;
+  border-radius: max(3px, calc(var(--widget-control-radius, 8px) - 2px));
+  font-size: 10px !important;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-size-small.has-action .widget-media-upload-action {
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+  max-width: calc(100% - 12px);
+  height: 18px !important;
+  min-height: 18px !important;
+  padding-inline: 5px !important;
+  font-size: 8px !important;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-size-small .widget-media-upload-empty {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  place-content: center;
+  justify-items: center;
+  gap: 7px;
+  padding: 16px 10px 10px;
+  text-align: center;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-size-small .widget-media-upload-icon {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  border: 2px solid var(--widget-border, var(--vt-ink));
+  border-radius: var(--widget-control-radius, 8px);
+  background: color-mix(in srgb, var(--widget-color) 72%, white);
+}
+:where(.dashboard-barrier) .widget-media-upload.is-size-small .widget-media-upload-copy {
+  align-items: center;
+  padding: 0 4px;
+  text-align: center;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-size-large .widget-media-upload-empty {
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: stretch;
+  text-align: left;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-size-large .widget-media-upload-icon {
+  width: 64px;
+  min-width: 64px;
+  height: 100%;
+  border-inline-end: 3px solid var(--widget-border, var(--vt-ink));
+}
+:where(.dashboard-barrier) .widget-media-upload.is-size-large .widget-media-upload-copy {
+  padding: 14px 76px 14px 14px;
 }

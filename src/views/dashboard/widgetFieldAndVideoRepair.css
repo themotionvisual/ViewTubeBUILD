@@ -32,8 +32,8 @@
 /* The selector bay has two stacked rows; the generic primitive icon rule
    otherwise forces a full-size glyph into its half-height chevron row. */
 .widget-video-select-trigger .widget-video-select-trigger-selector svg {
-  width: min(14px, calc(var(--vt-primitive-height) * .36)) !important;
-  height: min(14px, calc(var(--vt-primitive-height) * .36)) !important;
+  width: min(12px, calc(var(--vt-primitive-height) * .32)) !important;
+  height: min(12px, calc(var(--vt-primitive-height) * .32)) !important;
 }
 .widget-video-select-trigger-copy > span {
   line-height: 1.05;
@@ -42,6 +42,9 @@
 /* The menu is portalled to document.body and must receive widget theme tokens
    from WidgetVideoSelect, then use the same field contract as the trigger. */
 .widget-video-select-menu.is-portalled {
+  box-sizing: border-box;
+  gap: 0;
+  padding: 0;
   border-color: var(--vt-tone-stroke, var(--widget-border, var(--vt-ink, #243247)));
   color: var(--vt-ink, #243247);
   background: #fff;
@@ -51,11 +54,19 @@
   border-block-end: 1px solid color-mix(in srgb, var(--widget-color) 38%, white);
 }
 .widget-video-select-menu.is-portalled .widget-video-select-search {
-  padding: 5px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   background: #fff;
 }
 .widget-video-select-menu.is-portalled .widget-video-select-search > .widget-search-input {
   box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
   border: 2px solid var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color) 52%, white));
   border-radius: var(--vt-primitive-radius, 6px);
   background: color-mix(in srgb, var(--widget-color) 8%, white);

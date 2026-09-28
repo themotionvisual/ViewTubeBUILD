@@ -45,7 +45,6 @@ export const WidgetSplitCounterBadge:React.FC<{icon:React.ReactNode;value:React.
 )
 
 export interface WidgetVideoSelectOption {value:string;label:string;thumbnail?:string;meta?:string;duration?:string;views?:string}
-const VIDEO_MENU_MIN_WIDTH:Record<WidgetControlHeight,number> = {18:220,24:280,32:340,38:420}
 const resolveVideoOptionMeta = (option:WidgetVideoSelectOption) => {
  const parts=String(option.meta||"").split("·").map(part=>part.trim()).filter(Boolean)
  const first=parts[0]||""
@@ -83,8 +82,7 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
     const value=styles.getPropertyValue(name).trim()
     if(value)theme[name]=value
    }
-   const preferredWidth=Math.max(rect.width, VIDEO_MENU_MIN_WIDTH[height])
-   const width=Math.min(preferredWidth, window.innerWidth - 16)
+   const width=rect.width
    const left=Math.max(8,Math.min(rect.left,window.innerWidth-width-8))
    setMenuGeometry({left,top,width,maxHeight,placement,theme})
   }
@@ -101,7 +99,7 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
    role="listbox"
    aria-label={label}
   >
-   {searchable?<div className="widget-video-select-search"><WidgetSearchInput className="widget-video-select-menu-search-row" height={height} tone="primary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
+   {searchable?<div className="widget-video-select-search"><WidgetSearchInput className="widget-video-select-menu-search-row" height={height} tone="default" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
    <div className="widget-video-select-options">
     {visibleOptions.map(option=>{const meta=resolveVideoOptionMeta(option);return <button key={option.value} type="button" role="option" aria-selected={option.value===value} className={`widget-video-select-option ${option.value===value?"is-selected":""}`.trim()} onClick={()=>{onChange(option.value);setOpen(false)}}>
      <span className="widget-video-select-option-media">
