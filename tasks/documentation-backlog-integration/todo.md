@@ -18,15 +18,15 @@ Source:
 - `plan.md`
 
 ## Phase 0 — Evidence + source inventory
-- [ ] Refresh audited main SHA immediately before execution.
+- [x] Refresh audited main SHA immediately before execution — archive/inventory wave baseline `bb8ee9c9bd17c2946b329a26bd22cbe4e39eedad`.
 - [ ] Verify every “eliminate from unfinished” claim against current source/tests/receipts.
-- [ ] Inventory and hash all backlog/plan/audit/handoff/reference families.
-- [ ] Include registry-declared MASTER_SOURCE references as mandatory prior art without auto-promoting their ideas to tasks.
-- [ ] Classify every source by documentation class/lifecycle/disposition.
+- [x] Inventory and hash all backlog/plan/audit/handoff/reference families — `SOURCE-FAMILY-INVENTORY.json` currently inventories 199 governed candidate sources.
+- [x] Include registry-declared MASTER_SOURCE references as mandatory prior art without auto-promoting their ideas to tasks.
+- [x] Classify every inventoried source by source class and provisional disposition; canonical task state remains Task Authority-only.
 
 ### Checkpoint 0
-- [ ] No old audit is being treated as current truth.
-- [ ] No completed foundation remains a build-from-scratch candidate.
+- [x] No old audit is being treated as current truth.
+- [x] No completed foundation identified by the current-main reconciliation remains a build-from-scratch candidate.
 
 ## Phase 1 — Task identity reconciliation
 - [ ] Resolve canonical Task Index VNext writer/storage or explicitly remain proposal-only.
@@ -75,26 +75,26 @@ Source:
 - [x] Register `PLAN-MERGE-0005` and attach donor lineage to current plan families.
 - [x] Rewire stale agent Task/Crown/Brain authority references.
 - [x] Rewire the Finish Program todo to Integrated Application / Task Authority and record landed A06/B11 foundations.
-- [ ] Rewire remaining active/historical links to archive/manifest destinations.
-- [ ] Copy source bytes to Removed Archive and update archive index/registry only after the link gate is clean. — 1 of 4 principal donors migrated: dated Finish Program task projection.
+- [x] Rewire remaining active/historical links to archive/manifest destinations.
+- [x] Copy source bytes to Removed Archive and update archive index/registry only after the link gate is clean. — 4 of 4 principal donors preserved; final source-path deletion and broken-link audit are in this wave.
 
 ## Phase 4 — Donor consolidation
-- [ ] Consolidate 2026-09-11 unfinished master.
-- [ ] Consolidate 2026-09-25 100-item audit.
-- [ ] Reconcile conversation-derived 410-item list.
-- [ ] Consolidate dated Finish Program donors.
+- [x] Consolidate 2026-09-11 unfinished master.
+- [x] Consolidate 2026-09-25 100-item audit.
+- [x] Reconcile conversation-derived 410-item list.
+- [x] Consolidate dated Finish Program donors.
 - [ ] Consolidate Toolbox handoff family.
 - [ ] Consolidate Resource Library handoff family.
 - [ ] Consolidate Editor/Vault/Brain handoff families.
 - [ ] Write a consolidation manifest for each family.
 
 ## Phase 5 — Removed Archive
-- [ ] Validate inbound references.
+- [x] Validate inbound references.
 - [ ] Validate runtime/static-file consumption.
-- [ ] Preserve source bytes/hashes.
-- [ ] Move certified superseded files to `archive/removed/`.
-- [ ] Update archive index.
-- [ ] Update registry/supersession chains.
+- [x] Preserve source bytes/hashes.
+- [x] Move certified superseded backlog/Finish Program family files to `archive/removed/`; other plan families remain separate waves.
+- [x] Update archive index for backlog/Finish Program donor family.
+- [x] Update registry/supersession chains for backlog/Finish Program donor family.
 
 ## Phase 6 — Receipts / Crown / Conversation OS
 - [ ] Link task mutation proposals to evidence/receipts.

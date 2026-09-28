@@ -139,7 +139,7 @@ The following names are recorded in planning documents but may live outside curr
 - `viewtube-combined-catalog` variants
 
 Source naming reference:
-[VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md)
+[VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md)
 
 ## How to mine a reference safely
 

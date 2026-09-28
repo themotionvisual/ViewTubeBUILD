@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "viewtube.artifact-record.v1",
+  "artifactId": "VT-ARTIFACT-backlog-source-family-inventory",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "taskIds": [],
+  "title": "Backlog source-family inventory",
+  "type": "inventory",
+  "status": "CANONICAL",
+  "source": "tasks/documentation-backlog-integration/SOURCE-FAMILY-INVENTORY.json",
+  "canonicalTarget": "tasks/documentation-backlog-integration/SOURCE-FAMILY-INVENTORY.json",
+  "producedBy": "viewtube-document-consolidation",
+  "verified": false,
+  "notes": [
+    "Discovery/provenance inventory only; not a task ledger.",
+    "Hashes and provisionally classifies planning/backlog/audit/handoff/status/task/idea/exchange sources.",
+    "Exact task lifecycle remains Task Authority-only."
+  ]
+}

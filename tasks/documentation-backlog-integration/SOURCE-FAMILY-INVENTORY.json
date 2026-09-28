@@ -1,0 +1,1421 @@
+{
+  "schemaVersion": "viewtube.backlog-source-inventory.v1",
+  "productionDate": "2026-09-27",
+  "branchBaseline": "docs/backlog-reconciliation-archive-v2",
+  "baseMainSha": "bb8ee9c9bd17c2946b329a26bd22cbe4e39eedad",
+  "scope": "Planning, backlog, audit, handoff, migration, status, task, idea and Royal Exchange sources under docs/, tasks/, governance/, ideas/ and .viewtube/exchange/.",
+  "authorityRule": "Inventory is discovery/provenance, not a task ledger. Current main and canonical authorities determine implementation/task state.",
+  "counts": {
+    "scannedBlobs": 351,
+    "candidateSources": 199,
+    "byClass": {
+      "ROYAL_EXCHANGE_RECORD": 32,
+      "STATUS_PROJECTION": 11,
+      "WORK_SOURCE": 34,
+      "PLAN": 31,
+      "MASTER_RESOURCE": 10,
+      "AUDIT": 9,
+      "HANDOFF": 4,
+      "HISTORICAL_REFERENCE": 33,
+      "IDEA_GOVERNANCE": 16,
+      "RECEIPT": 5,
+      "CONVERSATION_INTAKE": 8,
+      "ACTIVE_RECONCILIATION_WORKSPACE": 6
+    }
+  },
+  "entries": [
+    {
+      "path": ".viewtube/exchange/artifacts/VT-ARTIFACT-current-main-backlog-reconciliation-plan.json",
+      "gitBlob": "85422783f2266fee089b413c4cf550e47f672cec",
+      "bytes": 853,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/conflicts/VT-MISSION-EXAMPLE-dashboard-canonical__data-authority.json",
+      "gitBlob": "d3a96c742463821725aed5b5921cfaeb52e13851",
+      "bytes": 683,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/conflicts/VT-MISSION-OBSERVATORY-dashboard-evidence__main-drift.json",
+      "gitBlob": "f17bc5bba7517a7424d9d7dec8475b09e0a30355",
+      "bytes": 893,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/decisions/VT-MISSION-EXAMPLE-dashboard-canonical__owner-decision.json",
+      "gitBlob": "8142d03301b788c170fb72a22c7676db1f3f0f12",
+      "bytes": 906,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/handoffs/VT-MISSION-EXAMPLE-dashboard-canonical__king-to-emperor.json",
+      "gitBlob": "d303d32144457048feaf257dab098baf6e4e0be5",
+      "bytes": 731,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/missions/VT-MISSION-BRAIN-evidence-tool-connection.json",
+      "gitBlob": "24d0e5e5f8c7a02df150c6ecb65fc24f2359ecef",
+      "bytes": 1546,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/missions/VT-MISSION-CITADEL-auth-sync-recovery.json",
+      "gitBlob": "79418d411f9270ea146606f6a5b567e7cda04868",
+      "bytes": 1481,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/missions/VT-MISSION-COMPASS-task-artifact-consolidation.json",
+      "gitBlob": "a175dc958fc0c8929667fbc1513a0799cf4acedd",
+      "bytes": 1548,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/missions/VT-MISSION-EXAMPLE-dashboard-canonical.json",
+      "gitBlob": "f3721ea3ab93978cf1d96721204718cf12905c54",
+      "bytes": 1512,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/missions/VT-MISSION-FORGE-video-package-editor.json",
+      "gitBlob": "17e50bc157f8ab27e30a2197069f3caa63b0d614",
+      "bytes": 1522,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/missions/VT-MISSION-OBSERVATORY-dashboard-evidence.json",
+      "gitBlob": "31f472a0306d0cd90eae0621bd3fcea1334b98c9",
+      "bytes": 1395,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/missions/VT-MISSION-current-main-backlog-reconciliation.json",
+      "gitBlob": "0f5444eee0ab005e8d4f41a5bc6cf3642e6fc751",
+      "bytes": 2888,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-BRAIN-evidence-tool-connection__schema-check.json",
+      "gitBlob": "f83aef7feb6ad2eb6d6205be5f4fdffec77b9543",
+      "bytes": 615,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-CITADEL-auth-sync-recovery__schema-check.json",
+      "gitBlob": "734ccf1c4a6cb24669033d8b61df8ffd246fff9c",
+      "bytes": 613,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-COMPASS-task-artifact-consolidation__schema-check.json",
+      "gitBlob": "fcb00c1a87be345ef6df6c99182e83dea74b9855",
+      "bytes": 647,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-EXAMPLE-dashboard-canonical__verification.json",
+      "gitBlob": "856bb809f5979dddce23a2f4fa16eb88809962a6",
+      "bytes": 948,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-FORGE-video-package-editor__schema-check.json",
+      "gitBlob": "d5db3cb1925a9cacff4266324d35572bce080de6",
+      "bytes": 618,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-OBSERVATORY-dashboard-evidence__schema-check.json",
+      "gitBlob": "dddb5cc4f1f63d8ae7e607689608b1e3c04a0699",
+      "bytes": 591,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-current-main-backlog-reconciliation__recon-01.json",
+      "gitBlob": "b65a810b6ca6878c9b95593c1393fcf5ae775ed9",
+      "bytes": 2366,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-current-main-backlog-reconciliation__recon-02.json",
+      "gitBlob": "47145fc9320aa0844817767aa6e29ceda1ec5fbb",
+      "bytes": 2799,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-current-main-backlog-reconciliation__recon-03.json",
+      "gitBlob": "ccd01db759b54369435cce9682ca802a12e9b76a",
+      "bytes": 3465,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/receipts/VT-MISSION-current-main-backlog-reconciliation__recon-04.json",
+      "gitBlob": "6efca5591d374b19e7a8af0532b44b19713c0ff7",
+      "bytes": 1883,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-BRAIN-evidence-tool-connection__emperor.json",
+      "gitBlob": "cd06e5082d972b25c86f96d80ad4073525065cce",
+      "bytes": 905,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-CITADEL-auth-sync-recovery__emperor.json",
+      "gitBlob": "762b894992ffa5e0edeb13e3c2042c88ca1e6d07",
+      "bytes": 1087,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-COMPASS-task-artifact-consolidation__emperor.json",
+      "gitBlob": "ec2ce2f27f5daba02af2e97f93900b74642cdcae",
+      "bytes": 1043,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-EXAMPLE-dashboard-canonical__emperor.json",
+      "gitBlob": "c318612de52b47d46898ccbcaad6988b75940b60",
+      "bytes": 1197,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-FORGE-video-package-editor__emperor.json",
+      "gitBlob": "267fd7dfea538521cd6c1a555fa19632ca6f1f92",
+      "bytes": 1044,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-OBSERVATORY-dashboard-evidence__emperor.json",
+      "gitBlob": "0e990ab1bec2c5f126388940410d8fcd9ef5f6ac",
+      "bytes": 929,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-current-main-backlog-reconciliation__archive-safe-donor-04.json",
+      "gitBlob": "5b618a2a4af530bbbf743c68384bf4e8d47f9ea6",
+      "bytes": 1569,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-current-main-backlog-reconciliation__archivist.json",
+      "gitBlob": "0bac3d6b96fdc3ef69d452951f737823985ca4a3",
+      "bytes": 2044,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-current-main-backlog-reconciliation__conversation-intake-02.json",
+      "gitBlob": "c82e473be22c2123e9bf5a870d07ea76d10180d5",
+      "bytes": 1832,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": ".viewtube/exchange/work-orders/VT-MISSION-current-main-backlog-reconciliation__donor-consolidation-03.json",
+      "gitBlob": "fff25036564aa767e0180b0e358748fda3165fc6",
+      "bytes": 1958,
+      "sourceClass": "ROYAL_EXCHANGE_RECORD",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "docs/DATA_VISUAL_MODULE_UNIFICATION_STATUS.md",
+      "gitBlob": "7beaa433f2db7438fa0ae6ea96bc38499d0c76aa",
+      "bytes": 358,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "docs/EDITOR_DESKTOP_PROJECT_BRIDGE_HOOK_HANDOFF.md",
+      "gitBlob": "971d951d65fc31acb50ebd0b1a778ac79a222dd6",
+      "bytes": 4308,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/MASTER_DATA_OVERLAY_PORTAL_PLAN_2026-09-14.md",
+      "gitBlob": "7919642bc367573f582aad7f1fb9ca14abce27fa",
+      "bytes": 2118,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md",
+      "gitBlob": "ec412c15538188dfbb16bbb127e7bd63bd2fc780",
+      "bytes": 62082,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md",
+      "gitBlob": "52a794e122fd0e3ef5e7056a4e70fb4b2c7fb8a7",
+      "bytes": 12778,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/analytics/YOUTUBE_ANALYTICS_DATASET_EXPANSION_PLAN.md",
+      "gitBlob": "642c6e6c00e872a9db91d7e8c03776c5f016ca13",
+      "bytes": 22346,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md",
+      "gitBlob": "b616c0d7304711ec78c53664afd7227f86ee4eea",
+      "bytes": 10610,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/AUTH_PR_CONSOLIDATION_AUDIT.md",
+      "gitBlob": "a0d79873c0c74ae48dd4777041c62d461b41510d",
+      "bytes": 7826,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "docs/architecture/CSS_SYSTEM_ISOLATION_PLAN_2026-09-14.md",
+      "gitBlob": "da58167f35fdda76987f0fd52e013bacd5b31e85",
+      "bytes": 5190,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md",
+      "gitBlob": "59d2ba50b9ba92f0dc557b4b7dce8fb2cf60e820",
+      "bytes": 22003,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/architecture/STUDIO_HUB_MIGRATION_MATRIX_V1.md",
+      "gitBlob": "d841db20a85a491d002ebaac5bd506a1bb9ba2c4",
+      "bytes": 5669,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/architecture/STUDIO_HUB_UNIFORM_PRIMITIVE_AUDIT_PLAN_2026-09-16.md",
+      "gitBlob": "ece945e3c1fb7ff8fb1a56347b9a89cd4e5e5549",
+      "bytes": 8791,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "docs/architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md",
+      "gitBlob": "bf2b0e3623f3eea72ee17affe443ec0bffedd230",
+      "bytes": 4592,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md",
+      "gitBlob": "2ad94762e172a2311079e75833d06cac2773dd53",
+      "bytes": 42944,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_CREATOR_VAULT_IMPLEMENTATION_PLAN_2026-09-24.md",
+      "gitBlob": "82d84a9a36097fb40b68642d0a47f9b2e0fc716c",
+      "bytes": 5458,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_CROWN_DOMAIN_MISSION_PACK.md",
+      "gitBlob": "df52b21bae671cb13beeccfc7a64832a9b24ce4a",
+      "bytes": 1962,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_CROWN_MAIN_AUDIT_2026-09-11.md",
+      "gitBlob": "8bd1ef3338d44572436d26cd5e497c9ab7a5df16",
+      "bytes": 3410,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_CROWN_RUNTIME_CONTROL_ROOM_PLAN.md",
+      "gitBlob": "4fd32a449fb7031eef943e6ca3336a78d9affbd4",
+      "bytes": 1659,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md",
+      "gitBlob": "d449167936c0fb11cbb2f92c8170947005159b23",
+      "bytes": 36108,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md",
+      "gitBlob": "1eec04dec4f46a5e196681a9dd43f1eda911944d",
+      "bytes": 20787,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md",
+      "gitBlob": "2a838da9c895f2c4ca10340c36b9d273cb32dd96",
+      "bytes": 42489,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md",
+      "gitBlob": "33d6e7e9c574180c42031406a036c509c878674e",
+      "bytes": 115003,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_OPTIMIZATION_PLAN.md",
+      "gitBlob": "4c88203c08c9cdd488899fa4e44f8abb5598692e",
+      "bytes": 23053,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_WIDGET_POST_CURRENT_CONSOLIDATION_PLAN_2026-09-24.md",
+      "gitBlob": "27457fef71238e38e2027f26125396497b819301",
+      "bytes": 21029,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md",
+      "gitBlob": "9fdc98adf9df884bf91aed834b49342a6c22e7e8",
+      "bytes": 8650,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/toolbox-ui-master-resource/HANDOFF_UPDATE_PROTOCOL.md",
+      "gitBlob": "7888a4a059e7c19cdf7b23b0230a24c274520867",
+      "bytes": 3648,
+      "sourceClass": "HANDOFF",
+      "disposition": "RECONCILE_TO_OWNER"
+    },
+    {
+      "path": "docs/architecture/widget-dashboard-master-resource/artifacts/ViewTube-All-190-Widgets-Source-Faithful-Gallery-and-Consolidation-Plan.html",
+      "gitBlob": "b21991e6ec9ca88f429bb42249e28ffcd8333f27",
+      "bytes": 782424,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/architecture/widget-dashboard-master-resource/library-extracts/ViewTube_Widget_Master_Resource_Guide_2026-09-11_EXTRACT.md",
+      "gitBlob": "915712da4462ed2a9257ff133618b0406dbf1631",
+      "bytes": 25015,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md",
+      "gitBlob": "0bb026a0c4672af44affc485c19c18d95461ffb3",
+      "bytes": 15901,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "docs/brain/PR241_DONOR_HARVEST_IMPLEMENTATION_PLAN_2026-09-24.md",
+      "gitBlob": "e2a9661585704bf98d4c3627f821d676601f1eb1",
+      "bytes": 5222,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+      "gitBlob": "fcc824d3323baefd720f133566c5023f658958dd",
+      "bytes": 11303,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/brain/UNIVERSAL_TOOL_HANDOFFS_AND_SUGGESTED_CHAINS.md",
+      "gitBlob": "74952278bc17795d0bb3958643f33ba2665e7169",
+      "bytes": 10266,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+      "gitBlob": "28e6883b32d1f34fecabf4310c14026092239b8e",
+      "bytes": 15365,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md",
+      "gitBlob": "c17061d1cbe7d17b93b22e92cf521537040131b5",
+      "bytes": 7471,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md",
+      "gitBlob": "d89b73a9afc060d6fdc9a19d27ddf8c491241707",
+      "bytes": 5233,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md",
+      "gitBlob": "89450391bfe4a5a25bf1379fd314ad59851270a1",
+      "bytes": 4081,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md",
+      "gitBlob": "380257f7589ec20b9d8a3297617b146b7024a12a",
+      "bytes": 10062,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/editor/EDITOR_PHASE_A_PARITY_FOUNDATIONS_AUDIT_2026-09-24.md",
+      "gitBlob": "e4306a405bffb28e98ec4e9a9f43e22d70108c65",
+      "bytes": 11055,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "docs/editor/EDITOR_SVG_TEMPLATE_ASSET_CONSOLIDATION_PLAN_2026-09-18.md",
+      "gitBlob": "8f6a50f1a7900e42a8298a34ca0cd5024a681241",
+      "bytes": 8618,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md",
+      "gitBlob": "22e5e5075d6f00c73f896c36fae07b303f886be0",
+      "bytes": 44961,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "docs/governance/CONVERSATION_HANDOFFS.md",
+      "gitBlob": "09b035a21c5de0dd72a2cc01c71afb7afea11a5a",
+      "bytes": 10366,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/governance/TASK_AUTHORITY.md",
+      "gitBlob": "f9407a08a116383039c121f6a1181fd969699943",
+      "bytes": 6323,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/governance/consolidation-manifest.schema.json",
+      "gitBlob": "bcd83c5cc6da9f4da50ef4dd227a77ed43eb1419",
+      "bytes": 3144,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/governance/conversation-handoff.schema.json",
+      "gitBlob": "e670b242a03e2c7a14866db4e9ee243a5345d1d1",
+      "bytes": 2731,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/handoffs/VIEWTUBE_TOOLBOX_UI_CSS_CONVERSATION_HANDOFF.md",
+      "gitBlob": "d6b0827f7c7f073fc11f1d56283562c5c188bd65",
+      "bytes": 26921,
+      "sourceClass": "HANDOFF",
+      "disposition": "RECONCILE_TO_OWNER"
+    },
+    {
+      "path": "docs/handoffs/VIEWTUBE_TOOLBOX_UI_CSS_MASTER_HANDOFF.md",
+      "gitBlob": "4cd2f57be3f619466ba8f199bb9b751115f55b5c",
+      "bytes": 35152,
+      "sourceClass": "HANDOFF",
+      "disposition": "RECONCILE_TO_OWNER"
+    },
+    {
+      "path": "docs/handoffs/VIEWTUBE_VAULT_MASTER_HANDOFF_2026-09-26.md",
+      "gitBlob": "17652a6eeb5371ba43c6025edb513571a68c0629",
+      "bytes": 58408,
+      "sourceClass": "HANDOFF",
+      "disposition": "RECONCILE_TO_OWNER"
+    },
+    {
+      "path": "docs/herald/artifacts/2026-09-18--data-visual-controller-unification/documents/data-visual-controller-unification-plan.md",
+      "gitBlob": "f9b618acab6c446de19de67ae7a5ceade8d365a3",
+      "bytes": 12727,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/migration/README.md",
+      "gitBlob": "98cd2aa731f0b84a453e031fb74d428f610ae495",
+      "bytes": 14785,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/migration/TIME_WINDOW_IMPLEMENTATION_PLAN_2026-09-11.md",
+      "gitBlob": "95d6bb9ebd8d0b56a269b555d6eba36d5241e38e",
+      "bytes": 26731,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/migration/data-visual-canvas-contract.md",
+      "gitBlob": "ffc94294b904258322302bae1c2efd8610a5e80f",
+      "bytes": 5938,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/migration/data-visual-controller-unification-plan.md",
+      "gitBlob": "1b3267266983b31e62b692ad04e385778d91a05d",
+      "bytes": 14349,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/migration/data-visual-mobile-mark-scale-plan.md",
+      "gitBlob": "11d750c7ce3d48e5ecd81b7161930fb914bcb311",
+      "bytes": 21945,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/migration/pending-features-inventory.md",
+      "gitBlob": "ab640e93a5dc4e047f955d96ee25c688e305e3cc",
+      "bytes": 9975,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/migration/reference/BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md",
+      "gitBlob": "360b58435190264c1932a4abe47f9f7759f8f2db",
+      "bytes": 13262,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/CHANNEL_INTELLIGENCE_ALGORITHM_WORKFLOW_SYSTEMS_2026-09-03.md",
+      "gitBlob": "16ac00d1e5087cc51498d7a69eb2c3b7ff165ef5",
+      "bytes": 6303,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/PARENT_DOCUMENTATION_UPDATES_2026-08-30.patch",
+      "gitBlob": "a95819ddfc49893e54933181a30a9f5436f5286b",
+      "bytes": 3299,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/PR241_VIEWTUBE_AI_BRAIN_BRAINSTORM_AND_FRONTEND_DESIGN_2026-09-12.md",
+      "gitBlob": "aa751a09718392054e3376d671aa2e9710e268f2",
+      "bytes": 23818,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/PR241_VIEWTUBE_AI_SYSTEMS_VERIFIED_AUDIT_AND_IMPLEMENTATION_PLAN_2026-09-12.md",
+      "gitBlob": "db2b5d3d207c073dd3383167c7dc85b1b4549c44",
+      "bytes": 55368,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/PR_77_MAIN_MERGE_VT_SYNC_ANALYTICS_MASTER_REFERENCE_2026-09-03.md",
+      "gitBlob": "8371d212a1447dfd82644bb6c876a5bdd4519039",
+      "bytes": 29635,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md",
+      "gitBlob": "196dd91263287c395b9c63eb5e1b90426e4077ed",
+      "bytes": 17279,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/README.md",
+      "gitBlob": "96ed0bbe24b1f0ba58f66771d3d02746a23f9a79",
+      "bytes": 9798,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VAULT_TOOL_DONOR_FEATURE_MAP_2026-09-24.md",
+      "gitBlob": "37e450409fc774ec87ec53d708ef255ffc67cffb",
+      "bytes": 4548,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VAULT_TOOL_DONOR_REHARVEST_2026-09-24.md",
+      "gitBlob": "992e239338f6778ec86d87ff1be12bc5ad1c7318",
+      "bytes": 15523,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBEX_VS_BRANCH_CHECK_REFRESH_2026-08-29.md",
+      "gitBlob": "4f0f3b13c3982e7aebd96c3d8dbc594461a3525d",
+      "bytes": 16898,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_AUTH_ARCHITECTURE_REVIEW_2026-08-27.html",
+      "gitBlob": "53799831ebbeef2e8efbb2b38a8aace6714a3014",
+      "bytes": 8087,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_CANONICAL_OWNER_MIGRATION_PLAN_2026-09-03.md",
+      "gitBlob": "a2de03cd1dc2d7e48dc4867a77277f3db207036b",
+      "bytes": 8524,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_DEVELOPMENT_STATUS_2026-09-03.md",
+      "gitBlob": "8be8c4e261e266bfc1941b0d40af7dc8495af205",
+      "bytes": 5008,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_PR77_TO_MAIN_MERGE_FEATURE_COMBINATION_OPTIMIZATION_GUIDE_2026-09-03.md",
+      "gitBlob": "4e04bed70adb1da8a29612b776f62e44768bb921",
+      "bytes": 12572,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_SYSTEM_INTEGRATION_MATRIX_2026-09-03.md",
+      "gitBlob": "90cdfc8a7959c56fe2cdd144a633d42c174583bc",
+      "bytes": 5507,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_SYSTEM_REFERENCE_REFRESH_2026-09-03.md",
+      "gitBlob": "c22f54361e898d2d969db39d49a9822060b0ec3d",
+      "bytes": 3317,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json",
+      "gitBlob": "75888d33aa2513a605eba5d7a28d1aa020fa7c1f",
+      "bytes": 17422,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_UNDEPLOYED_SYSTEMS_AUTH_MERGE_INDEX_2026-08-27.md",
+      "gitBlob": "639ce25f39cffa12a52e104e2006a723104d11dd",
+      "bytes": 25793,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_UNDEPLOYED_SYSTEMS_INDEX_2026-08-27.json",
+      "gitBlob": "ab519d66af944e6f7668d3ddb1a889a4599c93ef",
+      "bytes": 3065,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_UNIFIED_SYSTEMS_ARCHITECTURE_2026-09-03.md",
+      "gitBlob": "8cdf20fe7e7c4567a1fa16b29cc62e1f7d394ce2",
+      "bytes": 10461,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/VIEWTUBE_VT_SYNC_ANALYTICS_ARCHITECTURE_MASTER_REFERENCE_2026-09-03.md",
+      "gitBlob": "1be023b96de0387bf9aabf8eb89619a26ee8a2c3",
+      "bytes": 25050,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md",
+      "gitBlob": "38267660622f867eebe90d6ccff8d3cd679d446d",
+      "bytes": 9167,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/AI_BRAIN_REACHABILITY_AUDIT_WORK_ORDER_2026-09-17.md",
+      "gitBlob": "75988caf39929af670f55a2bc9e5064a2ada6e1e",
+      "bytes": 3285,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/AI_INTELLIGENCE_ENGINE_PHASE0_SYSTEM_MANIFEST_2026-09-17.md",
+      "gitBlob": "975cb8eba77310ed69ff5856778e2890f3494b6f",
+      "bytes": 6861,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/BRAIN_RUNTIME_PHASE_1_MODEL_AND_ORCHESTRATION_INVENTORY_2026-09-11.md",
+      "gitBlob": "2bcd7f25f1b3773f03400472a12e7d8062e4e220",
+      "bytes": 8479,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/PHASE_1_CLOSEOUT_PHASE_2_START.md",
+      "gitBlob": "9a2b3bc055c81d3f937f8f82d35e45fda697a04d",
+      "bytes": 4578,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/PHASE_4_LIVE_TOOL_INTEGRATION.md",
+      "gitBlob": "94bbde80e5058146f5dbdc54e6aac9a927ebe2cd",
+      "bytes": 3395,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/README.md",
+      "gitBlob": "b47458484342efc905956ea9b8b5a8076d9da66a",
+      "bytes": 1439,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md",
+      "gitBlob": "569eb86c03bd24c43d5d1c869aacb387a4f0d383",
+      "bytes": 41062,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/brain-ai-history/VIEWTUBE_AI_CREATOR_INTELLIGENCE_OS_IMPLEMENTATION_PLAN_2026-09-11.md",
+      "gitBlob": "f2112db3013ac508e3b9936b625a1b94000fd617",
+      "bytes": 24426,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/prototypes/ADAPTIVE_BRAIN_ORCHESTRATOR_2026-09-03.html",
+      "gitBlob": "c4d733fb02598033a114d3fcc61e209c3eb788ee",
+      "bytes": 2163,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/migration/reference/prototypes/VIEWTUBE_BRAIN_USER_CONTROL_CENTER_2026-09-03.html",
+      "gitBlob": "9f9d925e302754c6b6d14d6c782df727a0aad51b",
+      "bytes": 15493,
+      "sourceClass": "HISTORICAL_REFERENCE",
+      "disposition": "KEEP_REFERENCE"
+    },
+    {
+      "path": "docs/programs/INTEGRATED_APPLICATION.md",
+      "gitBlob": "b5672acb8ab97391a9ccdec661c4249942c67dab",
+      "bytes": 29158,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/resources/RESOURCE_LIBRARY_HANDOFF.md",
+      "gitBlob": "879a37dab212591c9fd477581bb29982749fb6ae",
+      "bytes": 25669,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "docs/ui/MEDIA_PRIMITIVE_EXPANSION_PLAN.md",
+      "gitBlob": "d45e25bdb2fb03dd6697e18cc385f9f182ac1882",
+      "bytes": 4675,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_HERALD_STATUS.md",
+      "gitBlob": "e6bfcf640ee26787fa56b3ac991f104406ff8a22",
+      "bytes": 612,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "docs/ui/toolbox-system/audits/MASTER_RESOURCE_50_IMPROVEMENTS_2026-09-13.md",
+      "gitBlob": "91558631828f0f882be09def8ea977ad4d7f876a",
+      "bytes": 5328,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "docs/user-guide-v2/PHASE_1_2_AUDIT_AND_TRUTH_REGISTRY.md",
+      "gitBlob": "37c7549d4c9398b715d671f2d45f0d26196dc33b",
+      "bytes": 6959,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "docs/user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md",
+      "gitBlob": "e77df848611dfc316ed08ac87929c975f71cf457",
+      "bytes": 6675,
+      "sourceClass": "MASTER_RESOURCE",
+      "disposition": "VERIFY_AUTHORITY_OR_DONOR"
+    },
+    {
+      "path": "governance/ai-systems/registry/plans.json",
+      "gitBlob": "017253abdcbdb16d414a0732bd01b4102c525287",
+      "bytes": 11473,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "governance/convergence/plan-families.json",
+      "gitBlob": "f62595f6d3a45a21ba091d96b0389bf7db27140d",
+      "bytes": 6757,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "governance/convergence/plan-merges.json",
+      "gitBlob": "e98ad7d37f01d456856ed8539dce26022d10d89e",
+      "bytes": 2880,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "governance/release-2026-08-22/CONSOLIDATION_MANIFEST.md",
+      "gitBlob": "97702059c71570c2b2f0bccbadcd286a7444d151",
+      "bytes": 4132,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "ideas/MASTER_IDEAS.md",
+      "gitBlob": "67a447460b4aa2de0312e7332f437037e08ac79f",
+      "bytes": 86114,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/README.md",
+      "gitBlob": "85d63146b4a5a5052f59ebc57399e69eecd18326",
+      "bytes": 1898,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/README.md",
+      "gitBlob": "a67a8be91639849454f9001f28b87391bc7e4e65",
+      "bytes": 390,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/ai/README.md",
+      "gitBlob": "6430d6c314ed945af7e2969c9856cbb5db3d61ee",
+      "bytes": 151,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/analytics/README.md",
+      "gitBlob": "9d0fa25d050e27b1f2c28bbef81cb570f30d862a",
+      "bytes": 165,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/editor-video/README.md",
+      "gitBlob": "8cf00367b96a59c68213355027dc9b6290fd1e16",
+      "bytes": 173,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/governance/document-governance-improvements.md",
+      "gitBlob": "950e35083e691ee8f08bc127547c36355241b262",
+      "bytes": 6932,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/infrastructure/README.md",
+      "gitBlob": "cfa058a81af3bf10b638c508562d7c9a9ca31d00",
+      "bytes": 175,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/product/README.md",
+      "gitBlob": "79bda09414966e0a9d4966ccc1571e0c03f03471",
+      "bytes": 366,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md",
+      "gitBlob": "f6cfeba9b21414b1bdb3efc356148c16cfbc8201",
+      "bytes": 9811,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+      "gitBlob": "b4d91fa6c15a8b3cd19681845182984e7386689a",
+      "bytes": 21251,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+      "gitBlob": "3f00094eb456483376ecd97b500ade001182a30f",
+      "bytes": 7374,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/ui-ux/README.md",
+      "gitBlob": "1a594309f04050a55fbe5f55bdd8ee0d567950d9",
+      "bytes": 159,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/workflows/README.md",
+      "gitBlob": "f17260cb0f0df5f4e1377d66c11828a9788c6f1d",
+      "bytes": 277,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+      "gitBlob": "00e85a174e6adaf957829573153af6876450a445",
+      "bytes": 27325,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "ideas/registry.json",
+      "gitBlob": "6c73e6c8a9d9d9dd5366f20d72df5e59117995a6",
+      "bytes": 202721,
+      "sourceClass": "IDEA_GOVERNANCE",
+      "disposition": "KEEP_IDEA_SOURCE"
+    },
+    {
+      "path": "tasks/SETTINGS-FRONTEND-BLUEPRINT.md",
+      "gitBlob": "421ad01db75687d3d4a4a700e7878b4fdc22776c",
+      "bytes": 14270,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/SPEC-settings-frontend-redesign.md",
+      "gitBlob": "fe0c1b4652d7d67cb4be3eb948c80b4f505c639b",
+      "bytes": 14258,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/ai-brain-quality/CAPABILITY-MAP.md",
+      "gitBlob": "d20e6fae7502b40b5d8d54c1e852c2e76983f638",
+      "bytes": 1945,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/ai-brain-quality/SPEC-channel-knowledge.md",
+      "gitBlob": "5e81178ffef8fe2dfd2bb379188183c9a9eb7a3c",
+      "bytes": 2054,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/ai-brain-quality/SPEC-evidence-contract.md",
+      "gitBlob": "5c35fd5d0b2e5e75ceb726052f1903d259322bd2",
+      "bytes": 1937,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/ai-brain-quality/plan.md",
+      "gitBlob": "598c71f6201a2e96040982bda1b203e2c69c9299",
+      "bytes": 4799,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/ai-brain-quality/todo.md",
+      "gitBlob": "1e6bfd05b9f112e5df820697bdd773c8181d2f46",
+      "bytes": 1965,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/ai-systems-management/CAPABILITY-MAP.md",
+      "gitBlob": "9d4d3811d113b369a06e96c86319c0c9c2748bcf",
+      "bytes": 4406,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/ai-systems-management/SPEC.md",
+      "gitBlob": "e697506c64a183fe044152634c7047a4090acbd8",
+      "bytes": 6614,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/ai-systems-management/plan.md",
+      "gitBlob": "4ae00057d4a0ff12ddccacb29eb25ccd98579d31",
+      "bytes": 6936,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/ai-systems-management/todo.md",
+      "gitBlob": "848dad170bda9908e17afdb3c3edb644ab289300",
+      "bytes": 3835,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/brain-authority-consolidation-phase-d/PHASE-D-RECEIPT.md",
+      "gitBlob": "1c235270d7b512bb275bd6ee69e8c34e41bff05e",
+      "bytes": 5376,
+      "sourceClass": "RECEIPT",
+      "disposition": "PRESERVE_EVIDENCE"
+    },
+    {
+      "path": "tasks/convergence-governance-wave/IDEAS_CONSOLIDATION_PLAN.md",
+      "gitBlob": "33a5755fe069a636bc1bd92c6e648926b3387199",
+      "bytes": 10109,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/convergence-governance-wave/RECEIPT.md",
+      "gitBlob": "0ce586450934cd6148678cf4a7ee4997686fa267",
+      "bytes": 3860,
+      "sourceClass": "RECEIPT",
+      "disposition": "PRESERVE_EVIDENCE"
+    },
+    {
+      "path": "tasks/conversation-intake/INDEX.md",
+      "gitBlob": "a0dce1dee9ace08d4c297c378dced3e8257c2b48",
+      "bytes": 1229,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-intake/README.md",
+      "gitBlob": "67a6f0905f108f641d0eca8ec02ddb8a7d51e6d8",
+      "bytes": 1254,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-intake/VT-CONV-DOCS-OS-TASK-INDEX/handoff.md",
+      "gitBlob": "790f40a90afcb093822e50107dd1c69577fdba0a",
+      "bytes": 37318,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-intake/VT-CONV-DOCS-OS-TASK-INDEX/review.md",
+      "gitBlob": "435373feb48c43154815e329bee0d776737e9281",
+      "bytes": 9366,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-intake/VT-CONV-DOCS-OS-TASK-INDEX/worklog.json",
+      "gitBlob": "d3a883009322c8dc03062df2568a9d7296a1c238",
+      "bytes": 26270,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/handoff.md",
+      "gitBlob": "6afecad5acefaece2a789812a4a1941e769aa742",
+      "bytes": 9047,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/review.md",
+      "gitBlob": "d0a94886c823caa706b8084e345eaf4c16740729",
+      "bytes": 13006,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/worklog.json",
+      "gitBlob": "4e5b16c0ffedb3293ec453ede566659e91869f39",
+      "bytes": 54780,
+      "sourceClass": "CONVERSATION_INTAKE",
+      "disposition": "PRESERVE_PROVENANCE"
+    },
+    {
+      "path": "tasks/conversation-os-phase-c/PHASE-C-RECEIPT.md",
+      "gitBlob": "d6ed464489e42992d3a803ccbc1181aad2c29acb",
+      "bytes": 4481,
+      "sourceClass": "RECEIPT",
+      "disposition": "PRESERVE_EVIDENCE"
+    },
+    {
+      "path": "tasks/document-system-foundation/PHASE-A-B-RECEIPT.md",
+      "gitBlob": "8ca6caa71980218bd781b0dd2be31dedf9726bbd",
+      "bytes": 3719,
+      "sourceClass": "RECEIPT",
+      "disposition": "PRESERVE_EVIDENCE"
+    },
+    {
+      "path": "tasks/documentation-backlog-integration/BACKLOG-DONOR-INBOUND-REFERENCES.md",
+      "gitBlob": "b31dae7bce077ae4c7cb48af7f106547f3aad194",
+      "bytes": 8264,
+      "sourceClass": "ACTIVE_RECONCILIATION_WORKSPACE",
+      "disposition": "KEEP_ACTIVE"
+    },
+    {
+      "path": "tasks/documentation-backlog-integration/CAPABILITY-MAP.md",
+      "gitBlob": "3b37e77f10d169a945334c0c59ab3e482fb82f51",
+      "bytes": 2567,
+      "sourceClass": "ACTIVE_RECONCILIATION_WORKSPACE",
+      "disposition": "KEEP_ACTIVE"
+    },
+    {
+      "path": "tasks/documentation-backlog-integration/CONSOLIDATION-MANIFEST-BACKLOG-FINISH-PROGRAMS.json",
+      "gitBlob": "a0b0a38ed7562c742125128c4874309dd9875675",
+      "bytes": 8565,
+      "sourceClass": "ACTIVE_RECONCILIATION_WORKSPACE",
+      "disposition": "KEEP_ACTIVE"
+    },
+    {
+      "path": "tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md",
+      "gitBlob": "4aaa726ab422dc94fe1aee7dd661f930d065f39a",
+      "bytes": 14636,
+      "sourceClass": "ACTIVE_RECONCILIATION_WORKSPACE",
+      "disposition": "KEEP_ACTIVE"
+    },
+    {
+      "path": "tasks/documentation-backlog-integration/plan.md",
+      "gitBlob": "6eeb5aba6e24eb7ed56d408b76861ce57dcbfcec",
+      "bytes": 13913,
+      "sourceClass": "ACTIVE_RECONCILIATION_WORKSPACE",
+      "disposition": "KEEP_ACTIVE"
+    },
+    {
+      "path": "tasks/documentation-backlog-integration/todo.md",
+      "gitBlob": "2fdd15ffa9a884811bd1d5544e10dfa5c5d2678f",
+      "bytes": 6972,
+      "sourceClass": "ACTIVE_RECONCILIATION_WORKSPACE",
+      "disposition": "KEEP_ACTIVE"
+    },
+    {
+      "path": "tasks/plan.md",
+      "gitBlob": "c45d2e1dabbf96c6f66330367cfd0ea33d0fac13",
+      "bytes": 9555,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/system-convergence/CREATOR-CONTEXT-REACHABILITY.md",
+      "gitBlob": "0ba49cb3ca46378e88ae0ef6dbe99a1c79c2511c",
+      "bytes": 4770,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/system-convergence/EVIDENCE-INTELLIGENCE-AUDIT.md",
+      "gitBlob": "140d74d1ad441cf09453f4dcbaa71cb99489a536",
+      "bytes": 7906,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "tasks/system-convergence/EVIDENCE-RECORD-DERIVED-SIGNAL-CONTRACT.md",
+      "gitBlob": "55febd15d013e1980a2d26e0b01419f72a559617",
+      "bytes": 7616,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/system-convergence/SYSTEM-CLASSIFICATION.md",
+      "gitBlob": "73806de870a2e66b6e0e3d8c7cb0fe902f5afd03",
+      "bytes": 10901,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/system-convergence/plan.md",
+      "gitBlob": "783a9a471b82be25712ff802716e5a5062922e53",
+      "bytes": 4992,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/system-convergence/todo.md",
+      "gitBlob": "8693dcdb8bad55604873be67e13047746d7f72a8",
+      "bytes": 7432,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/todo.md",
+      "gitBlob": "69fff2eb1f6c1cc2f2b6178e4312115c6051e3b8",
+      "bytes": 2329,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/toolbox-workflow-convergence/CANDIDATE-MAP.md",
+      "gitBlob": "b47311c7807056702562b424b454fb18afec2ee5",
+      "bytes": 4306,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/toolbox-workflow-convergence/DOC-INTEGRATION-RECEIPT.md",
+      "gitBlob": "548405c8c41e7299b0aa7dd926f758af8d3fafe8",
+      "bytes": 2989,
+      "sourceClass": "RECEIPT",
+      "disposition": "PRESERVE_EVIDENCE"
+    },
+    {
+      "path": "tasks/toolbox-workflow-convergence/plan.md",
+      "gitBlob": "c0522b801d4d271eab27fad03fc437b2e5778d32",
+      "bytes": 10252,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/toolbox-workflow-convergence/todo.md",
+      "gitBlob": "b90609a96f8a63a9bc61f3c9bb1cba19cce1f7fc",
+      "bytes": 8344,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/viewtube-finish-program/BACKLOG-REGISTRY.md",
+      "gitBlob": "dbec4d7c88a9729cb2cf0e999578c5b8b445ea31",
+      "bytes": 9478,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/viewtube-finish-program/plan.md",
+      "gitBlob": "9c37aa91968fe05d20a977432c310113d073c559",
+      "bytes": 4361,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/viewtube-finish-program/todo.md",
+      "gitBlob": "bc01b0b625d3f0c6af3723df37c82745948fa2cc",
+      "bytes": 6073,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/viewtube-one-goal-status.md",
+      "gitBlob": "cee942f040a042bf88791c46478c7620191c323b",
+      "bytes": 9408,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    },
+    {
+      "path": "tasks/viewtube-vault/CAPABILITY-MAP.md",
+      "gitBlob": "9ecfe56e768c625de264ea9409dba54c0a6317f5",
+      "bytes": 2035,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/viewtube-vault/REHARVEST-GAP-REGISTRY.md",
+      "gitBlob": "bf7a443d4e4244a68882f1c42d0dae42cf4a136f",
+      "bytes": 3874,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/viewtube-vault/REVISED-MERGE-PLAN.md",
+      "gitBlob": "19cc67f33ed6195efc9d3f7a0c0c24091b6a734c",
+      "bytes": 4029,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/viewtube-vault/SPEC-vault.md",
+      "gitBlob": "74f37a4184a313f2c636bd1a31b63dd74f441342",
+      "bytes": 9391,
+      "sourceClass": "WORK_SOURCE",
+      "disposition": "REVIEW"
+    },
+    {
+      "path": "tasks/viewtube-vault/UI-DENSITY-AUDIT-2026-09-25.md",
+      "gitBlob": "0e324854a6557646766b69670c9db4251d0e19c1",
+      "bytes": 9946,
+      "sourceClass": "AUDIT",
+      "disposition": "DONOR_REVIEW"
+    },
+    {
+      "path": "tasks/viewtube-vault/plan.md",
+      "gitBlob": "52d8f05c5084918aaa770823d0d31320a1a3757e",
+      "bytes": 7126,
+      "sourceClass": "PLAN",
+      "disposition": "RECONCILE_PLAN_FAMILY"
+    },
+    {
+      "path": "tasks/viewtube-vault/todo.md",
+      "gitBlob": "a8eda1b524851877b443a55e7353d05c1674f050",
+      "bytes": 9409,
+      "sourceClass": "STATUS_PROJECTION",
+      "disposition": "RECONCILE_CURRENT_MAIN"
+    }
+  ]
+}

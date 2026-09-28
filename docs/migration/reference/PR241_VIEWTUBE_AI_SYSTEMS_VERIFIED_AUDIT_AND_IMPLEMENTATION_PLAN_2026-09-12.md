@@ -1,7 +1,7 @@
 > **Historical donor reference — PR #241**  
 > Preserved from donor head `031230f0726063bf52895c693da26c06ca6b4264` on 2026-09-24.  
 > This document captures a 2026-09-12 point-in-time audit/design state. Its maturity percentages, reachability counts, branch status, provider assumptions and “current” claims are **not current authority**.  
-> Use `docs/brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md`, current Brain architecture docs, current code, and `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` for present status.  
+> Use `docs/brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md`, current Brain architecture docs, current code, and `archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` for present status.  
 > Valuable requirements and feature ideas are retained below as donor evidence.
 
 # ViewTube AI Systems — Verified Audit, Gap Analysis and Implementation Plan

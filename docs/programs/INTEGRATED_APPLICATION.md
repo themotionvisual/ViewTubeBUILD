@@ -8,7 +8,7 @@
 **Owner:** Integrated Application Program  
 **Registry ID:** DOC-PROGRAM-INTEGRATED  
 **Last Audited Main SHA:** 3ed2bc91f324338fd110a160d65ddbed93806142
-**Supersedes:** docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md after migration certification  
+**Supersedes:** archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md after migration certification  
 **Consolidates:** system convergence program relationships while preserving its detailed classification/task sources  
 **Related Authorities:** docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md; docs/architecture/PRODUCT_ARCHITECTURE.md; docs/governance/CONVERSATION_OS.md; docs/governance/DOCUMENTATION.md; docs/governance/TASK_AUTHORITY.md; docs/governance/VERIFICATION.md; docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md; Task Index
 
@@ -231,9 +231,9 @@ The following older plan items are no longer greenfield work and must not be re-
 
 Use the following sources as reconciliation inputs, not live status authorities:
 
-- `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` — DONOR/REVIEW until every unique item is harvested.
-- `docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md` — AUDIT snapshot; item status must be rechecked against current main before promotion.
-- `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` and `tasks/viewtube-finish-program/**` — superseded/donor execution sources; preserve aliases and unique acceptance criteria.
+- `archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` — DONOR/REVIEW until every unique item is harvested.
+- `archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md` — AUDIT snapshot; item status must be rechecked against current main before promotion.
+- `archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` and `tasks/viewtube-finish-program/**` — superseded/donor execution sources; preserve aliases and unique acceptance criteria.
 - Conversation-derived backlog summaries — evidence/intake only; route accepted durable work through the owning authority and Task Authority.
 - Old branches/PRs/prototypes — donor/evidence only unless current-main reconciliation proves a missing capability.
 

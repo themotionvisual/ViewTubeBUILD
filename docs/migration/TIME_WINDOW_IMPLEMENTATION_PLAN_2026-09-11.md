@@ -11,7 +11,7 @@
 sync controller options, and the consumer selectors that read windowed facts.
 **Grounding docs:**
 `docs/migration/reference/VIEWTUBE_VT_SYNC_ANALYTICS_ARCHITECTURE_MASTER_REFERENCE_2026-09-03.md` §3–§9
-and `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` task 11.
+and `archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` task 11.
 
 ---
 

@@ -7,7 +7,7 @@
 **Last audited main:** `6e5df12c2f0d3d3f8d2d1ca88e6fe2b87ce366dc`  
 **Canonical owner / concern:** creator-facing Brain runtime, AI orchestration, evidence/context policy, specialist intelligence integration, model gateway, outcome/evaluation/learning boundaries, creator controls, and strangler migration away from direct legacy generation paths.  
 **Executable authority:** `src/services/brain/runtime/**`, `BrainOrchestrator.ts`, `BrainContextBroker.ts`, `BrainEvidenceQuality.ts`, Brain intelligence/evaluation/outcome/learning services, and their tests.  
-**Related active work:** `tasks/ai-brain-quality/**` and `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`.  
+**Related active work:** `tasks/ai-brain-quality/**` and `archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`.  
 **Herald boundary:** repository AI-work governance is owned by `agent/contracts/herald-in.md`, `herald-out.md`, `herald-workflow.md`, and `.viewtube/herald/**`; Herald is not the creator Brain runtime.  
 **Rule:** unionize capabilities, not duplicate owners.
 

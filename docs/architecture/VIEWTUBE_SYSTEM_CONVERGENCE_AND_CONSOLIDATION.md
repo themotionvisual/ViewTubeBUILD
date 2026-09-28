@@ -557,7 +557,7 @@ Still authoritative:
 - `docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`
 - `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md`
 - `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md`
-- `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
+- `archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
 - `docs/handoffs/VIEWTUBE_VAULT_MASTER_HANDOFF_2026-09-26.md`
 
 This plan becomes the convergence layer that explains how those authorities should interact and where redundant integration infrastructure should shrink.

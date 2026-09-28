@@ -189,7 +189,7 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 115 | `docs/migration/reference/brain-ai-history/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md` | brain | `historical` | `retain-as-history` | 39897 | Broad September 11 AI/Brain audit; current runtime has advanced materially and the unified contract is current authority. |
 | 116 | `docs/migration/reference/brain-ai-history/VIEWTUBE_AI_CREATOR_INTELLIGENCE_OS_IMPLEMENTATION_PLAN_2026-09-11.md` | brain | `historical` | `retain-as-history` | 23217 | Original AI Creator Intelligence OS roadmap; current execution has moved to unified AI authority plus current task/finish plans. |
 | 117 | `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` | brain | `historical` | `retain-as-history` | 61545 | Original Herald design plan; implemented authority now lives in agent/contracts/herald-* plus .viewtube/herald and exchange records. |
-| 118 | `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | governance | `review` | `audit-before-move` | 25225 | Broad unfinished-work inventory can conflict with newer domain-specific state; verify item-by-item. |
+| 118 | `archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | governance | `review` | `audit-before-move` | 25225 | Broad unfinished-work inventory can conflict with newer domain-specific state; verify item-by-item. |
 | 119 | `docs/vt-e1-render-worker.md` | editor | `reference` | `retain-or-consolidate` | 1417 | General documentation; verify current scope and merge target during its domain wave. |
 
 ## Post-baseline living/control documents
@@ -204,7 +204,7 @@ These files were created after the original 119-file baseline and therefore are 
 - `docs/editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md` — active scoped Editor/Brain implementation plan.
 - `docs/deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md` — Wave 6 living deployment/release authority.
 - `docs/user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md` — Wave 6 living User Guide V2 authority.
-- `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` — current-main completion/convergence plan; not a replacement for domain authorities.
+- `archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` — current-main completion/convergence plan; not a replacement for domain authorities.
 
 ## Consolidation progress
 

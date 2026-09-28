@@ -90,7 +90,7 @@ Integrity is gated by `npm run check:quarantine`.
 
 | Path | Superseded by |
 |---|---|
-| `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | `docs/programs/INTEGRATED_APPLICATION.md` + current plan-family survivors + Task Authority; donor consolidation tracked by `CONSOL-BACKLOG-FINISH-PROGRAMS` |
+| `archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | `docs/programs/INTEGRATED_APPLICATION.md` + current plan-family survivors + Task Authority; donor consolidation tracked by `CONSOL-BACKLOG-FINISH-PROGRAMS` |
 | `docs/migration/reference/VIEWTUBE_UNDEPLOYED_SYSTEMS_INDEX_2026-08-27.json` | **empty** — 0 entries; do not rely on it |
 | The uploaded condensed memory reference | its `viewtubeX` and `docs/skills/` paths are stale — see plan O12. Its **FAILURE → FIX INDEX** remains valuable |
 

@@ -869,7 +869,7 @@ The following important sources are superseded/donor/historical and still need l
 - `docs/DOCUMENTATION_GOVERNANCE.md`
 - `docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md`
 - `docs/architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md`
-- `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
+- `archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
 - `docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md` — donor until all useful program content is harvested
 - `docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md`
 - `agent/contracts/herald-in.md`

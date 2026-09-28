@@ -214,8 +214,8 @@ Current main and active program authorities still support these unfinished progr
 
 The following should be treated as audit/donor/history and reconciled into current authorities/task projections:
 
-- `docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md`
-- `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md`
+- `archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md`
+- `archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md`
 - this conversation’s reconstructed 410-item list
 - dated Finish Program source files superseded by `docs/programs/INTEGRATED_APPLICATION.md`
 - root `DOCUMENTATION_GOVERNANCE.md` / `DOCUMENTATION_REGISTRY.md` baselines superseded by `docs/governance/DOCUMENTATION.md` + `docs/registry.json`

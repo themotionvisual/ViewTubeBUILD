@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "receiptId": "VT-RECEIPT-current-main-backlog-recon-05",
+  "worker": "viewtube-document-consolidation",
+  "kind": "archive-migration-and-source-inventory",
+  "changedPaths": [
+    "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+    "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+    "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+    "archive/removed/INDEX.md",
+    "tasks/documentation-backlog-integration/SOURCE-FAMILY-INVENTORY.json",
+    "tasks/documentation-backlog-integration/CONSOLIDATION-MANIFEST-BACKLOG-FINISH-PROGRAMS.json",
+    "tasks/documentation-backlog-integration/BACKLOG-DONOR-INBOUND-REFERENCES.md",
+    "tasks/documentation-backlog-integration/todo.md",
+    "docs/registry.json",
+    "governance/convergence/plan-families.json",
+    "governance/convergence/plan-merges.json"
+  ],
+  "checks": [
+    {
+      "name": "byte-preservation-unfinished-master",
+      "state": "proven",
+      "evidence": "source/archive Git blob 068e86e6349844df8c38ad0dcc06775a8ae88f19"
+    },
+    {
+      "name": "byte-preservation-100-item-audit",
+      "state": "proven",
+      "evidence": "source/archive Git blob 374a4a236e7e8d465c458de4810cd4860675fd60"
+    },
+    {
+      "name": "byte-preservation-finish-program",
+      "state": "proven",
+      "evidence": "source/archive Git blob b9337fce4d742c580b772ccf3642e38a70631148"
+    },
+    {
+      "name": "no-loss-accounting",
+      "state": "proven",
+      "evidence": "CONSOL-BACKLOG-FINISH-PROGRAMS reports allUniqueMaterialAccounted=true and allSourcesArchived=true."
+    },
+    {
+      "name": "source-family-inventory",
+      "state": "proven",
+      "evidence": "SOURCE-FAMILY-INVENTORY.json hashes and classifies 199 planning/backlog/audit/handoff/status/task/idea/exchange candidate sources from 351 governed blobs on the branch baseline."
+    },
+    {
+      "name": "task-writer-safety",
+      "state": "proven",
+      "evidence": "No canonical Task Index lifecycle mutation or permanent VT ID allocation performed; Task Index VNext writer remains unresolved."
+    }
+  ],
+  "artifacts": [
+    "tasks/documentation-backlog-integration/SOURCE-FAMILY-INVENTORY.json",
+    "tasks/documentation-backlog-integration/CONSOLIDATION-MANIFEST-BACKLOG-FINISH-PROGRAMS.json",
+    "archive/removed/INDEX.md"
+  ],
+  "limitations": [
+    "Post-move broken-link/release-gate verification is pending CI on the pull request.",
+    "The 199-source inventory uses provisional source-class/disposition labels; bounded authority and exact task state still require domain/Task Authority reconciliation.",
+    "Toolbox, Resource Library, Editor, Vault and Brain handoff families remain separate consolidation waves."
+  ],
+  "status": "partial"
+}
