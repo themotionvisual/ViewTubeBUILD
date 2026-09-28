@@ -1,7 +1,7 @@
 # Backlog Donor Inbound Reference Map
 
 **Production Date:** 2026-09-27  
-**Status:** RECONCILING  
+**Status:** ARCHIVE WAVE COMPLETE  
 **Purpose:** classify inbound references that must be handled before the backlog/Finish Program donor family can move to Removed Archive.
 
 ## Rule
@@ -42,7 +42,7 @@ Historical documents may retain lineage references only if those links remain re
 
 1. [x] `agent/registry/references.md` — rewired to Task Authority / current governance; the September 11 file remains donor lineage only.
 2. [x] `tasks/viewtube-finish-program/todo.md` — rewired to `docs/programs/INTEGRATED_APPLICATION.md` and explicitly demoted to a transition/alias projection.
-3. [ ] `tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md` — after the archive move, reference the consolidation manifest / archived source rather than the active root path.
+3. [x] `tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md` — rewired to archived donor paths/current reconciliation artifacts.
 
 ## Intentional lineage
 
@@ -53,8 +53,8 @@ Historical documents may retain lineage references only if those links remain re
 - [x] source family inventoried;
 - [x] unique task/program/idea/governance/reference material has a destination;
 - [x] inbound references discovered and classified;
-- [ ] active references rewired — 2 of 3 immediate rewires complete; final audit link waits for archive destination;
-- [ ] historical references updated to archive/manifest destinations;
-- [ ] source bytes copied to Removed Archive;
-- [ ] registry/archive index updated;
-- [ ] post-move broken-link audit clean.
+- [x] active references rewired;
+- [x] historical references updated to archive/manifest destinations;
+- [x] source bytes copied to Removed Archive with matching Git blob hashes;
+- [x] registry/archive index updated;
+- [ ] post-move broken-link audit clean — run after original source paths are removed.
