@@ -109,8 +109,8 @@ The detailed source ranges are preserved and routed in `worklog.json`. Major sur
 
 ## Important resources / donors
 
-- `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md`
-- `docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md`
+- `archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md`
+- `archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md`
 - `tasks/viewtube-finish-program/**`
 - `docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md`
 - `ideas/registry.json`
