@@ -81,6 +81,13 @@ describe("widget geometry finalization contracts", () => {
   })
 })
 
+describe("widget action shadow ownership", () => {
+  it("includes action buttons in canonical widget-color shadow ownership", () => {
+    expect(exactHeightsCss).toContain(".widget-action,.widget-split-button")
+    expect(exactHeightsCss).toContain("color-mix(in srgb,var(--widget-color,#34cdea) var(--vt-shadow-alpha),transparent)")
+  })
+})
+
 describe("widget viewport indicator geometry", () => {
   it.each([
     ["top", 0, 0],
