@@ -98,7 +98,7 @@
       "lastEdited": "2026-09-27",
       "lastAuditedMainSha": "e5bbb56fee503c26a1251c6e3643307af12c4632",
       "supersedes": [
-        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
+        "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
       ],
       "relatedAuthorities": [
         "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md",
@@ -418,7 +418,7 @@
       "archiveState": "PENDING"
     },
     {
-      "path": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "path": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "status": "SUPERSEDED",
       "supersededBy": "DOC-PROGRAM-INTEGRATED",
       "archiveState": "PENDING"
