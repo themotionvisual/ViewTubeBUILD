@@ -11,6 +11,8 @@ import { NEW_WIDGET_DEFINITIONS } from "./widgets/newWidgetSet"
 
 export { DEFAULT_DASHBOARD_ROWS, SUPPORTED_DASHBOARD_WIDGET_IDS }
 
+const HIDDEN_NEW_WIDGET_IDS = new Set<string>(["search-intent-mapper"])
+
 const inclusiveBucketRange = <T extends string>(order: readonly T[], minimum: T, maximum: T): readonly T[] => {
  const minIndex = Math.max(0, order.indexOf(minimum))
  const maxIndex = Math.max(minIndex, order.indexOf(maximum))
@@ -22,12 +24,13 @@ const NEW_REGISTERED_WIDGETS: WidgetDefinition[] = NEW_WIDGET_DEFINITIONS.map((w
  const supportedHeights = inclusiveBucketRange<DashboardHeightBucket>(HEIGHT_BUCKET_ORDER, widget.minHeight, widget.maxHeight)
  const supportedOrder = SUPPORTED_DASHBOARD_WIDGET_IDS.findIndex((id) => id === widget.id)
  const isSupportedDefault = supportedOrder >= 0
+ const isHidden = HIDDEN_NEW_WIDGET_IDS.has(widget.id)
  return {
   ...widget,
   status: "ready",
   rendererKey: widget.id,
-  releaseTier: isSupportedDefault ? "supported" : "preview",
-  defaultVisible: isSupportedDefault,
+  releaseTier: isHidden ? "hidden" : isSupportedDefault ? "supported" : "preview",
+  defaultVisible: isHidden ? false : isSupportedDefault,
   defaultOrder: isSupportedDefault ? supportedOrder : BASE_WIDGET_REGISTRY.length + index,
   supportedSizes,
   supportedHeights,
@@ -59,4 +62,5 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string; detailed: stri
  "video-director": { short: "DIRECT GENERATED VIDEO FROM ONE SHARED VIDEO DNA SYSTEM.", detailed: "Use the compact Dashboard execution surface for briefs, scoped Director settings, storyboard shots, variation permissions, generation planning, queue progress, and direct handoff to the expanded Studio Hub Video Director." },
  "video-asset-engine": { short: "ASSEMBLE DURABLE CREATOR ASSETS INTO ONE TRACEABLE VIDEO PACKAGE.", detailed: "Use canonical Asset Engine and Vault records to inspect package readiness, select recent assets, follow lineage, and hand work into Studio, Editor, or Vault without creating a second asset store." },
  "shorts-multiplier": { short: "TURN ONE SHORT INTO A SCHEDULED SET OF REPOST-READY VARIANTS.", detailed: "Create deterministic frame-trim variants from a prepared or published Short, preserve its packaging, plan publishing dates, and hand package-backed sources into the existing editor and publishing workflows." },
+ "search-intent-mapper": { short: "MAP OBSERVED SEARCH INTENT AND FIND EXPLICIT COVERAGE GAPS.", detailed: "Cluster creator-owned YouTube search-term evidence into explain, compare, and discover intent; connect observed terms to explicit catalog coverage and stage supported unanswered demand into Projects without inventing public search volume." },
 }
