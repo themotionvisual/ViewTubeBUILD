@@ -367,13 +367,13 @@
     overflow:hidden;
     text-overflow:clip;
   }
-  :where(.dashboard-barrier) .video-uploader-footer>.widget-split-button.is-large,
+  :where(.dashboard-barrier) .video-uploader-footer>.widget-split-button.is-left-split,
   :where(.dashboard-barrier) .video-uploader-footer>.widget-icon-button{
     height:38px;
     min-height:38px;
     max-height:38px;
   }
-  :where(.dashboard-barrier) .video-uploader-footer>.widget-split-button.is-large .widget-split-button-label{
+  :where(.dashboard-barrier) .video-uploader-footer>.widget-split-button.is-left-split .widget-split-button-label{
     font-size:16px;
     line-height:.9;
   }
