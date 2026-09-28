@@ -2376,3 +2376,94 @@ Before merge:
 - phone landscape certification;
 - verify dropdown, both A/B/C toggles, Analyze, tabs, change execution, creator review and ActionPacket handoffs;
 - confirm current-main mergeability before merge.
+
+
+---
+
+## AL. Packaging Intelligence implementation — 2026-09-27
+
+**Branch:** `feature/packaging-intelligence-widget-v2`  
+**PR:** #530  
+**Stable widget ID:** `packaging-intelligence`  
+**Status:** IMPLEMENTED ON CURRENT-MAIN PORT / CERTIFICATION IN PROGRESS
+
+### Creator job
+
+Explain whether a selected video's packaging is the likely bottleneck, project the current canonical Video Package state and experiment/provenance history, and continue the creator into Packaging Lab Pro, Thumbnail Studio, or Content Analysis with the evidence already attached.
+
+Packaging Lab Pro remains the deep packaging workbench and generation owner. The dashboard widget does not regenerate titles, thumbnails, descriptions, or create another package store.
+
+### Canonical ownership
+
+- deterministic specialist: `src/services/packagingIntelligence.ts`;
+- UI: `src/views/dashboard/widgets/PackagingIntelligenceWidget.tsx`;
+- widget-local composition: `src/views/dashboard/widgets/PackagingIntelligenceWidget.css`;
+- registry/renderer: `src/views/dashboard/widgets/newWidgetSet.ts`;
+- analytics truth: existing dashboard canonical video rows / analytics-canon / VT-SYNC;
+- package truth: `ViewTubeVideoPackage` plus projected ContentBuild selections;
+- history: Video Package provenance + ContentBuild event projection;
+- handoff: universal `ViewTubeActionPacket`;
+- deep packaging editor: existing `/packaging-lab-pro`;
+- thumbnail work: existing Thumbnail Studio;
+- post-click diagnosis: existing Content Analysis.
+
+### Deterministic diagnosis
+
+The first implementation intentionally avoids a pseudo-platform score:
+
+- insufficient exposure / missing CTR or AVP → **INSUFFICIENT EVIDENCE**;
+- weak click response + strong watch quality → **REPACKAGE**;
+- strong click response + weak watch quality → **CONTENT FRICTION**;
+- healthy click response + healthy watch quality → **HOLD**;
+- otherwise → **MIXED**.
+
+The opportunity value is an internal prioritization aid derived from explicit observed inputs. It is not a YouTube-provided score or causal claim.
+
+### Compact composition
+
+Default allocation is **half × tall**, with **half → full** width support and **medium → xtall** height support.
+
+Visible hierarchy:
+
+1. canonical video selector + **OPEN PACKAGING LAB**;
+2. compact signature strip: **Exposure | CTR | AVP | Package completeness**;
+3. canonical `SIGNAL | PACKAGE | HISTORY` step tabs;
+4. one active body using canonical module, data-grid and scroll primitives.
+
+### Package projection
+
+The widget projects:
+
+- title variant count and selected title;
+- thumbnail variant count and selected thumbnail;
+- description presence;
+- tag presence;
+- evidence references;
+- unresolved package blockers;
+- experiment/provenance event count;
+- ContentBuild/package history.
+
+No package data is copied into a widget-specific persistence store.
+
+### TDD / verification receipt
+
+Tests were authored before implementation on superseded draft PR #528. The verified implementation was then ported onto fresh current main in PR #530 after shared files advanced.
+
+On the verified implementation run:
+
+- `src/services/packagingIntelligence.test.ts` — **5/5 passed**;
+- `src/views/dashboard/__tests__/PackagingIntelligenceWidget.contract.test.ts` — **4/4 passed**;
+- focused contracts — **PASS**;
+- production build — **PASS**;
+- source governance — **PASS**;
+- local smoke — **PASS**.
+
+Repository-wide static-quality and full-suite jobs remain red from unrelated existing Vault, Editor, Brain migration, shared-color and TypeScript debt. Neither failing job reported a Packaging Intelligence implementation error.
+
+### Remaining certification
+
+Before merge:
+- verify PR #530 release gates after the current-main port;
+- refresh current-main comparison/mergeability again because main is moving quickly;
+- rendered dashboard certification when a browser preview is available;
+- only reconcile shared files if newer main changes overlap registry/handoff ownership.
