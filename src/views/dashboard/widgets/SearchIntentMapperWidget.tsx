@@ -114,27 +114,27 @@ const freshnessForSearch = (data: DashboardData) => {
 const termInputs = (data: DashboardData): SearchIntentTermInput[] => {
  const snapshot = data.overviewChartData
  const freshness = freshnessForSearch(data)
- return (snapshot?.searchTerms || [])
-  .map(row => {
-   const record = row as Record<string, unknown>
-   const term = stringFrom(record.term, record.insightTrafficSourceDetail, record.detail, record.title)
-   if (!term) return null
-   return {
-    term,
-    views: numberFrom(record.views),
-    watchTime: record.watchTime == null ? null : numberFrom(record.watchTime),
-    videoId: stringFrom(record.videoId) || null,
-    source: "youtube_analytics_v2:search_terms",
-    observedAt: stringFrom(record.day, record.date, record.observedAt, freshness?.updatedAt, snapshot?.capturedAt) || "unknown-date",
-    coverageStatus: (
-     record.coverageStatus === "complete"
-     || record.coverageStatus === "partial"
-     || record.coverageStatus === "unavailable"
-     || record.coverageStatus === "unsupported"
-    ) ? record.coverageStatus : null,
-   } satisfies SearchIntentTermInput
+ const inputs: SearchIntentTermInput[] = []
+ ;(snapshot?.searchTerms || []).forEach(row => {
+  const record = row as Record<string, unknown>
+  const term = stringFrom(record.term, record.insightTrafficSourceDetail, record.detail, record.title)
+  if (!term) return
+  inputs.push({
+   term,
+   views: numberFrom(record.views),
+   watchTime: record.watchTime == null ? null : numberFrom(record.watchTime),
+   videoId: stringFrom(record.videoId) || null,
+   source: "youtube_analytics_v2:search_terms",
+   observedAt: stringFrom(record.day, record.date, record.observedAt, freshness?.updatedAt, snapshot?.capturedAt) || "unknown-date",
+   coverageStatus: (
+    record.coverageStatus === "complete"
+    || record.coverageStatus === "partial"
+    || record.coverageStatus === "unavailable"
+    || record.coverageStatus === "unsupported"
+   ) ? record.coverageStatus : null,
   })
-  .filter((row): row is SearchIntentTermInput => Boolean(row))
+ })
+ return inputs
 }
 
 const stateCopy = {
