@@ -721,13 +721,15 @@ describe("reference-library video module and full-width primitive sizing", () =>
 })
 
 describe("reference library recovery completion", () => {
-  it("uses the approved family order and retires Navigation plus Metrics/States as standalone pages", () => {
-    expect(referenceSource).toContain('{ id: "header", label: "HEADER CONTROLS" }')
-    expect(referenceSource).not.toContain('{ id: "navigation", label: "NAV" }')
-    expect(referenceSource).not.toContain('{ id: "states", label: "STATES" }')
-    expect(referenceSource).toContain('activeCategory === "header"')
-    expect(referenceSource).not.toContain('activeCategory === "navigation"')
-    expect(referenceSource).not.toContain('activeCategory === "states"')
+  it("restores Navigation, Metrics/States and module-based header controls as sections 6 through 8", () => {
+    expect(referenceSource).toContain('{ id: "navigation", label: "NAV" }')
+    expect(referenceSource).toContain('{ id: "states", label: "STATES" }')
+    expect(referenceSource).toContain('{ id: "header-modules", label: "HEADER MODULES" }')
+    expect(referenceSource).not.toContain('{ id: "header", label: "HEADER CONTROLS" }')
+    expect(referenceSource).toContain('activeCategory === "navigation"')
+    expect(referenceSource).toContain('activeCategory === "states"')
+    expect(referenceSource).toContain('activeCategory === "header-modules"')
+    expect(referenceSource).not.toContain('sectionHeading("9. Header Controls"')
   })
 
   it("supports spectrum icon presentations at every canonical size tier", () => {
@@ -757,7 +759,7 @@ describe("reference library recovery completion", () => {
   it("keeps the video menu exactly aligned to the trigger width", () => {
     expect(extensionSource).not.toContain("VIDEO_MENU_MIN_WIDTH")
     expect(extensionSource).toContain("const width=rect.width")
-    expect(extensionSource).toContain("width:`${width}px`")
+    expect(extensionSource).toContain("width:`${menuGeometry.width}px`")
   })
 
   it("offers small and large data-grid density from one canonical primitive", () => {
@@ -801,8 +803,11 @@ describe("video selector overlay geometry", () => {
     expect(variantsCss).toContain(".widget-reference-navigation > .widget-select-trigger")
   })
 
-  it("gives video labels and chevrons enough room at the standard heights", () => {
-    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
+  it("fits the VIDEO label and chevron inside the square rail while keeping menu titles readable", () => {
+    expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 7px")
+    expect(variantsCss).toContain("is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 10px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }")
     expect(variantsCss).toContain("is-height-38 .widget-video-select-option-copy strong {")
     expect(variantsCss).toContain("font-size: 15px")
   })
