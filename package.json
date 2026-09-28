@@ -51,7 +51,7 @@
     "vt-e1-render:dev": "node src/server/vt-e1-render-server.mjs",
     "audit:documents": "node scripts/audit/document-system.mjs",
     "test:document-system": "node --test scripts/audit/document-system.test.mjs",
-    "test:convergence-governance": "node --test scripts/governance/convergence.test.mjs",
+    "test:convergence-governance": "node --test scripts/governance/convergence.test.mjs scripts/governance/ideas-consolidation.test.mjs",
     "audit:convergence": "node scripts/governance/audit-convergence.mjs",
     "generate:ideas-master": "node scripts/governance/build-ideas-master.mjs",
     "generate:convergence-control-room": "node scripts/governance/build-control-room.mjs",
