@@ -1,22 +1,110 @@
 {
   "schemaVersion": "viewtube.convergence-control-room.v1",
-  "generatedAt": "2026-09-27T19:09:00Z",
+  "generatedAt": "2026-09-27T23:50:00Z",
   "source": "governance/convergence/* + ideas/registry.json",
   "counts": {
     "capabilities": 13,
     "incompleteCapabilities": 13,
     "planFamilies": 10,
-    "ideas": 50,
-    "implementationWaveIdeas": 17,
+    "ideas": 190,
+    "ideaRecords": 228,
+    "mergedIdeaAliases": 38,
+    "ideaSourceItems": 254,
+    "ideaMergeRecords": 25,
     "openQuestions": 6,
     "workflows": 10,
-    "improvements": 17,
-    "planMergeRecords": 4
+    "improvements": 17
   },
-  "alerts": [
-    "All capability homes exist, but task/test/Guide/verification coverage remains incomplete and must be populated from canonical sources.",
-    "Code ownership includes PARTIAL records; do not enforce uncertain paths as hard CI ownership yet.",
-    "Task Index VNext remains a critical convergence dependency."
-  ],
-  "authority": "docs/governance/CONVERGENCE.md"
+  "highestPriorityCoverageGaps": [
+    {
+      "capabilityId": "CAP-CREATOR-CONTEXT",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-EVIDENCE-INTELLIGENCE",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-PROJECT-CONTENT-IDENTITY",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-ASSET-LINEAGE",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-CREATOR-OPERATIONS",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-OUTCOME-LEARNING",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-BRAIN-EXPERIENCE",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-ANALYTICS-CANON",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-EDITOR-RENDER",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    },
+    {
+      "capabilityId": "CAP-PUBLISH",
+      "missing": [
+        "taskRefs",
+        "tests",
+        "guideRefs",
+        "verificationRefs"
+      ]
+    }
+  ]
 }

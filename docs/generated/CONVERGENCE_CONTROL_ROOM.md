@@ -1,33 +1,36 @@
 # Convergence Control Room
 
-**Generated:** 2026-09-27  
-**Role:** read-only projection; not a database.
+Generated: 2026-09-27T23:50:00Z
 
 | Signal | Count |
 |---|---:|
-| Capabilities | 13 |
-| Capabilities with coverage gaps | 13 |
-| Plan families | 10 |
-| Unique ideas | 50 |
-| Ideas in this implementation wave | 17 |
-| Open questions | 6 |
-| Reusable workflows | 10 |
-| Improvement recommendations | 17 |
-| Recorded historical plan merges | 4 |
+| capabilities | 13 |
+| incompleteCapabilities | 13 |
+| planFamilies | 10 |
+| ideas | 190 |
+| ideaRecords | 228 |
+| mergedIdeaAliases | 38 |
+| ideaSourceItems | 254 |
+| ideaMergeRecords | 25 |
+| openQuestions | 6 |
+| workflows | 10 |
+| improvements | 17 |
 
-## Current alerts
+## Capability coverage gaps
 
-- Capability homes now exist for every accepted capability, but Task/Test/User-Guide/Verification references still need systematic population.
-- Several code-ownership records are deliberately `PARTIAL`; path enforcement should wait for discovery/certification.
-- Task Index VNext remains the largest missing canonical work-state dependency.
-- Similarity detection is advisory; plan/idea merges still require no-loss review.
+- **CAP-CREATOR-CONTEXT** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-EVIDENCE-INTELLIGENCE** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-PROJECT-CONTENT-IDENTITY** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-ASSET-LINEAGE** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-CREATOR-OPERATIONS** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-OUTCOME-LEARNING** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-BRAIN-EXPERIENCE** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-ANALYTICS-CANON** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-EDITOR-RENDER** — missing: taskRefs, tests, guideRefs, verificationRefs
+- **CAP-PUBLISH** — missing: taskRefs, tests, guideRefs, verificationRefs
 
-## Primary controls
+## Ideas consolidation
 
-- Capability homes: `docs/capabilities/`
-- Plan families: `governance/convergence/plan-families.json`
-- Ideas: `ideas/MASTER_IDEAS.md`
-- Questions: `governance/convergence/open-questions.json`
-- Workflows: `governance/convergence/workflows.json`
-- Improvements: `governance/convergence/improvements.json`
-- Coverage: `governance/convergence/capability-coverage.json`
+- Source-item provenance, reviewed semantic merges, merged aliases and master-idea counts come from `ideas/registry.json` v2.
+- Latest full review: `ideas/CONSOLIDATION_REPORT.md`.
+- Similarity is advisory; semantic merges require explicit review records.

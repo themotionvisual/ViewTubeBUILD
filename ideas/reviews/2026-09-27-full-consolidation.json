@@ -1,0 +1,855 @@
+{
+  "schemaVersion": "viewtube.idea-consolidation-review.v1",
+  "runId": "IDEA-REVIEW-RUN-2026-09-27-001",
+  "date": "2026-09-27",
+  "reviewer": "GPT-5.6 Sol via ChatGPT",
+  "baselineMainSha": "bdceef1de0d6c0784a5aca86ad365f2c237815b9",
+  "authority": "docs/governance/CONVERGENCE.md",
+  "processPlan": "tasks/convergence-governance-wave/IDEAS_CONSOLIDATION_PLAN.md",
+  "inventory": {
+    "registeredSourceListsBefore": 5,
+    "registeredSourceListsAfter": 7,
+    "explicitUnregisteredIdeaCatalogsFound": [
+      "docs/architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md"
+    ],
+    "conversationWorklogsInspected": 2,
+    "ideaClassifiedConversationItemsFound": [
+      "tasks/conversation-intake/VT-CONV-DOCS-OS-TASK-INDEX/worklog.json#VT-CWI-DOCS-011",
+      "tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/worklog.json#VT-CWI-022"
+    ],
+    "sourceItemCount": 254,
+    "ideaRecordCount": 228
+  },
+  "method": {
+    "candidateDiscovery": "Deterministic similarity/target/capability matching used only to surface candidates; no automatic merge decisions.",
+    "semanticReview": "Reviewed creator/development objective, lifecycle stage, owner, workflow role and distinct requirements.",
+    "mergeClasses": [
+      "SAME_OBJECTIVE",
+      "COMPLEMENTARY"
+    ],
+    "keepSeparateClasses": [
+      "DEPENDENCY",
+      "COMPLEMENTARY",
+      "DISTINCT"
+    ],
+    "losslessRule": "Every source item maps to exactly one master idea and every retained requirement maps back to one or more source item IDs."
+  },
+  "counts": {
+    "masterIdeas": 190,
+    "mergedAliases": 38,
+    "mergeGroups": 25,
+    "linkedRelationshipDecisions": 27,
+    "unresolved": 0
+  },
+  "mergeRecords": [
+    {
+      "id": "IDEA-MERGE-001",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-YT-002",
+      "mergedIdeaIds": [
+        "IDEA-SPA-004",
+        "IDEA-TWB-003"
+      ],
+      "rationale": "All three proposals describe the same publishing owner at different UI depths; retaining them separately would recreate Publisher/preflight/toolbox duplication.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-002",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-YT-004",
+      "mergedIdeaIds": [
+        "IDEA-TWB-008"
+      ],
+      "rationale": "The Toolbox proposal is the deep-workstation form of the existing comment/community operations idea.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-003",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-YT-010",
+      "mergedIdeaIds": [
+        "IDEA-TWB-016"
+      ],
+      "rationale": "Both ideas own the same calendar/scheduling outcome.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-004",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-SPA-001",
+      "mergedIdeaIds": [
+        "IDEA-TWB-006"
+      ],
+      "rationale": "Daily Creator Command is the Toolbox-scale manifestation of Creator Mission Control.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-005",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-SPA-008",
+      "mergedIdeaIds": [
+        "IDEA-TWB-014"
+      ],
+      "rationale": "The workbench and diagnostics are complementary parts of one retention investigation capability.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-006",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-SPA-010",
+      "mergedIdeaIds": [
+        "IDEA-TWB-017"
+      ],
+      "rationale": "Both proposals describe one audience segmentation/cohort workstation.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-007",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-SPA-009",
+      "mergedIdeaIds": [
+        "IDEA-TWB-018"
+      ],
+      "rationale": "Traffic pathway visualization is the signature visualization inside the broader Discovery & Distribution workbench.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-008",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-SPA-011",
+      "mergedIdeaIds": [
+        "IDEA-TWB-019"
+      ],
+      "rationale": "The widget-family consolidation and Revenue Opportunity Analyzer have one analytical goal.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-009",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-TWB-005",
+      "mergedIdeaIds": [
+        "IDEA-TWB-009"
+      ],
+      "rationale": "Autopsy and longform optimization are adjacent phases of the same per-video diagnostic/action workstation.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-010",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-APP-026",
+      "mergedIdeaIds": [
+        "IDEA-TWB-007"
+      ],
+      "rationale": "The two ideas are the same Brain Hub product surface at different detail levels.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-011",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-WFI-002",
+      "mergedIdeaIds": [
+        "IDEA-APP-045"
+      ],
+      "rationale": "Both ideas request the same registry-level handoff capability metadata.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-012",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-020",
+      "mergedIdeaIds": [
+        "IDEA-APP-021",
+        "IDEA-WFI-003"
+      ],
+      "rationale": "These proposals are three descriptions of the same operation-identity convergence objective.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-013",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-039",
+      "mergedIdeaIds": [
+        "IDEA-APP-016",
+        "IDEA-WFI-010"
+      ],
+      "rationale": "Evidence continuity and project/asset handoff continuity are facets of one end-to-end identity certification objective.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-014",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-022",
+      "mergedIdeaIds": [
+        "IDEA-APP-023",
+        "IDEA-APP-024",
+        "IDEA-APP-038",
+        "IDEA-WFI-011"
+      ],
+      "rationale": "Producer contracts, coverage, evaluation targets and publish outcome linkage are required parts of one outcome/evaluation closure system.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-015",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-025",
+      "mergedIdeaIds": [
+        "IDEA-WFI-007"
+      ],
+      "rationale": "Handoff preference feedback is one learning-input path and should not remain a separate learning system.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-016",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-027",
+      "mergedIdeaIds": [
+        "IDEA-APP-028",
+        "IDEA-APP-029"
+      ],
+      "rationale": "Reachability, canonical recipes and evaluation are successive phases of one prompt production-governance objective.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-017",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-031",
+      "mergedIdeaIds": [
+        "IDEA-APP-032"
+      ],
+      "rationale": "A canonical gateway and removal of direct callers are one migration objective.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-018",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-033",
+      "mergedIdeaIds": [
+        "IDEA-APP-034",
+        "IDEA-APP-035",
+        "IDEA-APP-036"
+      ],
+      "rationale": "The four ideas are slices of one Vault completion program rather than separate products.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-019",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-APP-042",
+      "mergedIdeaIds": [
+        "IDEA-WFI-009"
+      ],
+      "rationale": "The two records are the same domain-workbench consolidation program.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-020",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-APP-043",
+      "mergedIdeaIds": [
+        "IDEA-APP-044",
+        "IDEA-WFI-012"
+      ],
+      "rationale": "Cohort certification, universal empty/preview behavior and responsive/accessibility certification belong to one widget production-readiness program.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-021",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-WFI-001",
+      "mergedIdeaIds": [
+        "IDEA-WFI-008"
+      ],
+      "rationale": "The generic promotion framework and its core promotion wave are one program.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-022",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-APP-004",
+      "mergedIdeaIds": [
+        "IDEA-APP-005",
+        "IDEA-APP-006",
+        "IDEA-APP-007"
+      ],
+      "rationale": "These are source-specific instances of one historical backlog/program reconciliation objective.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-023",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-GOV-041",
+      "mergedIdeaIds": [
+        "IDEA-GOV-042",
+        "IDEA-APP-012"
+      ],
+      "rationale": "The audit ideas and CI proposal are one persistent documentation/plan health capability.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-024",
+      "date": "2026-09-27",
+      "classification": "SAME_OBJECTIVE",
+      "survivorIdeaId": "IDEA-GAI-003",
+      "mergedIdeaIds": [
+        "IDEA-GAI-015"
+      ],
+      "rationale": "Both Google-AI proposals describe the same multimodal adaptation workspace at different levels of specificity.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    },
+    {
+      "id": "IDEA-MERGE-025",
+      "date": "2026-09-27",
+      "classification": "COMPLEMENTARY",
+      "survivorIdeaId": "IDEA-SPA-003",
+      "mergedIdeaIds": [
+        "IDEA-TWB-013"
+      ],
+      "rationale": "Metadata/SEO is a package-creation mode inside the existing Packaging Laboratory, not a separate product owner.",
+      "requirementDisposition": "All source requirements retained on survivor via sourceItemIds/requirements.",
+      "reversible": true
+    }
+  ],
+  "relationshipDecisions": [
+    {
+      "id": "IDEA-REL-001",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-013",
+      "ideaB": "IDEA-WF-007",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Opportunity Miner is the persistent analysis/tool capability; Comment → New Video is the reusable orchestration recipe."
+    },
+    {
+      "id": "IDEA-REL-002",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-YT-004",
+      "ideaB": "IDEA-WF-029",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Comment Response Campaign executes through the canonical Comment/Community Operations workspace."
+    },
+    {
+      "id": "IDEA-REL-003",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-YT-004",
+      "ideaB": "IDEA-WF-008",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Comment → Community Campaign starts from the same comment/audience operations owner."
+    },
+    {
+      "id": "IDEA-REL-004",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-011",
+      "ideaB": "IDEA-WF-035",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "The workbench explains revenue evidence; the workflow turns an investigation into a bounded creator action."
+    },
+    {
+      "id": "IDEA-REL-005",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-012",
+      "ideaB": "IDEA-WF-023",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Series/Playlist Architect is the planning tool; Content Series Builder is the orchestration recipe."
+    },
+    {
+      "id": "IDEA-REL-006",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-007",
+      "ideaB": "IDEA-WF-034",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Content Experiment Manager is the experiment owner; Experiment Design Workflow is its setup recipe."
+    },
+    {
+      "id": "IDEA-REL-007",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-003",
+      "ideaB": "IDEA-WF-004",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Thumbnail Refresh Experiment is a packaging-lab workflow."
+    },
+    {
+      "id": "IDEA-REL-008",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-003",
+      "ideaB": "IDEA-WF-005",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Title Refresh Experiment is a packaging-lab workflow."
+    },
+    {
+      "id": "IDEA-REL-009",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-003",
+      "ideaB": "IDEA-WF-031",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Packaging Learning Loop evaluates the exact package variants produced/selected by the lab."
+    },
+    {
+      "id": "IDEA-REL-010",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-SPA-008",
+      "ideaB": "IDEA-WF-006",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Retention Rescue consumes Retention Lab evidence and diagnostics."
+    },
+    {
+      "id": "IDEA-REL-011",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-YT-010",
+      "ideaB": "IDEA-WF-024",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Calendar Gap Filler is a scheduling recipe over the canonical Publishing Calendar."
+    },
+    {
+      "id": "IDEA-REL-012",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-TWB-010",
+      "ideaB": "IDEA-WF-017",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Asset Engine exposes missing slots; Missing Asset Finder resolves them through reuse/generation."
+    },
+    {
+      "id": "IDEA-REL-013",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-TWB-010",
+      "ideaB": "IDEA-WF-019",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Asset Engine package state supplies Project Package Readiness."
+    },
+    {
+      "id": "IDEA-REL-014",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-031",
+      "ideaB": "IDEA-GAI-001",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Veo/Flow scene generation should route through the canonical media provider gateway."
+    },
+    {
+      "id": "IDEA-REL-015",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-031",
+      "ideaB": "IDEA-GAI-002",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Thumbnail image generation/edit providers should route through the canonical media provider gateway."
+    },
+    {
+      "id": "IDEA-REL-016",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-031",
+      "ideaB": "IDEA-GAI-003",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Multimodal generation adapters should use the canonical provider/generation boundary."
+    },
+    {
+      "id": "IDEA-REL-017",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-031",
+      "ideaB": "IDEA-GAI-006",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Generated audio should use the governed provider/generation boundary and asset lineage."
+    },
+    {
+      "id": "IDEA-REL-018",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-019",
+      "ideaB": "IDEA-TWB-010",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Asset Engine Toolbox visualizes and operates on the canonical asset identity/lineage contract."
+    },
+    {
+      "id": "IDEA-REL-019",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-022",
+      "ideaB": "IDEA-SPA-014",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Change Journal is a creator-facing projection over canonical action/outcome/evaluation identity."
+    },
+    {
+      "id": "IDEA-REL-020",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-025",
+      "ideaB": "IDEA-WF-031",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Packaging lessons are candidates for governed learning, not direct memory writes."
+    },
+    {
+      "id": "IDEA-REL-021",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-025",
+      "ideaB": "IDEA-WF-032",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Hook lessons are candidates for governed learning, not direct memory writes."
+    },
+    {
+      "id": "IDEA-REL-022",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-APP-025",
+      "ideaB": "IDEA-WF-040",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "The full improvement loop depends on governed promotion of durable learning."
+    },
+    {
+      "id": "IDEA-REL-023",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-GOV-046",
+      "ideaB": "IDEA-WFI-004",
+      "classification": "DISTINCT",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Governance reusable workflows orchestrate development processes; creator workflow recipes orchestrate product tools. They share patterns but need separate registries/namespaces."
+    },
+    {
+      "id": "IDEA-REL-024",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-TWB-015",
+      "ideaB": "IDEA-TWB-020",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Keyword Intelligence can be a lens/provider for Opportunity Intelligence but also serves metadata/search workflows; keep ownership separate until product boundaries are proven."
+    },
+    {
+      "id": "IDEA-REL-025",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-YT-007",
+      "ideaB": "IDEA-SPA-011",
+      "classification": "COMPLEMENTARY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "The broad analytics/revenue center supplies canonical data; the Monetization & Revenue Opportunity workbench is a focused analytical experience."
+    },
+    {
+      "id": "IDEA-REL-026",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-GAI-007",
+      "ideaB": "IDEA-GAI-013",
+      "classification": "DEPENDENCY",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Research notebooks and post-project auto-learning notebooks share infrastructure but operate at different lifecycle stages."
+    },
+    {
+      "id": "IDEA-REL-027",
+      "date": "2026-09-27",
+      "ideaA": "IDEA-GOV-002",
+      "ideaB": "IDEA-GOV-022",
+      "classification": "DISTINCT",
+      "disposition": "KEEP_SEPARATE_LINKED",
+      "rationale": "Plan families govern planned work; debugging families govern root-cause incidents. Similar naming does not imply one owner."
+    }
+  ],
+  "mergedAliases": [
+    {
+      "ideaId": "IDEA-GOV-042",
+      "title": "Plan Health Audit",
+      "mergedInto": "IDEA-GOV-041"
+    },
+    {
+      "ideaId": "IDEA-GAI-015",
+      "title": "Multimodal Adaptation Factory",
+      "mergedInto": "IDEA-GAI-003"
+    },
+    {
+      "ideaId": "IDEA-SPA-004",
+      "title": "Publish Flight Deck",
+      "mergedInto": "IDEA-YT-002"
+    },
+    {
+      "ideaId": "IDEA-TWB-003",
+      "title": "Video Publisher Toolbox",
+      "mergedInto": "IDEA-YT-002"
+    },
+    {
+      "ideaId": "IDEA-TWB-006",
+      "title": "Daily Creator Command Toolbox",
+      "mergedInto": "IDEA-SPA-001"
+    },
+    {
+      "ideaId": "IDEA-TWB-007",
+      "title": "Brain Hub Toolbox",
+      "mergedInto": "IDEA-APP-026"
+    },
+    {
+      "ideaId": "IDEA-TWB-008",
+      "title": "Comment Operations Toolbox",
+      "mergedInto": "IDEA-YT-004"
+    },
+    {
+      "ideaId": "IDEA-TWB-009",
+      "title": "Video Optimization Toolbox",
+      "mergedInto": "IDEA-TWB-005"
+    },
+    {
+      "ideaId": "IDEA-TWB-013",
+      "title": "Metadata / SEO Workbench",
+      "mergedInto": "IDEA-SPA-003"
+    },
+    {
+      "ideaId": "IDEA-TWB-014",
+      "title": "Retention Lab",
+      "mergedInto": "IDEA-SPA-008"
+    },
+    {
+      "ideaId": "IDEA-TWB-016",
+      "title": "Publishing Calendar",
+      "mergedInto": "IDEA-YT-010"
+    },
+    {
+      "ideaId": "IDEA-TWB-017",
+      "title": "Audience Intelligence",
+      "mergedInto": "IDEA-SPA-010"
+    },
+    {
+      "ideaId": "IDEA-TWB-018",
+      "title": "Discovery & Distribution",
+      "mergedInto": "IDEA-SPA-009"
+    },
+    {
+      "ideaId": "IDEA-TWB-019",
+      "title": "Monetization Intelligence",
+      "mergedInto": "IDEA-SPA-011"
+    },
+    {
+      "ideaId": "IDEA-APP-005",
+      "title": "2026-09-11 Unfinished Work Reconciliation",
+      "mergedInto": "IDEA-APP-004"
+    },
+    {
+      "ideaId": "IDEA-APP-006",
+      "title": "Finish Program Migration",
+      "mergedInto": "IDEA-APP-004"
+    },
+    {
+      "ideaId": "IDEA-APP-007",
+      "title": "System Convergence Donor Harvest",
+      "mergedInto": "IDEA-APP-004"
+    },
+    {
+      "ideaId": "IDEA-APP-012",
+      "title": "Documentation CI/Governance Automation",
+      "mergedInto": "IDEA-GOV-041"
+    },
+    {
+      "ideaId": "IDEA-APP-016",
+      "title": "Evidence-ID Continuity",
+      "mergedInto": "IDEA-APP-039"
+    },
+    {
+      "ideaId": "IDEA-APP-021",
+      "title": "ActionPacket / ToolReceipt / GenerationRecord Convergence",
+      "mergedInto": "IDEA-APP-020"
+    },
+    {
+      "ideaId": "IDEA-APP-023",
+      "title": "Outcome Coverage Matrix",
+      "mergedInto": "IDEA-APP-022"
+    },
+    {
+      "ideaId": "IDEA-APP-024",
+      "title": "Evaluation-Target Coverage",
+      "mergedInto": "IDEA-APP-022"
+    },
+    {
+      "ideaId": "IDEA-APP-028",
+      "title": "Prompt Families + Context Recipes",
+      "mergedInto": "IDEA-APP-027"
+    },
+    {
+      "ideaId": "IDEA-APP-029",
+      "title": "Prompt Evaluation Program",
+      "mergedInto": "IDEA-APP-027"
+    },
+    {
+      "ideaId": "IDEA-APP-032",
+      "title": "Legacy Direct Provider Cleanup",
+      "mergedInto": "IDEA-APP-031"
+    },
+    {
+      "ideaId": "IDEA-APP-034",
+      "title": "Vault Dense Creator UX",
+      "mergedInto": "IDEA-APP-033"
+    },
+    {
+      "ideaId": "IDEA-APP-035",
+      "title": "Vault ↔ Projects Creator Lane",
+      "mergedInto": "IDEA-APP-033"
+    },
+    {
+      "ideaId": "IDEA-APP-036",
+      "title": "Vault ↔ Editor Media Operations",
+      "mergedInto": "IDEA-APP-033"
+    },
+    {
+      "ideaId": "IDEA-APP-038",
+      "title": "Publish → Analytics → Outcome Loop",
+      "mergedInto": "IDEA-APP-022"
+    },
+    {
+      "ideaId": "IDEA-APP-044",
+      "title": "Universal Widget Empty/Preview Contract",
+      "mergedInto": "IDEA-APP-043"
+    },
+    {
+      "ideaId": "IDEA-APP-045",
+      "title": "Widget Handoff Capability Metadata",
+      "mergedInto": "IDEA-WFI-002"
+    },
+    {
+      "ideaId": "IDEA-WFI-003",
+      "title": "Universal operation envelope",
+      "mergedInto": "IDEA-APP-020"
+    },
+    {
+      "ideaId": "IDEA-WFI-007",
+      "title": "Creator preference learning",
+      "mergedInto": "IDEA-APP-025"
+    },
+    {
+      "ideaId": "IDEA-WFI-008",
+      "title": "Core Toolbox promotions",
+      "mergedInto": "IDEA-WFI-001"
+    },
+    {
+      "ideaId": "IDEA-WFI-009",
+      "title": "Domain-workbench consolidation",
+      "mergedInto": "IDEA-APP-042"
+    },
+    {
+      "ideaId": "IDEA-WFI-010",
+      "title": "Project/asset identity continuity certification",
+      "mergedInto": "IDEA-APP-039"
+    },
+    {
+      "ideaId": "IDEA-WFI-011",
+      "title": "Outcome/evaluation closure",
+      "mergedInto": "IDEA-APP-022"
+    },
+    {
+      "ideaId": "IDEA-WFI-012",
+      "title": "Responsive/accessibility certification",
+      "mergedInto": "IDEA-APP-043"
+    }
+  ],
+  "sourceLists": [
+    {
+      "id": "IDEA-LIST-GOVERNANCE-001",
+      "path": "ideas/lists/governance/document-governance-improvements.md",
+      "title": "Documentation Governance Improvement Ideas",
+      "sourceType": "conversation",
+      "itemCount": 50
+    },
+    {
+      "id": "IDEA-LIST-AUDIT-EXPANSION-001",
+      "path": "ideas/lists/product/current-main-audit-expansion-opportunities.md",
+      "title": "Current-Main Audit Expansion Opportunities",
+      "sourceType": "historical-audit",
+      "itemCount": 55
+    },
+    {
+      "id": "IDEA-LIST-WORKFLOWS-001",
+      "path": "ideas/lists/workflows/cross-tool-creator-workflows-2026-09-27.md",
+      "title": "Cross-Tool Creator Workflow Ideas — 40 Recipes",
+      "sourceType": "conversation",
+      "itemCount": 40
+    },
+    {
+      "id": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "path": "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+      "title": "Toolbox, Widget and Workbench Ideas",
+      "sourceType": "conversation",
+      "itemCount": 32
+    },
+    {
+      "id": "IDEA-LIST-APP-CONVERGENCE-001",
+      "path": "ideas/lists/product/app-plan-convergence-and-completion-ideas-2026-09-27.md",
+      "title": "Application Plan, Consolidation and Completion Ideas — 50 Items",
+      "sourceType": "conversation",
+      "itemCount": 50
+    },
+    {
+      "id": "IDEA-LIST-ASSET-ENGINE-WIDGET-001",
+      "path": "ideas/lists/product/video-asset-engine-widget-ideas-2026-09-20.md",
+      "title": "Video Asset Engine Widget Ideas — Preserved Ideas Source",
+      "sourceType": "historical-reference",
+      "itemCount": 25
+    },
+    {
+      "id": "IDEA-LIST-CONVERSATION-OPPORTUNITIES-001",
+      "path": "ideas/lists/governance/conversation-intake-opportunities-2026-09-27.md",
+      "title": "Conversation Intake Opportunity Ideas",
+      "sourceType": "conversation-intake",
+      "itemCount": 2
+    }
+  ],
+  "acceptance": {
+    "everySourceItemMapped": true,
+    "duplicateSourceItemIds": false,
+    "mergedIdeasPointToMaster": true,
+    "noAutomaticSemanticMerge": true,
+    "sourceListsRemainProvenance": true,
+    "noTaskIndexMutation": true
+  }
+}
