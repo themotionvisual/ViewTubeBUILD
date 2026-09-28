@@ -371,3 +371,34 @@
     max-width: 12rem;
   }
 }
+
+:where(.dashboard-barrier) .video-manager-page-button{
+  min-width:0;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:clip;
+  line-height:.86;
+}
+@container video-manager-widget (max-width:460px){
+  :where(.dashboard-barrier) .video-manager-pages{
+    gap:4px;
+  }
+  :where(.dashboard-barrier) .video-manager-page-button{
+    height:32px;
+    min-height:32px;
+    max-height:32px;
+    padding-inline:3px;
+    font-size:11px;
+    white-space:normal;
+    line-height:.82;
+  }
+  :where(.dashboard-barrier) .video-manager-footer>.widget-split-button.is-left-split,
+  :where(.dashboard-barrier) .video-manager-footer>.widget-icon-button{
+    height:38px;
+    min-height:38px;
+    max-height:38px;
+  }
+  :where(.dashboard-barrier) .video-manager-footer{
+    align-items:stretch;
+  }
+}
