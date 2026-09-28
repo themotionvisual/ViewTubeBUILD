@@ -43,7 +43,7 @@
 
   /* Required header controls survive portrait. Nonessential extras may hide,
      but a primary toggle/action never disappears to make room for the title. */
-  .vt-widget-header .header-extra:not(:has(.widget-header-toggle)) { display:none !important; }
+  .vt-widget-header .header-extra:not(:has(.widget-header-toggle)):not(:has(.widget-header-action)):not(:has(.widget-header-action)) { display:none !important; }
   .vt-widget-header .header-extra:has(.widget-header-toggle) {
     display:flex !important;
     flex:0 0 auto !important;
