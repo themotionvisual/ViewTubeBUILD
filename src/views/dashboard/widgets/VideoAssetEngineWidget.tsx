@@ -153,7 +153,7 @@ export const VideoAssetEngineWidget: React.FC<
   }, [activeVideoPackage, assets])
 
   const packageView = (
-    <div className="vt-asset-engine-package">
+    <div className="vt-asset-engine-package vt-widget-track-stack vt-widget-zone-full">
       <div className="vt-asset-engine-composer">
         <section className="vt-asset-engine-preview-panel">
           <div className="vt-asset-engine-package-label">
@@ -188,7 +188,7 @@ export const VideoAssetEngineWidget: React.FC<
           />
         </section>
 
-        <section className="vt-asset-engine-slot-panel" aria-label="Video package asset slots">
+        <section className="vt-asset-engine-slot-panel vt-widget-zone-full" aria-label="Video package asset slots">
           <div className="vt-asset-engine-slot-grid">
             {slotAssets.map(({ slot, asset }) => (
               <button
