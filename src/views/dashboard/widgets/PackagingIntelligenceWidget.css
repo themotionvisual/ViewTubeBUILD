@@ -1,0 +1,207 @@
+.packaging-intelligence-widget {
+ height: 100%;
+ min-width: 0;
+ min-height: 0;
+ display: grid;
+ grid-template-rows: auto auto auto minmax(0, 1fr);
+ align-content: stretch;
+ gap: 6px;
+ padding-block: 6px;
+}
+
+.packaging-intelligence-command {
+ min-width: 0;
+ display: grid;
+ grid-template-columns: minmax(0, 1fr) auto;
+ align-items: center;
+ gap: 6px;
+}
+
+.packaging-intelligence-video-select {
+ min-width: 0;
+}
+
+.packaging-intelligence-signal-strip {
+ min-width: 0;
+ min-height: 42px;
+ display: grid;
+ grid-template-columns: repeat(4, minmax(0, 1fr));
+ overflow: hidden;
+ border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+ border-radius: var(--widget-control-radius, 5px);
+ background: white;
+}
+
+.packaging-intelligence-signal-strip > span {
+ min-width: 0;
+ display: grid;
+ place-content: center;
+ gap: 2px;
+ padding: 3px 5px;
+ border-inline-end: var(--widget-module-stroke, 2px) solid var(--widget-border);
+ text-align: center;
+}
+
+.packaging-intelligence-signal-strip > span:last-child {
+ border-inline-end: 0;
+}
+
+.packaging-intelligence-signal-strip small {
+ font-size: 7px;
+ font-weight: 1000;
+ line-height: 1;
+ opacity: .58;
+}
+
+.packaging-intelligence-signal-strip b {
+ min-width: 0;
+ overflow: hidden;
+ font-size: 12px;
+ font-weight: 1000;
+ line-height: 1;
+}
+
+.packaging-intelligence-workspace {
+ min-width: 0;
+ min-height: 0;
+ height: 100%;
+}
+
+.packaging-intelligence-scroll-content {
+ min-width: 0;
+ min-height: 100%;
+}
+
+.packaging-intelligence-signal-card .widget-module-frame-body {
+ padding-block: 7px;
+}
+
+.packaging-intelligence-diagnosis {
+ min-width: 0;
+ display: grid;
+ gap: 6px;
+}
+
+.packaging-intelligence-diagnosis > strong {
+ font-size: 11px;
+ font-weight: 1000;
+ line-height: 1.08;
+ text-transform: uppercase;
+}
+
+.packaging-intelligence-diagnosis > p {
+ margin: 0;
+ font-size: 8px;
+ font-weight: 750;
+ line-height: 1.2;
+ opacity: .68;
+}
+
+.packaging-intelligence-evidence,
+.packaging-intelligence-actions {
+ min-width: 0;
+ display: flex;
+ flex-wrap: wrap;
+ align-items: center;
+ gap: 4px;
+}
+
+.packaging-intelligence-package,
+.packaging-intelligence-history {
+ min-width: 0;
+ display: grid;
+ gap: 6px;
+}
+
+.packaging-intelligence-empty {
+ min-width: 0;
+ min-height: 64px;
+ display: grid;
+ grid-template-columns: auto minmax(0, 1fr);
+ place-items: center start;
+ gap: 7px;
+ padding: 8px;
+ border: 2px solid color-mix(in srgb, var(--widget-color) 55%, white);
+ border-radius: var(--widget-control-radius, 5px);
+ background: color-mix(in srgb, var(--widget-color) 8%, white);
+ font-size: 9px;
+ font-weight: 800;
+ line-height: 1.2;
+}
+
+.packaging-intelligence-empty > svg {
+ width: 24px;
+ height: 24px;
+}
+
+.packaging-intelligence-no-data {
+ min-height: 100%;
+ display: grid;
+ place-items: center;
+ align-content: center;
+ gap: 7px;
+ text-align: center;
+}
+
+.packaging-intelligence-no-data > svg {
+ width: 34px;
+ height: 34px;
+}
+
+.packaging-intelligence-no-data > strong {
+ font-size: 13px;
+ font-weight: 1000;
+}
+
+.packaging-intelligence-no-data > span {
+ max-width: 54ch;
+ font-size: 9px;
+ font-weight: 750;
+ line-height: 1.2;
+}
+
+@container vt-widget (max-width: 620px) {
+ .packaging-intelligence-command {
+  grid-template-columns: minmax(0, 1fr);
+ }
+
+ .packaging-intelligence-command > .widget-sized-button {
+  width: 100%;
+ }
+
+ .packaging-intelligence-signal-strip b {
+  font-size: 10px;
+ }
+
+ .packaging-intelligence-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+ }
+
+ .packaging-intelligence-actions > * {
+  width: 100%;
+ }
+}
+
+@container vt-widget (max-width: 420px) {
+ .packaging-intelligence-widget {
+  gap: 4px;
+  padding-block: 4px;
+ }
+
+ .packaging-intelligence-signal-strip {
+  min-height: 38px;
+ }
+
+ .packaging-intelligence-signal-strip small {
+  font-size: 6px;
+ }
+
+ .packaging-intelligence-signal-strip b {
+  font-size: 9px;
+ }
+
+ .packaging-intelligence-signal-card .widget-module-header-copy > small {
+  display: none;
+ }
+}
