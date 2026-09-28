@@ -39,6 +39,8 @@ describe("mobile widget density and edge contracts", () => {
     expect(mobile).toContain("width: calc(100% + var(--vt-mobile-canvas-reclaim-right))")
     expect(mobile).toContain("margin-inline-end: calc(-1 * var(--vt-mobile-canvas-reclaim-right))")
     expect(mobile).toContain("--vt-widget-edge-safe: 0px")
+    expect(mobile).toContain(".dashboard-barrier .vt-widget-body")
+    expect(mobile).toContain("--vt-widget-edge-safe: 0px !important")
     expect(legacy).not.toContain("max-width: calc(100vw - 32px)")
     expect(legacy).not.toContain("margin-right: 8px")
   })
