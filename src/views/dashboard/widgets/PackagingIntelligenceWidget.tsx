@@ -155,8 +155,11 @@ export const PackagingIntelligenceWidget: React.FC<
    : ranked[0].videoId)
  }, [ranked])
 
- const selected = ranked.find(item => item.videoId === selectedVideoId) || ranked[0] || null
- const selectedVideo = videoInputs.find(item => item.videoId === selected?.videoId) || null
+ const selectedRanked = ranked.find(item => item.videoId === selectedVideoId) || ranked[0] || null
+ const selectedVideo = videoInputs.find(item => item.videoId === selectedRanked?.videoId) || null
+ const selected = selectedVideo
+  ? derivePackagingIntelligence(selectedVideo, packageByVideoId[selectedVideo.videoId])
+  : selectedRanked
  const selectedPackage = packages.find(item => packageVideoId(item) === selected?.videoId) || null
  const channelId = data.authState.channelId
   || (selected ? data.videoAssets.find(asset => asset.videoId === selected.videoId)?.channelId : null)
