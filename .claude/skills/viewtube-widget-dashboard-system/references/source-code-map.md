@@ -112,7 +112,7 @@ These still live in the shared renderer and are migration candidates. Do not res
 | `recent-uploads` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 | `top-performer` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 | `alerts-feed` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
-| `ai-prompt-box` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
+| `ai-prompt-box` | [src/views/dashboard/widgets/AIPromptBoxWidget.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/AIPromptBoxWidget.tsx) |
 | `task-stack` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 | `alerts-ticker` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 
