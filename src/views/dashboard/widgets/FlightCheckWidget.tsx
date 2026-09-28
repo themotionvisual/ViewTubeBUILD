@@ -143,7 +143,7 @@ export const FlightCheckWidget = ({
 
   return (
     <WidgetShell {...common} icon={<Check size={22} />}>
-      <div className="vt-publishing-command">
+      <div className="vt-publishing-command vt-widget-track-stack vt-widget-zone-full">
         {model.source === "canonical" ? (
           <>
             <div className="vt-publishing-command__header">
