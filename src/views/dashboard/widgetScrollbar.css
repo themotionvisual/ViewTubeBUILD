@@ -103,6 +103,7 @@
 :where(.dashboard-barrier) .widget-scroll-area.is-full .widget-scroll-content > :is(
   .widget-section.is-full,
   .widget-divider.is-full,
+  .widget-scroll-area.is-full,
   .vt-full-bleed,
   .vt-widget-zone-full,
   .vt-full-bleed-top,
