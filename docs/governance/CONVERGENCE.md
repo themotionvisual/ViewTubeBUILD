@@ -153,6 +153,20 @@ Each unique idea records:
 
 Source idea lists remain intact as provenance.
 
+## Idea consolidation invariants
+
+A consolidation run must prove:
+
+- every source-list item has a stable source-item ID;
+- every source item maps to exactly one active master idea or a named unresolved queue;
+- every useful retained requirement maps back to source-item IDs;
+- every semantic merge records survivor, donor IDs, rationale, reviewer/date and reversible lineage;
+- merged idea IDs remain addressable aliases rather than being deleted;
+- dependency/complementary relationships may remain separate when owner/lifecycle/output differ;
+- consolidation never implies implementation or Task promotion.
+
+The current process and run evidence live in `tasks/convergence-governance-wave/IDEAS_CONSOLIDATION_PLAN.md`, `ideas/reviews/`, and `ideas/CONSOLIDATION_REPORT.md`.
+
 ## Idea-to-capability routing
 
 Every idea should first attempt to attach to:
@@ -272,11 +286,11 @@ Generation:
 
 Source lists live under `ideas/lists/<category>/`.
 
-`ideas/registry.json` is the normalized unique-idea registry.
+`ideas/registry.json` is the normalized idea registry. Schema v2 separates immutable atomic source-item provenance from reviewed master ideas, preserves merged idea IDs as aliases, records explicit merge/relationship decisions, and maps every retained requirement back to source-item IDs.
 
-`ideas/MASTER_IDEAS.md` is a generated human projection grouped by category and subcategory.
+`ideas/MASTER_IDEAS.md` is the generated human projection of active master ideas grouped by category and subcategory. `ideas/reviews/**` stores semantic review manifests and `ideas/CONSOLIDATION_REPORT.md` records the latest full-library run.
 
-The master list is generated from unique idea records; it does not erase source lists.
+Deterministic similarity is candidate discovery only. Semantic consolidation requires an explicit SAME_OBJECTIVE / COMPLEMENTARY / DEPENDENCY / CONFLICT / DISTINCT review decision. Tool/workflow/provider/platform records are not merged merely because they share vocabulary. Source lists and merged IDs remain intact as provenance.
 
 ## Operating pipeline
 
