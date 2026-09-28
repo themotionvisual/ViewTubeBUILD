@@ -251,7 +251,7 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
   maxHeight: "xtall",
   ...getDashboardWidgetPaletteColors(8),
   dependency: ["none"],
-  status: "prototype",
+  status: "ready",
  },
  {
   id: "revenue-momentum",
