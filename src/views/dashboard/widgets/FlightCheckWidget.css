@@ -125,9 +125,15 @@
   font-weight:1000;
 }
 
+.vt-publishing-command__blockers{
+  flex:1 1 auto;
+}
+.vt-publishing-command__manual-list{
+  flex:0 0 auto;
+  height:min(230px,42cqh);
+}
 .vt-publishing-command__blockers,
 .vt-publishing-command__manual-list{
-  flex:1 1 auto;
   min-height:0;
   width:100%;
   max-width:100%;
