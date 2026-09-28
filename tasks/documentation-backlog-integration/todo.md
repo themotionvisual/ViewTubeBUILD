@@ -75,26 +75,26 @@ Source:
 - [x] Register `PLAN-MERGE-0005` and attach donor lineage to current plan families.
 - [x] Rewire stale agent Task/Crown/Brain authority references.
 - [x] Rewire the Finish Program todo to Integrated Application / Task Authority and record landed A06/B11 foundations.
-- [ ] Rewire remaining active/historical links to archive/manifest destinations.
-- [ ] Copy source bytes to Removed Archive and update archive index/registry only after the link gate is clean. — 1 of 4 principal donors migrated: dated Finish Program task projection.
+- [x] Rewire remaining active/historical links to archive/manifest destinations.
+- [x] Copy source bytes to Removed Archive and update archive index/registry only after the link gate is clean. — 4 of 4 principal donors preserved; final source-path deletion and broken-link audit are in this wave.
 
 ## Phase 4 — Donor consolidation
-- [ ] Consolidate 2026-09-11 unfinished master.
-- [ ] Consolidate 2026-09-25 100-item audit.
-- [ ] Reconcile conversation-derived 410-item list.
-- [ ] Consolidate dated Finish Program donors.
+- [x] Consolidate 2026-09-11 unfinished master.
+- [x] Consolidate 2026-09-25 100-item audit.
+- [x] Reconcile conversation-derived 410-item list.
+- [x] Consolidate dated Finish Program donors.
 - [ ] Consolidate Toolbox handoff family.
 - [ ] Consolidate Resource Library handoff family.
 - [ ] Consolidate Editor/Vault/Brain handoff families.
 - [ ] Write a consolidation manifest for each family.
 
 ## Phase 5 — Removed Archive
-- [ ] Validate inbound references.
+- [x] Validate inbound references.
 - [ ] Validate runtime/static-file consumption.
-- [ ] Preserve source bytes/hashes.
-- [ ] Move certified superseded files to `archive/removed/`.
-- [ ] Update archive index.
-- [ ] Update registry/supersession chains.
+- [x] Preserve source bytes/hashes.
+- [x] Move certified superseded backlog/Finish Program family files to `archive/removed/`; other plan families remain separate waves.
+- [x] Update archive index for backlog/Finish Program donor family.
+- [x] Update registry/supersession chains for backlog/Finish Program donor family.
 
 ## Phase 6 — Receipts / Crown / Conversation OS
 - [ ] Link task mutation proposals to evidence/receipts.
