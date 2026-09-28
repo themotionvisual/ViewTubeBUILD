@@ -73,7 +73,7 @@
     .dashboard-barrier .vt-widget-header .header-extra:has(.widget-header-toggle) {
       flex: 0 0 auto !important;
       min-width: 0;
-      max-width: 46%;
+      max-width: 54%;
       overflow: visible;
     }
 
