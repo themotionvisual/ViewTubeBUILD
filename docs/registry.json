@@ -421,7 +421,9 @@
       "path": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "status": "SUPERSEDED",
       "supersededBy": "DOC-PROGRAM-INTEGRATED",
-      "archiveState": "PENDING"
+      "archiveState": "ARCHIVED",
+      "archivedPath": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "originalPath": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
     },
     {
       "path": "docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md",
