@@ -18,15 +18,15 @@ Source:
 - `plan.md`
 
 ## Phase 0 — Evidence + source inventory
-- [ ] Refresh audited main SHA immediately before execution.
+- [x] Refresh audited main SHA immediately before execution — archive/inventory wave baseline `bb8ee9c9bd17c2946b329a26bd22cbe4e39eedad`.
 - [ ] Verify every “eliminate from unfinished” claim against current source/tests/receipts.
-- [ ] Inventory and hash all backlog/plan/audit/handoff/reference families.
-- [ ] Include registry-declared MASTER_SOURCE references as mandatory prior art without auto-promoting their ideas to tasks.
-- [ ] Classify every source by documentation class/lifecycle/disposition.
+- [x] Inventory and hash all backlog/plan/audit/handoff/reference families — `SOURCE-FAMILY-INVENTORY.json` currently inventories 199 governed candidate sources.
+- [x] Include registry-declared MASTER_SOURCE references as mandatory prior art without auto-promoting their ideas to tasks.
+- [x] Classify every inventoried source by source class and provisional disposition; canonical task state remains Task Authority-only.
 
 ### Checkpoint 0
-- [ ] No old audit is being treated as current truth.
-- [ ] No completed foundation remains a build-from-scratch candidate.
+- [x] No old audit is being treated as current truth.
+- [x] No completed foundation identified by the current-main reconciliation remains a build-from-scratch candidate.
 
 ## Phase 1 — Task identity reconciliation
 - [ ] Resolve canonical Task Index VNext writer/storage or explicitly remain proposal-only.
