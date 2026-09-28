@@ -213,11 +213,23 @@
 }
 
 @container vt-widget (max-width:520px){
-  .vt-asset-engine-slot-panel{
-    width:calc(100% + (2 * var(--widget-content-inset)));
+  .vt-asset-engine-package.vt-widget-track-stack{
+    display:grid;
+    grid-template-rows:auto auto auto;
+    align-content:start;
+  }
+  .vt-asset-engine-composer{
+    display:contents;
+  }
+  .vt-asset-engine-preview-panel{
+    grid-column:inset-start / inset-end;
+  }
+  .vt-asset-engine-slot-panel.vt-widget-zone-full{
+    grid-column:full-start / full-end;
+    width:auto;
     max-width:none;
-    margin-inline:calc(-1 * var(--widget-content-inset));
-    padding-inline:var(--widget-content-inset);
+    margin-inline:0;
+    padding-inline:0;
     overflow:visible;
     box-sizing:border-box;
   }
@@ -266,10 +278,15 @@
     grid-template-columns:repeat(4,minmax(0,1fr));
   }
   .vt-asset-engine-widget > .widget-step-tabs button{
+    min-width:0;
     gap:2px;
     padding-inline:2px;
     font-size:9px;
     line-height:.9;
+    white-space:normal;
+    overflow:hidden;
+    text-overflow:clip;
+    overflow-wrap:anywhere;
   }
   .vt-asset-engine-widget > .widget-step-tabs button > span{
     display:none;
