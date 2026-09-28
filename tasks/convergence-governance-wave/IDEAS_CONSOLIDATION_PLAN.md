@@ -3,13 +3,13 @@
 **Production Date:** 2026-09-27
 **Last Edited:** 2026-09-27
 **Class:** PLAN
-**Status:** PROPOSED — implementation not claimed
+**Status:** IMPLEMENTED FOUNDATION — FIRST FULL CONSOLIDATION RUN COMPLETE
 **Concern:** conversation idea intake, review, semantic consolidation and master projection
 **Owner:** Documentation Governance / Conversation & Improvement OS
 **Capability:** CAP-DOCUMENT-GOVERNANCE
 **Plan family:** PLAN-FAMILY-DOCS-AGENTS
 **Existing owner:** `docs/governance/CONVERGENCE.md`
-**Audited main:** `1a41090d5c1ca1b2f554c7fdc6f4f1ab4f11820f`
+**Audited main / run baseline:** `bdceef1de0d6c0784a5aca86ad365f2c237815b9`
 
 ## Decision and current state
 
@@ -71,9 +71,28 @@ Current main already has category source folders, `ideas/registry.json`, generat
 
 Start with one small pair of overlapping governance ideas and one pair of genuinely distinct same-capability ideas. Prove lossless behavior, then migrate the current registry, then backfill conversation lists. Use the existing `PLAN-FAMILY-DOCS-AGENTS` survivor and Task Authority for exact implementation work; this plan is a scoped proposal, not a replacement authority or task ledger. Do not make automatic semantic grouping authoritative without review.
 
+## Run status — 2026-09-27
+
+The first full lossless consolidation run is complete on `ideas/consolidation-run-2026-09-27`.
+
+| Wave | Result |
+| --- | --- |
+| 1. Inventory | COMPLETE — 5 registered lists plus one unregistered 25-item Asset Engine catalog and two explicit idea-classified conversation items were inventoried. |
+| 2. Schema and migration | COMPLETE — registry upgraded to `viewtube.ideas-registry.v2` with 254 source items, stable master mappings, requirements, merge lineage and review metadata. |
+| 3. Review workflow | COMPLETE FOR CURRENT LIBRARY — deterministic similarity was candidate discovery only; 25 semantic merge groups and 27 keep-separate relationship decisions were explicitly reviewed. |
+| 4. Projection and audit | COMPLETE — Master generator is merge-aware and convergence audit now validates source coverage, master mappings, merge lineage and requirement mapping. |
+| 5. Conversation integration | COMPLETE FOR CURRENT INTAKE — two IDEA/CREATE_OPPORTUNITY worklog records were harvested; curator skill and Ideas README now describe the process. |
+| 6. Backfill and promotion | PARTIAL / ONGOING — the explicit 25-item Asset Engine catalog was backfilled. Future older idea donors can enter the same source-item/review process. No bulk task promotion was performed. |
+
+Current result: **7 source lists / 254 atomic source items / 228 stable idea records / 190 active master ideas / 38 merged aliases / 0 unresolved source items**.
+
+Detailed review evidence:
+- `ideas/reviews/2026-09-27-full-consolidation.json`
+- `ideas/CONSOLIDATION_REPORT.md`
+
 ## Next action
 
-Implement Wave 1 inventory and a source-item coverage report on a feature branch. Use its measured gaps to finalize the versioned schema before any bulk migration.
+Use registry v2 as the intake baseline. On the next idea-bearing conversation/audit/document, add source items first, run candidate discovery against the 190 active masters, record explicit semantic decisions, regenerate the master, and audit before any promotion. Backfill additional historical idea catalogs only when inventory discovers a real uncaptured source.
 
 ## September 27 workflow/tool/widget intake
 
