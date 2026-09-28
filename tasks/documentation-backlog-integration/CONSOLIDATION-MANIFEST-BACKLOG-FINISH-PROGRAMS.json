@@ -5,7 +5,7 @@
   "target": "docs/programs/INTEGRATED_APPLICATION.md",
   "sources": [
     {
-      "path": "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+      "path": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
       "hash": "068e86e6349844df8c38ad0dcc06775a8ae88f19",
       "classification": "DONOR",
       "sourceCommit": null,
@@ -13,7 +13,7 @@
       "archivedPath": null
     },
     {
-      "path": "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+      "path": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
       "hash": "374a4a236e7e8d465c458de4810cd4860675fd60",
       "classification": "AUDIT_DONOR",
       "sourceCommit": null,
@@ -21,7 +21,7 @@
       "archivedPath": null
     },
     {
-      "path": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "path": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "hash": "b9337fce4d742c580b772ccf3642e38a70631148",
       "classification": "SUPERSEDED_PROGRAM",
       "sourceCommit": null,
@@ -39,70 +39,70 @@
   ],
   "accounting": [
     {
-      "source": "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+      "source": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
       "kind": "TASK",
       "summary": "The 50 highest-priority unfinished-work items and system/feature guide are reconciled by current main, the Integrated Application Program, current plan-family survivors, the current conversation work log, and temporary VT status projections. Completed foundations are not recreated.",
       "disposition": "INCORPORATED",
       "destination": "docs/programs/INTEGRATED_APPLICATION.md; governance/convergence/plan-families.json; tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/worklog.json"
     },
     {
-      "source": "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+      "source": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
       "kind": "REFERENCE",
       "summary": "Standalone HTML families, widget atlases, prototype references and preservation guidance remain useful donor/reference material rather than task truth.",
       "disposition": "REFERENCE",
       "destination": ".claude/skills/viewtube-widget-dashboard-system/references/futures-prototypes-and-reference-atlas.md; agent/registry/references.md"
     },
     {
-      "source": "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+      "source": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
       "kind": "DECISION",
       "summary": "Canonical-owner, preservation and integrated-definition principles have been superseded by Documentation Governance, Product Completion, Product Architecture, Verification and Task Authority.",
       "disposition": "SUPERSEDED",
       "destination": "docs/governance/DOCUMENTATION.md; docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md; docs/governance/TASK_AUTHORITY.md; docs/governance/VERIFICATION.md"
     },
     {
-      "source": "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+      "source": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
       "kind": "TASK",
       "summary": "The 100-item backlog is a point-in-time audit. Current implementation state is reconciled through the current-main backlog mission, Integrated Application, One-Goal transition projection and plan-family survivors; broad implemented foundations were narrowed or removed from active unfinished intake.",
       "disposition": "INCORPORATED",
       "destination": "docs/programs/INTEGRATED_APPLICATION.md; tasks/documentation-backlog-integration/CURRENT-MAIN-RECONCILIATION.md; tasks/conversation-intake/VT-CONV-SETTINGS-BACKLOG-GOVERNANCE-2026-09-27/review.md"
     },
     {
-      "source": "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+      "source": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
       "kind": "REFERENCE",
       "summary": "All 55 expansion ideas (10 YouTube, 15 Google AI, 15 Resource Library, 15 Studio/Projects/Analytics) were preserved as a governed idea source and normalized registry entries. The first three Resource Library ideas are marked implemented.",
       "disposition": "INCORPORATED",
       "destination": "ideas/lists/product/current-main-audit-expansion-opportunities.md; ideas/registry.json; ideas/MASTER_IDEAS.md"
     },
     {
-      "source": "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+      "source": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
       "kind": "REFERENCE",
       "summary": "PR/branch donor-map material remains useful only as donor provenance and must be rechecked against current branches before code salvage.",
       "disposition": "REFERENCE",
       "destination": "docs/governance/DOCUMENTATION.md; docs/governance/CONVERSATION_OS.md; current-main backlog reconciliation mission"
     },
     {
-      "source": "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+      "source": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
       "kind": "DECISION",
       "summary": "Living-ledger, receipt, stale-document and no-new-failure concepts have been absorbed into Task Authority, Conversation OS, Verification and Convergence Governance rather than creating another ledger.",
       "disposition": "INCORPORATED",
       "destination": "docs/governance/TASK_AUTHORITY.md; docs/governance/CONVERSATION_OS.md; docs/governance/VERIFICATION.md; docs/governance/CONVERGENCE.md"
     },
     {
-      "source": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "source": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "kind": "TASK",
       "summary": "F1–F16, dependency ordering, implementation phases and expanded completion tracks are superseded as cross-system program state by Integrated Application and current Task Authority projections; permanent historical aliases are preserved.",
       "disposition": "INCORPORATED",
       "destination": "docs/programs/INTEGRATED_APPLICATION.md; tasks/viewtube-one-goal-status.md; governance/convergence/plan-families.json"
     },
     {
-      "source": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "source": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "kind": "DECISION",
       "summary": "Architecture decisions about one canonical owner, evidence provenance, publishing freeze/recovery, learning governance and final certification are represented in current constitutions/domain authorities/specifications.",
       "disposition": "SUPERSEDED",
       "destination": "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md; docs/governance/VERIFICATION.md; docs/domains/BRAIN.md; docs/specifications/PROMPTS.md; docs/programs/INTEGRATED_APPLICATION.md"
     },
     {
-      "source": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "source": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "kind": "REFERENCE",
       "summary": "Prompt-system and System-Convergence references continue through their current surviving authorities and task workspaces.",
       "disposition": "REFERENCE",
@@ -123,21 +123,21 @@
       "destination": "docs/specifications/PROMPTS.md; tasks/viewtube-finish-program/; docs/registry.json"
     },
     {
-      "source": "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+      "source": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
       "kind": "CONFLICT",
       "summary": "Live inbound references still point to this donor from agent registry, migration documentation, Brain consolidation history and widget reference material. Those references must be classified as current donor links versus stale links before archive.",
       "disposition": "CONFLICT_REQUIRES_DECISION",
       "destination": null
     },
     {
-      "source": "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+      "source": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
       "kind": "CONFLICT",
       "summary": "Integrated Application, the current reconciliation audit and a superseded product-architecture donor still link to this audit. Rewire active links to the governed idea source/current reconciliation artifacts before archive.",
       "disposition": "CONFLICT_REQUIRES_DECISION",
       "destination": null
     },
     {
-      "source": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "source": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "kind": "CONFLICT",
       "summary": "Multiple historical/current files still cite this superseded program. Active links should route to Integrated Application; historical donor links may remain only if archive paths/lineage are updated.",
       "disposition": "CONFLICT_REQUIRES_DECISION",
