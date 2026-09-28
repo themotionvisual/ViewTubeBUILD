@@ -2,7 +2,7 @@
 
 **Source List ID:** IDEA-LIST-AUDIT-EXPANSION-001  
 **Source Type:** historical audit / idea donor  
-**Original Source:** `docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md`  
+**Original Source:** `archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md`  
 **Original Blob:** `374a4a236e7e8d465c458de4810cd4860675fd60`  
 **Preservation Rule:** The block below is preserved from the donor audit as idea provenance. Normalized ideas live in `ideas/registry.json`; implementation status must be reconciled against current main before promotion.
 
