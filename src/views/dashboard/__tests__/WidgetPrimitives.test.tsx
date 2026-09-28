@@ -211,6 +211,14 @@ describe("adaptive sized-control typography", () => {
   })
 })
 
+describe("UI reference field parity", () => {
+  it("documents the canonical textarea beside text input and video selector", () => {
+    expect(referenceSource).toContain("WidgetTextInput")
+    expect(referenceSource).toContain("WidgetTextArea")
+    expect(referenceSource).toContain("WidgetVideoSelect")
+  })
+})
+
 describe("shared widget form primitives", () => {
   it("maps A–Z across all 12 canonical spectrum colors", () => {
     expect(resolveAlphabeticalSpectrumSlot("A")).toBe(0)
