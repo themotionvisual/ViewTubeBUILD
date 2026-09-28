@@ -89,6 +89,7 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "app-verification-explainer": React.lazy(() => import("./widgets/VerificationExplainerWidget").then((module) => ({ default: module.VerificationExplainerWidget }))),
  "revenue-momentum": React.lazy(() => import("./widgets/RevenueMomentumWidget").then((module) => ({ default: module.RevenueMomentumWidget }))),
  "superfan-card": React.lazy(() => import("./widgets/SuperfanCardWidget").then((module) => ({ default: module.SuperfanCardWidget }))),
+ "ai-prompt-box": React.lazy(() => import("./widgets/AIPromptBoxWidget").then((module) => ({ default: module.AIPromptBoxWidget }))),
  "system-micro-stack": React.lazy(() => import("./widgets/SettingsWidget").then((module) => ({ default: module.SettingsWidget }))),
 }
 
@@ -105,7 +106,6 @@ const INLINE_WIDGET_RENDERER_KEYS = [
  "top-performer",
  "goals-tracker",
  "alerts-feed",
- "ai-prompt-box",
  "task-stack",
  "alerts-ticker",
 ] as const
@@ -890,51 +890,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  }
 
 
-
- // 11. ORACLE (Strategic)
- if (widget.id === "ai-prompt-box") {
-  return (
-   <WidgetShell {...common} icon={<WandSparkles size={22} />}>
-    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-     <div
-      style={{
-       display: "flex",
-       alignItems: "center",
-       gap: "4px",
-       marginBottom: "2px",
-      }}>
-      <Activity size={14} className="text-[#FF8AAF]" />
-      <span className="label-tiny" style={{ color: "#FF8AAF" }}>
-       Strategic Priorities
-      </span>
-     </div>
-     <div
-      style={{
-       display: "flex",
-       background: "#fff",
-       border: "2px solid #000",
-       borderRadius: "10px",
-       overflow: "hidden",
-       boxShadow: "3px 3px 0 0 rgba(255,138,175,0.4)",
-      }}>
-      <div style={{ width: "5px", background: "#FF8AAF", flexShrink: 0 }}></div>
-      <div
-       style={{ flex: 1, padding: "6px", fontSize: "13px", fontWeight: 700 }}>
-       Title hooks are generic. Commit to 2 unique scripts this week.
-      </div>
-     </div>
-     <div className="label-tiny" style={{ opacity: 0.3 }}>
-      Ask Agent Anything
-     </div>
-     <input
-      className="brutal-input"
-      style={{ height: "36px" }}
-      placeholder="Drop a question..."
-     />
-    </div>
-   </WidgetShell>
-  )
- }
 
  // 15. NEWS TICKER (placeholder)
  // Alerts ticker removed (now implemented in DashboardHeader)
