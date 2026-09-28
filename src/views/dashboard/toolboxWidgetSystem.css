@@ -1156,7 +1156,7 @@
     word-break: normal;
   }
 
-  :where(.dashboard-barrier) .header-extra,
+  :where(.dashboard-barrier) .header-extra:not(:has(.widget-header-toggle)):not(:has(.widget-header-action)),
   :where(.dashboard-barrier) .widget-ai-cost-chip {
     display: none !important;
   }
