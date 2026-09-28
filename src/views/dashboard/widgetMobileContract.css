@@ -7,7 +7,8 @@
     .dashboard-barrier {
       --vt-mobile-widget-gap: 8px;
       --vt-mobile-widget-gutter: 4px;
-      --vt-widget-edge-safe: 4px;
+      --vt-widget-edge-safe: 0px;
+      --vt-mobile-canvas-reclaim-right: 8px;
       /* The dashboard owns the real phone viewport width. Earlier field-QA
          compensation widened the row asymmetrically and eventually pushed
          widget shells past the right edge. Keep outer gutter correction in the
@@ -21,6 +22,15 @@
       --vt-mobile-height-tall: 350px;
       --vt-mobile-height-xtall: 450px;
       --vt-mobile-height-massive: 850px;
+    }
+
+    /* Reclaim only the excess right-side mobile canvas gap. The widget shell
+       and scroll content remain 100% canonical; the page/grid owner is the
+       only layer allowed to widen. */
+    .dashboard-canvas-inner {
+      width: calc(100% + var(--vt-mobile-canvas-reclaim-right));
+      max-width: none;
+      margin-inline-end: calc(-1 * var(--vt-mobile-canvas-reclaim-right));
     }
 
 
