@@ -2376,3 +2376,91 @@ Before merge:
 - phone landscape certification;
 - verify dropdown, both A/B/C toggles, Analyze, tabs, change execution, creator review and ActionPacket handoffs;
 - confirm current-main mergeability before merge.
+
+
+---
+
+## AL. Packaging Intelligence implementation — 2026-09-27
+
+**Branch:** `feature/packaging-intelligence-widget`  
+**PR:** #528  
+**Stable widget ID:** `packaging-intelligence`  
+**Status:** IMPLEMENTED ON BRANCH / READY FOR REVIEW
+
+### Creator job
+
+Explain whether a selected video's packaging is the likely bottleneck, project the current canonical Video Package state and experiment/provenance history, and continue the creator into Packaging Lab Pro, Thumbnail Studio, or Content Analysis with the evidence already attached.
+
+This widget is deliberately a compact dashboard companion. **Packaging Lab Pro remains the deep packaging workbench and generation owner.** The dashboard widget does not regenerate titles, thumbnails, descriptions, or a second package store.
+
+### Canonical ownership
+
+- **Deterministic specialist:** `src/services/packagingIntelligence.ts`.
+- **UI:** `src/views/dashboard/widgets/PackagingIntelligenceWidget.tsx`.
+- **Widget-local composition:** `src/views/dashboard/widgets/PackagingIntelligenceWidget.css`.
+- **Registry/renderer:** `src/views/dashboard/widgets/newWidgetSet.ts`.
+- **Analytics truth:** existing dashboard canonical video rows / analytics-canon / VT-SYNC.
+- **Package truth:** `ViewTubeVideoPackage` plus projected ContentBuild selections.
+- **History:** Video Package provenance + ContentBuild event projection; no widget-only ledger.
+- **Handoff:** universal `ViewTubeActionPacket`.
+- **Deep editor:** existing `/packaging-lab-pro`.
+- **Thumbnail work:** existing Thumbnail Studio.
+- **Post-click diagnosis:** existing Content Analysis.
+
+### Deterministic diagnosis
+
+The first implementation intentionally avoids a pseudo-platform score.
+
+- insufficient exposure / missing CTR or AVP → **INSUFFICIENT EVIDENCE**;
+- weak click response + strong watch quality → **REPACKAGE**;
+- strong click response + weak watch quality → **CONTENT FRICTION**;
+- healthy click response + healthy watch quality → **HOLD**;
+- otherwise → **MIXED**.
+
+The opportunity value is an internal prioritization aid derived from explicit observed inputs. It is not presented as a YouTube-provided score or causal proof.
+
+### Compact composition
+
+Default allocation is **half × tall**, with **half → full** width support and **medium → xtall** height support.
+
+Visible hierarchy:
+
+1. canonical video selector + **OPEN PACKAGING LAB**;
+2. compact signature strip: **Exposure | CTR | AVP | Package completeness**;
+3. canonical `SIGNAL | PACKAGE | HISTORY` step tabs;
+4. one active body using canonical module/data-grid/scroll primitives.
+
+### Package projection
+
+The widget reads and exposes:
+
+- title variant count and selected title;
+- thumbnail variant count and selected thumbnail;
+- description presence;
+- tag presence;
+- evidence references;
+- unresolved package blockers;
+- experiment/provenance event count;
+- ContentBuild/package history.
+
+No package data is copied into a widget-specific persistence store.
+
+### Verification receipt
+
+Release run `36362155039` on the final implementation head:
+
+- Packaging Intelligence backend tests — **5/5 passed**;
+- Packaging Intelligence widget contract tests — **4/4 passed**;
+- focused contracts — **PASS**;
+- production build — **PASS**;
+- source governance — **PASS**;
+- local smoke — **PASS**.
+
+Repository-wide static-quality and full-suite jobs remain red from unrelated existing failures in Vault, Editor, Brain migration guards, shared color ownership and pre-existing TypeScript debt. Neither failing job reports a Packaging Intelligence implementation error.
+
+### Remaining before merge
+
+- refresh current-main comparison/mergeability;
+- reconcile only if main moved across overlapping registry/handoff files;
+- rendered dashboard certification when a browser preview is available;
+- mark PR ready for review after freshness check.
