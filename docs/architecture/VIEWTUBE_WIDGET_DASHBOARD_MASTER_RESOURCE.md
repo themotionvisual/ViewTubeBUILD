@@ -2376,3 +2376,52 @@ Before merge:
 - phone landscape certification;
 - verify dropdown, both A/B/C toggles, Analyze, tabs, change execution, creator review and ActionPacket handoffs;
 - confirm current-main mergeability before merge.
+
+
+---
+
+## AL. AI Prompt Box production rebuild — 2026-09-28
+
+**Branch:** `feature/ai-prompt-box-widget`  
+**PR:** #532  
+**Stable widget ID:** `ai-prompt-box`  
+**Status:** IMPLEMENTED / RELEASE-GATE VERIFICATION
+
+### Creator job
+
+Give the creator one compact dashboard surface for fast, channel-aware questions without opening the full Brain workspace.
+
+### Ownership
+
+- **Renderer owner:** `src/views/dashboard/widgets/AIPromptBoxWidget.tsx`.
+- **Widget-local composition:** `src/views/dashboard/widgets/AIPromptBoxWidget.css`.
+- **Reasoning:** canonical `runBrainTask / BrainRuntime`.
+- **Context:** canonical Brain snapshot/system prompt/growth-context builders plus a bounded current-dashboard context projection.
+- **Persistence/conversation:** remains owned by BrainRuntime/Brain orchestration; the widget creates no second chat or memory store.
+- **External actions:** none; all external mutations remain approval-gated outside this widget.
+
+### Compact composition
+
+The prior inline placeholder was removed from `WidgetRendererBase.tsx`. The replacement uses canonical production primitives:
+
+- one row of four compact evidence-aware quick prompts;
+- one 32px input + split ASK control row;
+- compact context/evidence badges;
+- one bounded answer scroll area using `WidgetModuleFrame`;
+- a compact footer handoff to the full Brain.
+
+The widget preserves its existing quarter → third → full width contract and short → medium → xtall height contract. Container queries collapse the preset deck from four columns to two rather than stretching the widget vertically by default.
+
+### TDD / verification receipt
+
+RED:
+- `src/views/dashboard/__tests__/AIPromptBoxWidget.contract.test.ts` landed before the extracted production owner.
+
+GREEN on the implementation pass:
+- focused contracts passed;
+- production build passed;
+- the old `if (widget.id === "ai-prompt-box")` inline renderer was removed;
+- registry status advanced from `prototype` to `ready`;
+- source map and current-widget inventory now point to the independent owner.
+
+Repository-wide static/full-suite debt is reported separately from feature-specific failures.
