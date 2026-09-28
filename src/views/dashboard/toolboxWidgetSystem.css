@@ -1156,13 +1156,21 @@
     word-break: normal;
   }
 
-  :where(.dashboard-barrier) .header-extra,
+  :where(.dashboard-barrier) .header-extra:not(:has(.widget-header-toggle)):not(:has(.widget-header-action)),
   :where(.dashboard-barrier) .widget-ai-cost-chip {
     display: none !important;
   }
 
   /* Header mode toggles remain visible in portrait. They compress before the
      title or action rail is removed. Non-toggle extras may still hide. */
+  :where(.dashboard-barrier) .header-extra:has(.widget-header-action) {
+    display:flex !important;
+    flex:0 0 auto !important;
+    min-width:0;
+    overflow:visible;
+    justify-content:center !important;
+  }
+
   :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) {
     display: flex !important;
     flex: 0 0 auto !important;

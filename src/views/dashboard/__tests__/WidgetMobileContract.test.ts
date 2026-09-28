@@ -63,6 +63,11 @@ describe("mobile widget geometry contract", () => {
     expect(widgetSystemCss).toContain("grid-template-columns: repeat(4, minmax(0, 1fr));")
   })
 
+  it("keeps canonical header action buttons visible in portrait widget headers", () => {
+    expect(widgetSystemCss).toContain(":not(:has(.widget-header-toggle)):not(:has(.widget-header-action))")
+    expect(widgetSystemCss).toContain(".header-extra:has(.widget-header-action)")
+  })
+
   it("keeps header toggles visible in portrait widget headers", () => {
     expect(widgetSystemCss).toContain(".header-extra:has(.widget-header-toggle)")
     expect(widgetSystemCss).toContain("display: flex !important;")
