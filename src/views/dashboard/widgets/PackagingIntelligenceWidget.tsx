@@ -33,6 +33,8 @@ import "./PackagingIntelligenceWidget.css"
 
 type Page = "signal" | "package" | "history"
 
+const PACKAGING_LAB_ROUTE = "/packaging-lab-pro"
+
 const PAGES: readonly { id: Page; label: string }[] = [
  { id: "signal", label: "SIGNAL" },
  { id: "package", label: "PACKAGE" },
@@ -182,7 +184,9 @@ export const PackagingIntelligenceWidget: React.FC<
    targetToolId,
    channelId,
   })
-  onNavigate?.(handoff.route)
+  const route = handoff.route || (targetToolId === "packaging-lab-pro" ? PACKAGING_LAB_ROUTE : "/studio")
+  if (onNavigate) onNavigate(route)
+  else if (typeof window !== "undefined") window.location.assign(route)
  }
 
  const packageRows = selected ? [
