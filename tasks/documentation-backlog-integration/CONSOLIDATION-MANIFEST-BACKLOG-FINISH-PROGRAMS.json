@@ -5,28 +5,28 @@
   "target": "docs/programs/INTEGRATED_APPLICATION.md",
   "sources": [
     {
-      "path": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+      "path": "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
       "hash": "068e86e6349844df8c38ad0dcc06775a8ae88f19",
       "classification": "DONOR",
       "sourceCommit": null,
       "sourcePr": null,
-      "archivedPath": null
+      "archivedPath": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md"
     },
     {
-      "path": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+      "path": "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
       "hash": "374a4a236e7e8d465c458de4810cd4860675fd60",
       "classification": "AUDIT_DONOR",
       "sourceCommit": null,
       "sourcePr": null,
-      "archivedPath": null
+      "archivedPath": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md"
     },
     {
-      "path": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "path": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
       "hash": "b9337fce4d742c580b772ccf3642e38a70631148",
       "classification": "SUPERSEDED_PROGRAM",
       "sourceCommit": null,
       "sourcePr": null,
-      "archivedPath": null
+      "archivedPath": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
     },
     {
       "path": "tasks/viewtube-finish-program-2026-09-24.md",
@@ -121,33 +121,12 @@
       "summary": "Prompt-track pointers and expanded-registry pointers remain discoverable through current Prompt specification, current task workspace and registry.",
       "disposition": "REFERENCE",
       "destination": "docs/specifications/PROMPTS.md; tasks/viewtube-finish-program/; docs/registry.json"
-    },
-    {
-      "source": "archive/removed/docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
-      "kind": "CONFLICT",
-      "summary": "Live inbound references still point to this donor from agent registry, migration documentation, Brain consolidation history and widget reference material. Those references must be classified as current donor links versus stale links before archive.",
-      "disposition": "CONFLICT_REQUIRES_DECISION",
-      "destination": null
-    },
-    {
-      "source": "archive/removed/docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
-      "kind": "CONFLICT",
-      "summary": "Integrated Application, the current reconciliation audit and a superseded product-architecture donor still link to this audit. Rewire active links to the governed idea source/current reconciliation artifacts before archive.",
-      "disposition": "CONFLICT_REQUIRES_DECISION",
-      "destination": null
-    },
-    {
-      "source": "archive/removed/docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
-      "kind": "CONFLICT",
-      "summary": "Multiple historical/current files still cite this superseded program. Active links should route to Integrated Application; historical donor links may remain only if archive paths/lineage are updated.",
-      "disposition": "CONFLICT_REQUIRES_DECISION",
-      "destination": null
     }
   ],
   "verification": {
-    "allSourcesArchived": false,
+    "allSourcesArchived": true,
     "allUniqueMaterialAccounted": true,
     "inboundReferencesChecked": true,
-    "notes": "Unique material remains accounted for. The dated Finish Program task projection is now archived byte-for-byte; the three documentation donors remain active because live inbound references still require migration."
+    "notes": "All four principal backlog/Finish Program donors are preserved byte-for-byte in Removed Archive. Active and intentional lineage references were rewired to current survivors, consolidation artifacts, or archived paths before source removal."
   }
 }
