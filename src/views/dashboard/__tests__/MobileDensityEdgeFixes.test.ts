@@ -18,6 +18,7 @@ const legacy = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.ur
 const flightCss = readFileSync(new URL("../widgets/FlightCheckWidget.css", import.meta.url), "utf8")
 const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
 const navigationCss = readFileSync(new URL("../../../components/navigation/adaptive-navigation.css", import.meta.url), "utf8")
+const canvasSource = readFileSync(new URL("../DashboardCanvas.tsx", import.meta.url), "utf8")
 
 describe("mobile widget density and edge contracts", () => {
   it("does not reserve a desktop scroll-track lane around the mobile dashboard", () => {
@@ -33,9 +34,11 @@ describe("mobile widget density and edge contracts", () => {
     expect(scrollbar).not.toContain("width: calc(100% + (2 * var(--widget-shadow-clearance)))")
     expect(mobile).toContain("scrollbar-gutter: auto")
     expect(mobile).toContain("--vt-mobile-widget-gutter: 4px")
-    expect(mobile).not.toContain("--vt-mobile-reclaim-left")
-    expect(mobile).not.toContain("--vt-mobile-reclaim-right")
-    expect(mobile).toContain("margin-inline: 0")
+    expect(canvasSource).toContain("dashboard-canvas-inner")
+    expect(mobile).toContain("--vt-mobile-canvas-reclaim-right")
+    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-canvas-reclaim-right))")
+    expect(mobile).toContain("margin-inline-end: calc(-1 * var(--vt-mobile-canvas-reclaim-right))")
+    expect(mobile).toContain("--vt-widget-edge-safe: 0px")
     expect(legacy).not.toContain("max-width: calc(100vw - 32px)")
     expect(legacy).not.toContain("margin-right: 8px")
   })
