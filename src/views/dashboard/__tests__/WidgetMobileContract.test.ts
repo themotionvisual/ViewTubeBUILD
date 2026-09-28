@@ -69,9 +69,11 @@ describe("mobile widget geometry contract", () => {
     expect(widgetSystemCss).toContain(".vt-widget-header:has(.header-extra .widget-header-toggle)")
   })
 
-  it("lets intrinsic header toggles size to their labels instead of forcing fixed phone widths", () => {
+  it("lets intrinsic header toggles use more portrait width and wrap labels instead of clipping", () => {
     expect(widgetSystemCss).toContain(".widget-header-toggle.is-intrinsic")
     expect(widgetSystemCss).toContain("width: fit-content")
+    expect(mobileCss).toContain("max-width: 54%")
+    expect(mobileCss).toContain("white-space: normal")
     expect(widgetSystemCss).not.toContain('[data-widget-id="comment-replier"] .widget-header-toggle {\n    width: 88px')
   })
 
@@ -90,11 +92,11 @@ describe("mobile widget geometry contract", () => {
     expect(mobileCss).toContain("max-width: 100%;")
   })
 
-  it("keeps the mobile dashboard on the real viewport width instead of asymmetric reclaim math", () => {
+  it("reclaims only the excess right-side mobile canvas gap at the page owner", () => {
     expect(mobileCss).not.toContain("--vt-mobile-reclaim-left")
-    expect(mobileCss).not.toContain("--vt-mobile-reclaim-right")
-    expect(mobileCss).not.toContain("width: calc(100% + var(--vt-mobile-reclaim")
-    expect(mobileCss).toContain("margin-inline: 0;")
+    expect(mobileCss).toContain("--vt-mobile-canvas-reclaim-right")
+    expect(mobileCss).toContain("width: calc(100% + var(--vt-mobile-canvas-reclaim-right))")
+    expect(mobileCss).toContain("margin-inline-end: calc(-1 * var(--vt-mobile-canvas-reclaim-right))")
   })
 
   it.each([
