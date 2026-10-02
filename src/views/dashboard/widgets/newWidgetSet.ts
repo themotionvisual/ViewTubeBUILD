@@ -10,6 +10,7 @@ import { AudienceRequestsWidget } from "./AudienceRequestsWidget"
 import { VideoAssetEngineWidget } from "./VideoAssetEngineWidget"
 import { ShortsMultiplierWidget } from "./ShortsMultiplierWidget"
 import { LongformOptimizationWidget } from "./LongformOptimizationWidget"
+import { SearchIntentMapperWidget } from "./SearchIntentMapperWidget"
 import "./newWidgetSet.css"
 
 const VideoDirectorWidget = React.lazy(() => import("./video-director/VideoDirectorWidget"))
@@ -25,6 +26,7 @@ export const NEW_WIDGET_DEFINITIONS: WidgetDefinitionBase[] = [
   { id: "video-asset-engine", title: "Video Asset Engine", subtitle: "Package, inspect and hand off durable creator assets", category: "creation", defaultSize: "half", minSize: "third", maxSize: "full", defaultHeight: "tall", minHeight: "tall", maxHeight: "xtall", ...getDashboardWidgetPaletteColors(61), dependency: ["none"], status: "prototype" },
   { id: "shorts-multiplier", title: "Shorts Multiplier", subtitle: "Create repost-ready Shorts variants with trim and schedule plans", category: "creation", defaultSize: "full", minSize: "half", maxSize: "full", defaultHeight: "massive", minHeight: "tall", maxHeight: "massive", ...getDashboardWidgetPaletteColors(63), dependency: ["none"], status: "prototype" },
   { id: "longform-optimizer", title: "Longform Optimizer", subtitle: "AI-guided longform package changes with measured follow-through", category: "ai", defaultSize: "half", minSize: "half", maxSize: "full", defaultHeight: "tall", minHeight: "medium", maxHeight: "xtall", ...getDashboardWidgetPaletteColors(64), dependency: ["youtube_analytics_v2", "gemini_api"], status: "prototype" },
+  { id: "search-intent-mapper", title: "Search Intent Mapper", subtitle: "Find unanswered audience searches", category: "analytics", defaultSize: "half", minSize: "third", maxSize: "full", defaultHeight: "tall", minHeight: "medium", maxHeight: "xtall", ...getDashboardWidgetPaletteColors(67), dependency: ["youtube_analytics_v2"], status: "prototype" },
 ]
 
 export const NEW_WIDGET_RENDERERS: Record<string, React.ComponentType<any>> = {
@@ -38,6 +40,7 @@ export const NEW_WIDGET_RENDERERS: Record<string, React.ComponentType<any>> = {
   "video-asset-engine": VideoAssetEngineWidget,
   "shorts-multiplier": ShortsMultiplierWidget,
   "longform-optimizer": LongformOptimizationWidget,
+  "search-intent-mapper": SearchIntentMapperWidget,
 }
 
 export const NEW_WIDGET_IDS = NEW_WIDGET_DEFINITIONS.map((widget) => widget.id)
